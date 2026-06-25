@@ -1,0 +1,12 @@
+/node_modules
+/.vscode
+/dist
+/lib
+.env
+.prettierrc.json
+eslint.config.mjs
+just.config.ts
+listen.bat
+package-lock.json
+package.json
+tsconfig.json

@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.90",
+    "minecraft:item": {
+        "description": {
+            "identifier": "player_head:yzbwdlt",
+            "menu_category": { "category": "items", "group": "minecraft:itemGroup.name.skull" }
+        },
+        "components": {
+            "minecraft:block_placer": { "block": "player_head:yzbwdlt", "replace_block_item": true },
+            "minecraft:wearable": { "slot": "slot.armor.head", "hides_player_location": true },
+            "minecraft:display_name": { "value": "tile.player_head:yzbwdlt.name" },
+            "minecraft:rarity": "uncommon"
+        }
+    }
+}

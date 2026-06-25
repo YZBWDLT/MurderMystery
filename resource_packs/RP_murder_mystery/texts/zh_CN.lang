@@ -1,0 +1,141 @@
+## ===== 方块 =====
+tile.player_head:yzbwdlt.name=YZBWDLT 的头
+tile.player_head:freamoluwu.name=Freamoluwu 的头
+tile.player_head:jhy2189.name=JHY2189 的头
+tile.player_head:violetmiaw.name=VioletMiaw 的头
+tile.player_head:cheesey.name=Cheesey 的头
+tile.player_head:fudgiethewhale.name=_fudgiethewhale 的头
+
+tile.murder_mystery:mark_spawnpoint.name=重生点
+tile.murder_mystery:mark_goldpoint.name=金生成点
+
+## ===== 实体 =====
+
+### --- NPC ---
+entity.template:npc.name=NPC
+item.spawn_egg.entity.template:npc.name=NPC 刷怪蛋
+
+## ===== 物品组 =====
+murder_mystery:itemGroup.name.mark_block=方块标记
+
+## ===== 名词翻译 =====
+
+### 地图名
+map.library=图书馆
+
+### 模式名
+mode.classic=经典
+
+### 身份名
+role.innocent=平民
+role.detective=侦探
+role.murderer=杀手
+role.spectator=旁观者
+role.dead=死亡
+role.innocentWithColor=§a平民
+role.detectiveWithColor=§b侦探
+role.murdererWithColor=§c杀手
+role.spectatorWithColor=§7旁观者
+role.deadWithColor=§7死亡
+
+## ===== 游戏事件消息 =====
+
+### 游戏开始倒计时
+chat.beforeGameStart.countdown=§e游戏将在§r%s§e秒后开始！
+
+### 游戏开始
+title.gameStart.innocent=§a身份：平民
+subtitle.gameStart.innocent=§e努力存活下来！活着就是胜利！
+title.gameStart.detective=§b身份：侦探
+subtitle.gameStart.detective=§e找到杀手并杀死，为民除害！
+title.gameStart.murderer=§c身份：杀手
+subtitle.gameStart.murderer=§e杀死所有玩家！
+chat.teaming.innocent=§c§l严禁与杀手联手！
+chat.teaming.detective=§c§l严禁与杀手联手！
+chat.teaming.murderer=§c§l严禁与侦探/平民联手！
+
+### 杀手拿到剑
+chat.murderWillGetSword.murderer=§e你会在§c%s§e秒后拿到你的剑！
+chat.murderWillGetSword.innocent=§e杀手会在§c%s§e秒后拿到他的剑！
+chat.murderWillGetSword.detective=§e杀手会在§c%s§e秒后拿到他的剑！
+chat.murderGetSword.murderer=§e你已经拿到了剑！
+chat.murderGetSword.innocent=§e杀手已经拿到了剑！
+chat.murderGetSword.detective=§e杀手已经拿到了剑！
+subtitle.murderGetSword.murder=§6右键§e掷出手中的剑！
+
+### 杀手杀死玩家
+chat.youDied=§c你死了！§e%s
+title.youDied=§c你死了！
+deathMessage.murderer=§e杀手捅了你一刀！
+deathMessage.murdererStab=§e杀手捅了你一刀！
+deathMessage.murdererShot=§e杀手射中了你！
+deathMessage.murdererKnife=§e杀手的飞刀击中了你！
+deathMessage.shotSelf=§e你成功地射杀了你自己！
+deathMessage.player=§e一名玩家杀了你！
+deathMessage.manslaughter=§e你杀死了一位平民！
+deathMessage.void=§e你掉入了虚空！
+deathMessage.hitGround=§e你撞到了地上！
+deathMessage.trap=§e你踩到了一个陷阱！
+deathMessage.potion=§e毒药杀死了你。
+deathMessage.other=§e你死了！
+
+### 杀手杀死侦探
+chat.detectiveKilled=§6侦探已被杀死！
+subtitle.detectiveKilled=§6侦探已被杀死！
+chat.bowDropped=§6弓已掉落！
+subtitle.bowDropped=§6弓已掉落！
+
+### 拾起金锭
+chat.pickedUpGold=§6拾起了%s块金锭！
+
+### 平民集齐 10 个金锭
+chat.10GoldCollected=§e你收集了10块金锭，获得一支箭矢！
+subtitle.10GoldCollected=§a获得一支箭矢！
+
+### 平民拾起弓
+chat.bowPicked=§6一位玩家拿起了弓！
+chat.bowPicked.picker=§a你拿起了弓！§6目标：§e推测出杀手并杀死他！
+
+### 玩家退出游戏
+chat.detectiveQuit=§6侦探退出了游戏！§e找到弓，并抓住机会杀死杀手。
+chat.murdererQuit=§a一名杀手已经离开，你取代了他的位置！
+chat.murdererQuit.gameOver=§a杀手已离开，游戏结束！
+
+### 杀手长时间未杀人的提示
+chat.remindMurderer=§e别忘了：你是§c杀手§e！你的目标是杀死其他玩家！
+title.remindMurderer=§e你是§c杀手§e！
+subtitle.remindMurderer=§e别忘了：杀死所有玩家！
+
+### 游戏结束
+title.win=§a你赢了！
+title.lose=§c你输了！
+subtitle.win.innocent=§6杀手已被阻止！
+subtitle.win.detective=§6杀手已被阻止！
+subtitle.win.murderer=§6所有幸存者都死了！
+chat.line=§a§l---------------
+chat.title=§l     密室杀手
+chat.winner.innocent=§l胜利者：§r§a所有平民与侦探
+chat.winner.detective=§l胜利者：§r§a所有平民与侦探
+chat.winner.murderer=§l胜利者：§r§c杀手
+chat.detective=§7侦探：§a%s
+chat.murderer=§7杀手：§a%s§7（§a%s§7击杀）
+chat.hero=§7英雄：§a%s
+
+### 其他消息
+chat.chestLocked=此箱子已被上锁！
+
+## ===== 信息板消息 =====
+
+infoboard.title=§l§e    密室杀手    
+infoboard.mapName=地图：§a%s§r
+infoboard.playerCount=玩家：§a%s/%s
+infoboard.waiting=等待中……
+infoboard.countdown=即将开始：§a%s秒
+infoboard.mode=模式：§a%s§r
+infoboard.role=身份：§a%s§r
+infoboard.innocentLeft=剩余平民：§a%s§r
+infoboard.timeLeft=剩余时间：§a%s§r
+infoboard.kills=击杀数：§a%s§r
+infoboard.detectiveAlive=侦探：§a存活§r
+infoboard.bowNotDropped=弓：§a未掉落§r
+infoboard.bowDropped=弓：§c已掉落§r

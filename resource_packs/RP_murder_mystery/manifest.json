@@ -1,0 +1,26 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "量筒的密室杀手 资源包",
+        "description": "仿照Hypixel在基岩版上实现的密室杀手！",
+        "uuid": "b371222d-e05b-4d0f-aae0-ea2d90d9cb80",
+        "version": [1, 1, 7],
+        "min_engine_version": [1, 26, 10]
+    },
+    "modules": [
+        {
+            "type": "resources",
+            "uuid": "0c668597-ca38-439d-a9a9-464ffa7e3b26",
+            "version": [2, 0, 0]
+        }
+    ],
+    "metadata": {
+        "authors": ["YZBWDLT", "EurluoL", "Tetrisoo"]
+    },
+    "dependencies": [
+        {
+            "uuid": "459363a0-9008-4654-a350-496c402f2223",
+            "version": [1, 0, 0]
+        }
+    ]
+}

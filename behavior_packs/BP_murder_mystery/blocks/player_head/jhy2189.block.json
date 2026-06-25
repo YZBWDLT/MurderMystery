@@ -1,0 +1,50 @@
+{
+    "format_version": "1.21.90",
+    "minecraft:block": {
+        "description": {
+            "identifier": "player_head:jhy2189",
+            "menu_category": { "category": "items", "group": "minecraft:itemGroup.name.skull" },
+            "traits": {
+                "minecraft:placement_direction": {
+                    "enabled_states": ["minecraft:cardinal_direction"],
+                    "y_rotation_offset": 180
+                },
+                "minecraft:placement_position": {
+                    "enabled_states": ["minecraft:block_face"]
+                }
+            }
+        },
+        "components": {
+            "minecraft:geometry": { "identifier": "geometry.custom_player_head", "bone_visibility": { "player_head_wall": "false" } },
+            "minecraft:material_instances": { "*": { "texture": "player_head_jhy2189", "render_method": "alpha_test" } },
+            "minecraft:collision_box": { "origin": [-4, 0, -4], "size": [8, 8, 8] },
+            "minecraft:selection_box": { "origin": [-4, 0, -4], "size": [8, 8, 8] },
+            "minecraft:destructible_by_explosion": { "explosion_resistance": 1 },
+            "minecraft:destructible_by_mining": { "seconds_to_destroy": 1 },
+            "minecraft:liquid_detection": { "detection_rules": [{ "on_liquid_touches": "popped" }] },
+            "minecraft:destruction_particles": { "texture": "soul_sand", "particle_count": 50 }
+        },
+        "permutations": [
+            {
+                "condition": "q.block_state('minecraft:block_face') != 'up' && q.block_state('minecraft:block_face') != 'down'",
+                "components": {
+                    "minecraft:collision_box": { "origin": [0, 4.5, -4], "size": [8, 8, 8] },
+                    "minecraft:selection_box": { "origin": [0, 4, -4], "size": [8, 8, 8] },
+                    "minecraft:geometry": { "identifier": "geometry.custom_player_head", "bone_visibility": { "player_head_ground": "false" } }
+                }
+            },
+            {
+                "condition": "q.block_state('minecraft:cardinal_direction') == 'north' || q.block_state('minecraft:block_face') == 'north'",
+                "components": { "minecraft:transformation": { "rotation": [0, 90, 0] } }
+            },
+            {
+                "condition": "q.block_state('minecraft:cardinal_direction') == 'west' || q.block_state('minecraft:block_face') == 'west'",
+                "components": { "minecraft:transformation": { "rotation": [0, 180, 0] } }
+            },
+            {
+                "condition": "q.block_state('minecraft:cardinal_direction') == 'south' || q.block_state('minecraft:block_face') == 'south'",
+                "components": { "minecraft:transformation": { "rotation": [0, 270, 0] } }
+            }
+        ]
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "hud_actionbar_text": {
+        "offset": [0, 0],
+        "anchor_from": "right_middle",
+        "anchor_to": "right_middle",
+        "alpha": 0.4
+    },
+
+    "hud_title_text/title_frame": {
+        "modifications": [
+            {
+                "array_name": "controls",
+                "operation": "remove",
+                "control_name": "title_background"
+            }
+        ]
+    },
+    "hud_title_text/subtitle_frame": {
+        "modifications": [
+            {
+                "array_name": "controls",
+                "operation": "remove",
+                "control_name": "subtitle_background"
+            }
+        ]
+    },
+    "hud_title_text/title_frame/title": {
+        "shadow": true
+    },
+    "hud_title_text/subtitle_frame/subtitle": {
+        "shadow": true
+    }
+}

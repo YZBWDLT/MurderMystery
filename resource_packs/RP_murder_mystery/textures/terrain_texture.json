@@ -1,0 +1,13 @@
+{
+    "resource_pack_name": "player_head",
+    "texture_data": {
+        "player_head_fudgiethewhale": { "textures": "textures/entity/fudgiethewhale" },
+        "player_head_cheesey": { "textures": "textures/entity/cheesey" },
+        "player_head_yzbwdlt": { "textures": "textures/entity/yzbwdlt" },
+        "player_head_violetmiaw": { "textures": "textures/entity/violetmiaw" },
+        "player_head_jhy2189": { "textures": "textures/entity/jhy2189" },
+        "player_head_freamoluwu": { "textures": "textures/entity/freamoluwu" },
+
+        "empty": { "textures": "textures/empty" }
+    }
+}

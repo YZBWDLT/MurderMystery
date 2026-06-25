@@ -1,0 +1,44 @@
+{
+    "format_version": "1.21.90",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "murder_mystery:npc",
+            "is_experimental": false,
+            "is_spawnable": true,
+            "is_summonable": true,
+            "properties": {
+                "murder_mystery:skin": { "type": "int", "range": [0, 1], "default": 0, "client_sync": true },
+                "murder_mystery:geometry": {
+                    "type": "enum",
+                    "values": ["default", "slim"],
+                    "default": "default",
+                    "client_sync": true
+                }
+            }
+        },
+        "components": {
+            "minecraft:physics": {},
+            "minecraft:collision_box": { "height": 1.8, "width": 0.6 },
+            "minecraft:type_family": { "family": ["npc"] },
+            "minecraft:knockback_resistance": { "value": 1 },
+            "minecraft:persistent": {},
+            "minecraft:health": { "value": 20, "max": 20 },
+            "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
+            "minecraft:damage_sensor": { "triggers": [{ "cause": "all", "deals_damage": "no" }] },
+            "minecraft:equipment": { "slot_drop_chance": [{ "slot": "slot.weapon.mainhand", "drop_chance": 0 }] }
+        },
+        "events": {
+            "murder_mystery:npc_steve": {
+                "set_property": { "murder_mystery:skin": 0, "murder_mystery:geometry": "default" }
+            },
+            "murder_mystery:npc_alex": {
+                "set_property": { "murder_mystery:skin": 1, "murder_mystery:geometry": "slim" }
+            },
+
+            "murder_mystery:remove_immediately": { "add": { "component_groups": ["remove_immediately"] } }
+        },
+        "component_groups": {
+            "remove_immediately": { "minecraft:instant_despawn": {} }
+        }
+    }
+}

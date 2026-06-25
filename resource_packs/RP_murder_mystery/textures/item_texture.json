@@ -1,0 +1,6 @@
+{
+    "resource_pack_name": "test",
+    "texture_data": {
+        "bed_red": { "textures": "textures/items/bed_red" }
+    }
+}

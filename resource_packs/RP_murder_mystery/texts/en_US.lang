@@ -1,0 +1,141 @@
+## ===== Blocks =====
+tile.player_head:yzbwdlt.name=YZBWDLT's Head
+tile.player_head:freamoluwu.name=Freamoluwu's Head
+tile.player_head:jhy2189.name=JHY2189's Head
+tile.player_head:violetmiaw.name=VioletMiaw's Head
+tile.player_head:cheesey.name=Cheesey's Head
+tile.player_head:fudgiethewhale.name=_fudgiethewhale's Head
+
+tile.murder_mystery:mark_spawnpoint.name=Spawn Point
+tile.murder_mystery:mark_goldpoint.name=Gold Point
+
+## ===== Entities =====
+
+### --- NPC ---
+entity.template:npc.name=NPC
+item.spawn_egg.entity.template:npc.name=NPC Spawn Egg
+
+## ===== Item Group =====
+murder_mystery:itemGroup.name.mark_block=Mark Blocks
+
+## ===== Noun Translations =====
+
+### Map name
+map.library=Library
+
+### Mode name
+mode.classic=Classic
+
+### 身份名
+role.innocent=Innocent
+role.detective=Detective
+role.murderer=Murderer
+role.spectator=Spectator
+role.dead=Dead
+role.innocentWithColor=§aInnocent
+role.detectiveWithColor=§bDetective
+role.murdererWithColor=§cMurderer
+role.spectatorWithColor=§7Spectator
+role.deadWithColor=§7Dead
+
+## ===== Game Events Message =====
+
+### Game start countdown
+chat.beforeGameStart.countdown=§eThe game starts in §r%s§e seconds!
+
+### Game started
+title.gameStart.innocent=§cROLE: INNOCENT
+subtitle.gameStart.innocent=§eStay alive as long as posible!
+title.gameStart.detective=§cROLE: DETECTIVE
+subtitle.gameStart.detective=§eFind and kill the murderer!
+title.gameStart.murderer=§cROLE: MURDERER
+subtitle.gameStart.murderer=§eKill all players!
+chat.teaming.innocent=§c§lTeaming with the Murderer is not allowed!
+chat.teaming.detective=§c§lTeaming with the Murderer is not allowed!
+chat.teaming.murderer=§c§lTeaming with the Detective/Innocent is not allowed!
+
+### Murderer get sword
+chat.murderWillGetSword.murder=§eYou get your sword in §c%s§e seconds!
+chat.murderWillGetSword.innocent=§eThe Murderer gets their sword in §c%s§e seconds!
+chat.murderWillGetSword.detective=§eThe Murderer gets their sword in §c%s§e seconds!
+chat.murderGetSword.murder=§eYou have received your sword!
+chat.murderGetSword.innocent=§eThe Murderer has received their sword!
+chat.murderGetSword.detective=§eThe Murderer has received their sword!
+subtitle.murderGetSword.murder=§6Right Cilck §eto throw your sword!
+
+### Murderer killed player
+chat.youDied=§cYOU DIED!§e%s
+title.youDied=§cYOU DIED!
+deathMessage.murderer=§eThe Murderer threw their knife at you!
+deathMessage.murdererStab=§eA Murderer stabbed you!
+deathMessage.murdererShot=§eA Murderer shot you!
+deathMessage.murdererKnife=§eA Murderer threw his Knife at you!
+deathMessage.shotSelf=§eYou managed to shoot yourself!
+deathMessage.player=§eA player killed you!
+deathMessage.manslaughter=§eYou killed an Innocent player!
+deathMessage.void=§eYou fell into the void!
+deathMessage.hitGround=§eYou hit the ground!
+deathMessage.trap=§eYou fell into a trap!
+deathMessage.potion=§eThe poison killed you.
+deathMessage.other=§eYou Died!
+
+### Murderer killed Detective
+chat.detectiveKilled=§6The Detective has been killed!
+subtitle.detectiveKilled=§6The Detective has been killed!
+chat.bowDropped=§6The bow has been dropped!
+subtitle.bowDropped=§6The bow has been dropped!
+
+### Pick up gold
+chat.pickedUpGold=§6Picked up %s gold!
+
+### Innocents collected 10 golds
+chat.10GoldCollected=§eYou collected 10 gold and got an arrow!
+subtitle.10GoldCollected=§a+1 Bow Shot!
+
+### Innocents pick up bow
+chat.bowPicked=§6A player has picked up the bow!
+chat.bowPicked.picker=§aYou picked up the Bow!§6GOAL: §eFind and kill the Murderer!
+
+### Player quit
+chat.detectiveQuit=§6The Detective has left!§eFind the Bow for a chance to kill the Murderer.
+chat.murdererQuit=§aThe previous murderer left, you are now taking their position!
+chat.murdererQuit.gameOver=§aThe murderer left, game over!
+
+### Remind Murder to kill players
+chat.remindMurderer=§eRemember: you are the §cMURDERER§e! Your objective is to kill all players!
+title.remindMurderer=§eYou are the §cMURDERER§e!
+subtitle.remindMurderer=§eReminder: kill all players!
+
+### Game Over
+title.win=§aYOU WIN!
+title.lose=§cYOU LOSE!
+subtitle.win.innocent=§6The murder has been stopped!
+subtitle.win.detective=§6The murder has been stopped!
+subtitle.win.murderer=§6Every survivor died!
+chat.line=§a§l---------------
+chat.title=§l MURDER MYSTERY
+chat.winner.innocent=§lWinner: §r§aPlayers
+chat.winner.detective=§lWinner: §r§aPlayers
+chat.winner.murderer=§lWinner: §r§cMurderer
+chat.detective=§7Detective: §a%s
+chat.murderer=§7Murderer: §a%s§7（§a%s§7Kills）
+chat.hero=§7Hero: §a%s
+
+### Other message
+chat.chestLocked=The chest is locked!
+
+## ===== Infoboard Message =====
+
+infoboard.title=§l§e MURDER MYSTERY 
+infoboard.mapName=Map: §a%s§r
+infoboard.playerCount=Players: §a%s/%s
+infoboard.waiting=Waiting……
+infoboard.countdown=Starting in: §a%s Seconds
+infoboard.mode=Mode: §a%s§r
+infoboard.role=Role: §a%s§r
+infoboard.innocentLeft=Innocents Left: §a%s§r
+infoboard.timeLeft=Time Left: §a%s§r
+infoboard.kills=Kills: §a%s§r
+infoboard.detectiveAlive=Detective: §aAlive§r
+infoboard.bowNotDropped=Bow: §aNot Dropped§r
+infoboard.bowDropped=Bow: §cDropped§r

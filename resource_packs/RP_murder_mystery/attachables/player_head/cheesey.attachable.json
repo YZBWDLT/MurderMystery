@@ -1,0 +1,13 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "player_head:cheesey",
+
+            "render_controllers": ["controller.render.default"],
+            "materials": { "default": "armor" },
+            "textures": { "default": "textures/entity/cheesey" },
+            "geometry": { "default": "geometry.custom_player_head.entity" }
+        }
+    }
+}

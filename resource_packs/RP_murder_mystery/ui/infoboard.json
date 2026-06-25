@@ -1,0 +1,51 @@
+{
+    "namespace": "infoboard",
+    "main": {
+        "type": "panel",
+        "size": ["100%cm", "100%c"],
+        "anchor_from": "right_middle",
+        "anchor_to": "right_middle",
+        "controls": [
+            {
+                "background_main@infoboard.background_main": {}
+            },
+            {
+                "background_title@infoboard.background_title": {}
+            }
+        ]
+    },
+    "background_main": {
+        "type": "image",
+        "texture": "textures/ui/Black",
+        "alpha": 0.4,
+        "size": ["100%cm", "100%c"],
+        "anchor_from": "top_middle",
+        "anchor_to": "top_middle",
+        "controls": [
+            {
+                "label@infoboard.label": {}
+            }
+        ]
+    },
+    "background_title": {
+        "type": "image",
+        "texture": "textures/ui/Black",
+        "alpha": 0.6,
+        "size": ["100%sm", 9],
+        "anchor_from": "top_middle",
+        "anchor_to": "top_middle"
+    },
+    "label": {
+        "type": "label",
+        "text": "#text - '[infoboard]'",
+        "anchor_from": "top_left",
+        "anchor_to": "top_left",
+        "layer": 1,
+        "bindings": [
+            {
+                "binding_name": "#hud_title_text_string",
+                "binding_name_override": "#text"
+            }
+        ]
+    }
+}

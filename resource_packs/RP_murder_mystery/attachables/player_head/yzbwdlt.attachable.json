@@ -1,0 +1,13 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "player_head:yzbwdlt",
+            
+            "render_controllers": [ "controller.render.default" ],
+            "materials": { "default": "armor" },
+            "textures": { "default": "textures/entity/yzbwdlt" },
+            "geometry": { "default": "geometry.custom_player_head.entity" }
+        }
+    }
+}

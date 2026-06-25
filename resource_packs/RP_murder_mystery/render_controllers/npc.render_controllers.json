@@ -1,0 +1,18 @@
+{
+    "format_version": "1.10.0",
+    "render_controllers": {
+        "controller.render.custom_npc": {
+            "textures": ["array.skins[variable.skin]"],
+            "materials": [{ "*": "material.default" }],
+            "geometry": "array.models[variable.geometry]",
+            "arrays": {
+                "textures": {
+                    "array.skins": ["texture.skin_0", "texture.skin_1"]
+                },
+                "geometries": {
+                    "array.models": ["geometry.default", "geometry.slim"]
+                }
+            }
+        }
+    }
+}
