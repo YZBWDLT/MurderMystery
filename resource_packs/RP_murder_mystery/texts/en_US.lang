@@ -12,8 +12,14 @@ tile.murder_mystery:mark_goldpoint.name=Gold Point
 ## ===== Entities =====
 
 ### --- NPC ---
-entity.template:npc.name=NPC
-item.spawn_egg.entity.template:npc.name=NPC Spawn Egg
+entity.murder_mystery:npc.name=NPC
+item.spawn_egg.entity.murder_mystery:npc.name=NPC Spawn Egg
+entity.murder_mystery:fake_player.name=Fake Player
+item.spawn_egg.entity.murder_mystery:fake_player.name=Fake Player Spawn Egg
+entity.murder_mystery:dead_player.name=Dead Player
+item.spawn_egg.entity.murder_mystery:dead_player.name=Dead Player Spawn Egg
+entity.murder_mystery:item_bow.name=Bow
+item.spawn_egg.entity.murder_mystery:item_bow.name=Bow Spawn Egg
 
 ## ===== Item Group =====
 murder_mystery:itemGroup.name.mark_block=Mark Blocks
@@ -26,7 +32,7 @@ map.library=Library
 ### Mode name
 mode.classic=Classic
 
-### 身份名
+### Role name
 role.innocent=Innocent
 role.detective=Detective
 role.murderer=Murderer
@@ -109,9 +115,11 @@ subtitle.remindMurderer=§eReminder: kill all players!
 ### Game Over
 title.win=§aYOU WIN!
 title.lose=§cYOU LOSE!
-subtitle.win.innocent=§6The murder has been stopped!
-subtitle.win.detective=§6The murder has been stopped!
-subtitle.win.murderer=§6Every survivor died!
+title.gameOver=§cGAME OVER!
+subtitle.playerWin=§6The Murderer has been stopped!
+subtitle.playerWin.timeOut=§6The Murderer ran out of time!
+subtitle.murdererWin=§6Every survivor died!
+subtitle.murdererLose.timeOut=§6Time ran out!
 chat.line=§a§l---------------
 chat.title=§l MURDER MYSTERY
 chat.winner.innocent=§lWinner: §r§aPlayers

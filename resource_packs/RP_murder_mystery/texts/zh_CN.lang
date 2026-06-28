@@ -12,8 +12,14 @@ tile.murder_mystery:mark_goldpoint.name=金生成点
 ## ===== 实体 =====
 
 ### --- NPC ---
-entity.template:npc.name=NPC
-item.spawn_egg.entity.template:npc.name=NPC 刷怪蛋
+entity.murder_mystery:npc.name=NPC
+item.spawn_egg.entity.murder_mystery:npc.name=NPC 刷怪蛋
+entity.murder_mystery:fake_player.name=假玩家
+item.spawn_egg.entity.murder_mystery:fake_player.name=假玩家 刷怪蛋
+entity.murder_mystery:dead_player.name=死去的玩家
+item.spawn_egg.entity.murder_mystery:dead_player.name=死去的玩家 刷怪蛋
+entity.murder_mystery:item_bow.name=弓
+item.spawn_egg.entity.murder_mystery:item_bow.name=弓 刷怪蛋
 
 ## ===== 物品组 =====
 murder_mystery:itemGroup.name.mark_block=方块标记
@@ -89,8 +95,8 @@ subtitle.bowDropped=§6弓已掉落！
 chat.pickedUpGold=§6拾起了%s块金锭！
 
 ### 平民集齐 10 个金锭
-chat.10GoldCollected=§e你收集了10块金锭，获得一支箭矢！
-subtitle.10GoldCollected=§a获得一支箭矢！
+chat.10GoldCollected=§e你收集了10块金锭，获得一支箭！
+subtitle.10GoldCollected=§a获得一支箭！
 
 ### 平民拾起弓
 chat.bowPicked=§6一位玩家拿起了弓！
@@ -109,9 +115,11 @@ subtitle.remindMurderer=§e别忘了：杀死所有玩家！
 ### 游戏结束
 title.win=§a你赢了！
 title.lose=§c你输了！
-subtitle.win.innocent=§6杀手已被阻止！
-subtitle.win.detective=§6杀手已被阻止！
-subtitle.win.murderer=§6所有幸存者都死了！
+title.gameOver=§c游戏结束！
+subtitle.playerWin=§6杀手已被阻止！
+subtitle.playerWin.timeOut=§6杀手已经没有时间了！
+subtitle.murdererWin=§6所有幸存者都死了！
+subtitle.murdererLose.timeOut=§6时间耗尽！
 chat.line=§a§l---------------
 chat.title=§l     密室杀手
 chat.winner.innocent=§l胜利者：§r§a所有平民与侦探
