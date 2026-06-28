@@ -1,0 +1,25 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "murder_mystery:item_bow",
+            "render_controllers": ["controller.render.default"],
+            "geometry": {
+                "default": "geometry.item_bow"
+            },
+            "materials": {
+                "default": "entity_alphatest"
+            },
+            "textures": {
+                "default": "textures/entity/item_bow"
+            },
+
+            "scripts": {
+                "animate": ["spin"]
+            },
+            "animations": {
+                "spin": "animation.item_bow.spin"
+            }
+        }
+    }
+}

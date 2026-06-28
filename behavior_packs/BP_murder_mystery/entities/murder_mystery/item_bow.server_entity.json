@@ -1,0 +1,22 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "murder_mystery:item_bow",
+            "is_experimental": false,
+            "is_spawnable": false,
+            "is_summonable": true
+        },
+        "components": {
+            "minecraft:physics": {},
+            "minecraft:collision_box": { "height": 1.1, "width": 1.1 },
+            "minecraft:damage_sensor": { "triggers": [{ "cause": "all", "deals_damage": "no" }] },
+            "minecraft:type_family": { "family": ["item_bow"] },
+            "minecraft:interact": {
+                "interactions": [{ "swing": true }]
+            }
+        },
+        "events": {},
+        "component_groups": {}
+    }
+}
