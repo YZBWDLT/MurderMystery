@@ -1,0 +1,42 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "murder_mystery:dead_player",
+            "render_controllers": ["controller.render.dead_player"],
+            "materials": { "default": "entity_alphatest" },
+            "textures": {
+                "steve": "textures/entity/dead_player/steve",
+                "alex": "textures/entity/dead_player/alex",
+                "ari": "textures/entity/dead_player/ari",
+                "kai": "textures/entity/dead_player/kai",
+                "noor": "textures/entity/dead_player/noor",
+                "sunny": "textures/entity/dead_player/sunny",
+                "zuri": "textures/entity/dead_player/zuri",
+                "efe": "textures/entity/dead_player/efe",
+                "makena": "textures/entity/dead_player/makena"
+            },
+            "geometry": {
+                "steve": "geometry.murder_mystery_npc.default",
+                "alex": "geometry.murder_mystery_npc.slim",
+                "ari": "geometry.murder_mystery_npc.slim",
+                "kai": "geometry.murder_mystery_npc.slim",
+                "noor": "geometry.murder_mystery_npc.slim",
+                "sunny": "geometry.murder_mystery_npc.default",
+                "zuri": "geometry.murder_mystery_npc.default",
+                "efe": "geometry.murder_mystery_npc.default",
+                "makena": "geometry.murder_mystery_npc.default"
+            },
+            "spawn_egg": { "base_color": "#ffffff", "overlay_color": "#000000" },
+            "scripts": {
+                "scale": "0.9375",
+                "pre_animation": ["variable.skin = query.property('murder_mystery:skin');"],
+                "animate": ["lie"]
+            },
+            "animations": {
+                "lie": "animation.dead_player.lie"
+            },
+            "enable_attachables": true
+        }
+    }
+}

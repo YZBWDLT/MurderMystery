@@ -1,0 +1,38 @@
+{
+    "format_version": "1.10.0",
+    "render_controllers": {
+        "controller.render.dead_player": {
+            "textures": ["array.skins[variable.skin]"],
+            "materials": [{ "*": "material.default" }],
+            "geometry": "array.models[variable.skin]",
+            "arrays": {
+                "textures": {
+                    "array.skins": [
+                        "texture.steve",
+                        "texture.alex",
+                        "texture.ari",
+                        "texture.kai",
+                        "texture.noor",
+                        "texture.sunny",
+                        "texture.zuri",
+                        "texture.efe",
+                        "texture.makena"
+                    ]
+                },
+                "geometries": {
+                    "array.models": [
+                        "geometry.steve",
+                        "geometry.alex",
+                        "geometry.ari",
+                        "geometry.kai",
+                        "geometry.noor",
+                        "geometry.sunny",
+                        "geometry.zuri",
+                        "geometry.efe",
+                        "geometry.makena"
+                    ]
+                }
+            }
+        }
+    }
+}

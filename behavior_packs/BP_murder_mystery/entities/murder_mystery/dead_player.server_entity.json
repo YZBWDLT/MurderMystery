@@ -1,0 +1,37 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "murder_mystery:dead_player",
+            "is_experimental": false,
+            "is_spawnable": true,
+            "is_summonable": true,
+            "properties": {
+                "murder_mystery:skin": {
+                    "type": "int",
+                    "range": [0, 8],
+                    "default": 0,
+                    "client_sync": true
+                }
+            }
+        },
+        "components": {
+            "minecraft:physics": {},
+            "minecraft:collision_box": { "height": 0.2, "width": 0.6 },
+            "minecraft:type_family": { "family": ["dead_player"] },
+            "minecraft:knockback_resistance": { "value": 1 },
+            "minecraft:persistent": {},
+            "minecraft:health": { "value": 20, "max": 20 },
+            "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
+            "minecraft:damage_sensor": { "triggers": [{ "cause": "all", "deals_damage": "no" }] }
+        },
+        "events": {
+            "minecraft:entity_spawned": {
+                "set_property": {
+                    "murder_mystery:skin": "math.random_integer(0, 8)"
+                }
+            }
+        },
+        "component_groups": {}
+    }
+}
