@@ -2,14 +2,19 @@
 // 实现密室杀手的主体逻辑。
 
 // TODO LIST:
-// - 实现侦探和平民杀死其他玩家，包括误杀判断
-// - 实现侦探被杀死后掉落弓
-// - 实现玩家捡起弓后完成角色转换
-// - 实现杀死玩家后显示尸体和遗言
-// - 实现杀手飞刀和穿过玻璃板的破碎效果
 // - 实现游戏结束检查
+//   - 实现英雄、杀手和侦探的提示
+//   - 在游戏结束 10 秒后，先尝试移除多余实体再重置系统
+// - 实现侦探掉进虚空等情况时，弓掉落到最近的重生点上
+// - 实现旁观者玩家的出界判断
+// - 实现侦探补箭
+// - 实现杀手飞刀和穿过玻璃板的破碎效果
 // - 实现杀手长时间未击杀玩家的提示
 // - 实现神秘药水效果
+// - 实现在只剩余 1 名平民/侦探的时候对杀手的额外 buff 加成
+// - 【待定】实现杀死玩家后显示遗言
+// - 移除假玩家的名字显示
+// - 实现设置 UI
 
 // #region 模块导入
 import * as minecraft from "@minecraft/server";
@@ -123,6 +128,15 @@ interface PlayerData {
 /** 密室杀手的金锭 ID。 */
 const goldId = "murder_mystery:gold_ingot";
 
+/** 密室杀手的弓掉落物 ID。 */
+const bowEntityId = "murder_mystery:item_bow";
+
+/** 尸体 ID。 */
+const deadPlayerId = "murder_mystery:dead_player";
+
+/** 判断实体是否为玩家。 */
+const isPlayer = lib.PlayerUtils.isPlayer;
+
 // #endregion
 // #region 系统
 
@@ -163,6 +177,21 @@ type MurderMysteryBeforeGameInfo = {
     /** 游戏是否已经开始倒计时。 */
     countdownStarted: boolean;
 };
+
+/** 游戏结束的原因。 */
+enum MurderMysteryGameOverReason {
+    /** 所有玩家死了。 */
+    AllPlayersDied = "AllPlayersDied",
+
+    /** 杀手死了。 */
+    MurdererDied = "MurdererDied",
+
+    /** 杀手离开了游戏。 */
+    MurdererQuit = "MurdererQuit",
+
+    /** 超时。 */
+    TimeOut = "TimeOut",
+}
 
 /** 密室杀手系统，通过系统调控组件的运行，并获取游戏运行的方方面面。 */
 class MurderMysterySystem {
@@ -251,6 +280,9 @@ class MurderMysterySystem {
     /** 是否已给予杀手刀。 */
     murdererGetSword = false;
 
+    /** 是否是一个有效的系统。在游戏结束后，该系统将变得无效化。 */
+    isValid = true;
+
     // #endregion
     // #region - 游戏阶段转换
 
@@ -267,14 +299,27 @@ class MurderMysterySystem {
     /** 令游戏进入加载阶段。 */
     enterLoadStage() {}
 
-    /** 令游戏进入等待阶段。 */
+    /** 令游戏进入等待阶段。
+     * @description 转换阶段并移除所有正在监听的时间线和事件。
+     * @description 初始化所有玩家。
+     * @description 移除所有掉落物、尸体和侦探的弓。
+     * @description 注册等待阶段的组件。
+     * @description 获取地图内所有标记方块的坐标。
+     */
     enterWaitingStage() {
+        // 转换阶段并移除所有正在监听的时间线和事件
+        lib.gameSystem.unsubscribeAllTimelines();
+        lib.gameSystem.unsubscribeAllEvents();
+        this.gameStage = GameStage.WaitingStage;
+
         // 初始化所有玩家
         const players = this.getPlayersBeforeGame();
         players.forEach(player => this.initPlayer(player));
 
-        // 移除掉落物
+        // 移除掉落物、尸体和侦探的弓
         lib.ItemUtils.removeEntity();
+        lib.EntityUtils.getType(deadPlayerId).forEach(deadPlayer => deadPlayer.remove());
+        lib.EntityUtils.getType(bowEntityId).forEach(bowEntity => bowEntity.remove());
 
         // 注册组件
         this.general();
@@ -288,6 +333,8 @@ class MurderMysterySystem {
     /** 令游戏进入游戏阶段。
      * @description 转换阶段并移除所有正在监听的时间线和事件。
      * @description 随机传送玩家。
+     * @description 移除所有掉落物、尸体和侦探的弓。
+     * @description 注册游戏阶段的组件。
      */
     enterGamingStage() {
         // 转换阶段并移除所有正在监听的时间线和事件
@@ -314,13 +361,15 @@ class MurderMysterySystem {
             // 这里，因为玩家总数可能超出安排的重生点数量，可能会导致locations[index]返回undefined，因此需要进行限制
             const location = locations[index % maxLocationCount];
             player.teleport(location);
-            if (lib.PlayerUtils.isPlayer(player)) {
+            if (isPlayer(player)) {
                 player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getOverworld() });
             }
         });
 
-        // 移除掉落物
+        // 移除掉落物、尸体和侦探的弓
         lib.ItemUtils.removeEntity();
+        lib.EntityUtils.getType(deadPlayerId).forEach(deadPlayer => deadPlayer.remove());
+        lib.EntityUtils.getType(bowEntityId).forEach(bowEntity => bowEntity.remove());
 
         // 注册必选组件
         this.general();
@@ -330,6 +379,7 @@ class MurderMysterySystem {
         MurderMysteryComponents.generateGold(this);
         MurderMysteryComponents.playerCollectGold(this);
         MurderMysteryComponents.playerKillTest(this);
+        MurderMysteryComponents.playerPickupBowTest(this);
         MurderMysteryComponents.spectatorOutOfBorderTest(this);
         MurderMysteryComponents.playerLeaveTest(this);
         MurderMysteryComponents.playerJoinTest(this);
@@ -340,8 +390,85 @@ class MurderMysterySystem {
         if (preventOpeningChest) MurderMysteryComponents.preventOpeningChest(preventOpeningChest);
     }
 
-    /** 令游戏进入结束阶段。 */
-    enterGameOverStage(murdererWin = false) {}
+    /** 令游戏进入结束阶段。
+     * @description 转换阶段并移除所有正在监听的时间线和事件。
+     * @description 通知玩家游戏结束。
+     * @description 注册结束阶段的组件。
+     */
+    enterGameOverStage(reason: MurderMysteryGameOverReason) {
+        // 转换阶段并移除所有正在监听的时间线和事件
+        lib.gameSystem.unsubscribeAllTimelines();
+        lib.gameSystem.unsubscribeAllEvents();
+        this.gameStage = GameStage.GameOverStage;
+        minecraft.system.runTimeout(() => {
+            this.isValid = false;
+        }, 200);
+
+        // 提示玩家胜负情况
+        const playerWinList: Record<MurderMysteryGameOverReason, boolean> = {
+            AllPlayersDied: false,
+            MurdererDied: true,
+            MurdererQuit: true,
+            TimeOut: true,
+        };
+        const playerWin = playerWinList[reason];
+        this.players.allPlayers.forEach(playerData => {
+            if (!isPlayer(playerData.player)) return;
+
+            // 平民/侦探
+            if (
+                playerData.role === MurderMysteryPlayerRole.Detective ||
+                playerData.role === MurderMysteryPlayerRole.Innocent
+            ) {
+                /** 返回的副标题。 */
+                const subtitle: minecraft.RawMessage = (() => {
+                    // 如果是因为超时获胜的，返回超时信息
+                    if (reason === MurderMysteryGameOverReason.TimeOut)
+                        return { translate: "subtitle.playerWin.timeOut" };
+                    // 如果正常获胜，返回一般的获胜信息
+                    if (playerWin) return { translate: "subtitle.playerWin" };
+                    // 否则，返回失败信息
+                    return { translate: "subtitle.murdererWin" };
+                })();
+                lib.PlayerUtils.sendMessage(playerData.player, {
+                    title: { translate: `${playerWin ? "title.win" : "title.lose"}` },
+                    subtitle: subtitle,
+                    titleOptions: { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 },
+                });
+                return;
+            }
+
+            // 杀手
+            if (playerData.role === MurderMysteryPlayerRole.Murderer) {
+                /** 返回的副标题。 */
+                const subtitle: minecraft.RawMessage = (() => {
+                    // 如果是因为超时失败的，返回超时信息
+                    if (reason === MurderMysteryGameOverReason.TimeOut)
+                        return { translate: "subtitle.murdererLose.timeOut" };
+                    // 如果正常失败，返回一般的失败信息
+                    if (playerWin) return { translate: "subtitle.playerWin" };
+                    // 否则，返回失败信息
+                    return { translate: "subtitle.murdererWin" };
+                })();
+                lib.PlayerUtils.sendMessage(playerData.player, {
+                    // 是否获胜和平民反过来
+                    title: { translate: `${playerWin ? "title.lose" : "title.win"}` },
+                    subtitle: subtitle,
+                    titleOptions: { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 },
+                });
+            }
+        });
+
+        // 如果是因为杀手退出导致游戏结束，则提示所有玩家
+        if (reason === MurderMysteryGameOverReason.MurdererQuit)
+            this.players.allPlayers.forEach(playerData => {
+                if (isPlayer(playerData.player))
+                    playerData.player.sendMessage({ translate: "chat.murdererQuit.gameOver" });
+            });
+
+        // 注册组件
+        this.general();
+    }
 
     // #endregion
     // #region - 地图管理
@@ -398,18 +525,20 @@ class MurderMysterySystem {
         // 根据玩家角色向玩家信息数组推入不同玩家
         const playerRole = playerData.role;
         this.players.allPlayers.push(murderMysteryPlayer);
-        this.alivePlayers.allPlayers.push(murderMysteryPlayer);
         switch (playerRole) {
             case MurderMysteryPlayerRole.Innocent:
                 this.players.innocent.push(murderMysteryPlayer);
+                this.alivePlayers.allPlayers.push(murderMysteryPlayer);
                 this.alivePlayers.innocent.push(murderMysteryPlayer);
                 break;
             case MurderMysteryPlayerRole.Murderer:
                 this.players.murderer.push(murderMysteryPlayer);
+                this.alivePlayers.allPlayers.push(murderMysteryPlayer);
                 this.alivePlayers.murderer.push(murderMysteryPlayer);
                 break;
             case MurderMysteryPlayerRole.Detective:
                 this.players.detective.push(murderMysteryPlayer);
+                this.alivePlayers.allPlayers.push(murderMysteryPlayer);
                 this.alivePlayers.detective.push(murderMysteryPlayer);
                 break;
             case MurderMysteryPlayerRole.Spectator:
@@ -449,6 +578,15 @@ class MurderMysterySystem {
         }
     }
 
+    /** 游戏结束检测。 */
+    gameOverTest(reason: MurderMysteryGameOverReason) {
+        // 当杀手数量为 0 时，判定平民/侦探获胜
+        if (this.alivePlayers.murderer.length === 0) this.enterGameOverStage(reason);
+        // 当所有存活玩家全是杀手时，判定杀手获胜
+        else if (this.alivePlayers.murderer.length === this.alivePlayers.allPlayers.length)
+            this.enterGameOverStage(reason);
+    }
+
     /** 在开始游戏前获取可能参与游戏的有效玩家。 */
     getPlayersBeforeGame() {
         const players = minecraft.world.getPlayers();
@@ -461,18 +599,28 @@ class MurderMysterySystem {
         this.removePlayer(playerData);
         playerData.role = toRole;
         const isDead = playerData.isDead;
+        this.players.allPlayers.push(playerData);
         switch (toRole) {
             case MurderMysteryPlayerRole.Innocent:
                 this.players.innocent.push(playerData);
-                if (!isDead) this.alivePlayers.innocent.push(playerData);
+                if (!isDead) {
+                    this.alivePlayers.allPlayers.push(playerData);
+                    this.alivePlayers.innocent.push(playerData);
+                }
                 break;
             case MurderMysteryPlayerRole.Murderer:
                 this.players.murderer.push(playerData);
-                if (!isDead) this.alivePlayers.murderer.push(playerData);
+                if (!isDead) {
+                    this.alivePlayers.allPlayers.push(playerData);
+                    this.alivePlayers.murderer.push(playerData);
+                }
                 break;
             case MurderMysteryPlayerRole.Detective:
                 this.players.detective.push(playerData);
-                if (!isDead) this.alivePlayers.detective.push(playerData);
+                if (!isDead) {
+                    this.alivePlayers.allPlayers.push(playerData);
+                    this.alivePlayers.detective.push(playerData);
+                }
                 break;
             case MurderMysteryPlayerRole.Spectator:
                 this.players.spectator.push(playerData);
@@ -490,11 +638,11 @@ class MurderMysterySystem {
 
         const { location, facingLocation } = this.mapData.description.waitHall;
         player.teleport(location, { facingLocation });
-        if (lib.PlayerUtils.isPlayer(player)) {
+        if (isPlayer(player)) {
             player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getDefault() });
         }
 
-        if (lib.PlayerUtils.isPlayer(player)) {
+        if (isPlayer(player)) {
             player.setGameMode(minecraft.GameMode.Adventure);
         }
     }
@@ -516,7 +664,7 @@ class MurderMysterySystem {
         })();
         const texts: minecraft.RawMessage[] = [
             { translate: "infoboard.title" },
-            { text: `§8${this.gameId}` },
+            { text: `§7${lib.JSUtils.timeDisplay.formatDateToYYMMDD()} §8${this.gameId}` },
             { text: `` },
             {
                 translate: "infoboard.mapName",
@@ -570,6 +718,9 @@ type MurderMysteryGameSettings = {
 
     /** 金锭的生成间隔是否会随玩家人数变化。若设定为`true`，则将金锭生成间隔等比例放大`最大玩家数/玩家数`倍。 */
     goldIntervalMultipliedByPlayerAmount: boolean;
+
+    /** 平民如何拾取弓。可以选择右键拾取或接近拾取。 */
+    pickupBowMethod: "rightClick" | "nearby";
 };
 
 type MurderMysteryMiscellaneousSettings = {
@@ -594,6 +745,7 @@ class MurderMysterySettings {
         murdererGetSwordDelay: 15,
         generateGoldInterval: 10,
         goldIntervalMultipliedByPlayerAmount: true,
+        pickupBowMethod: "nearby",
     };
 
     /** 杂项设置，控制游戏中一些其他内容的设置项。 */
@@ -755,12 +907,14 @@ class MurderMysteryComponents {
 
     /** 游戏计时器。
      * @description 每秒进行倒计时。
+     * @description 若超时则直接游戏结束
      */
     static gameTimer(system: MurderMysterySystem) {
         lib.gameSystem.subscribeTimeline(
             "gameTimer",
             () => {
                 system.timeLeft--;
+                if (system.timeLeft <= 0) system.enterGameOverStage(MurderMysteryGameOverReason.TimeOut);
             },
             20
         );
@@ -780,7 +934,7 @@ class MurderMysteryComponents {
                 // 当给杀手刀剩余 1-5 秒时，对所有玩家提示
                 if (murdererGetSwordTimeLeft > 0 && murdererGetSwordTimeLeft <= 5) {
                     system.alivePlayers.allPlayers.forEach(playerData => {
-                        if (!lib.PlayerUtils.isPlayer(playerData.player)) return;
+                        if (!isPlayer(playerData.player)) return;
                         lib.PlayerUtils.sendMessage(playerData.player, {
                             message: {
                                 translate: `chat.murderWillGetSword.${playerData.role}`,
@@ -793,7 +947,7 @@ class MurderMysteryComponents {
                 // 当倒计时结束后，给予杀手剑并对所有玩家提示
                 if (murdererGetSwordTimeLeft <= 0) {
                     system.alivePlayers.allPlayers.forEach(playerData => {
-                        if (!lib.PlayerUtils.isPlayer(playerData.player)) return;
+                        if (!isPlayer(playerData.player)) return;
                         lib.PlayerUtils.sendMessage(playerData.player, {
                             message: {
                                 translate: `chat.murderGetSword.${playerData.role}`,
@@ -844,7 +998,7 @@ class MurderMysteryComponents {
             minecraft.world.afterEvents.entityItemPickup,
             event => {
                 const { entity: player, items: goldIngot } = event;
-                if (!lib.PlayerUtils.isPlayer(player)) return;
+                if (!isPlayer(player)) return;
                 player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0].amount}`] });
                 const inventoryUtils = lib.ItemUtils.inventory;
                 // 锁定玩家的金锭到快捷栏的最后一位
@@ -861,31 +1015,17 @@ class MurderMysteryComponents {
                         }
                     });
                 // 如果玩家集齐 10 个金锭，则给予一把弓和一根箭
-                const playerData = system.getPlayer(player);
-                if (!playerData) return;
-                if (
-                    playerData.role !== MurderMysteryPlayerRole.Innocent &&
-                    playerData.role !== MurderMysteryPlayerRole.Murderer
-                )
-                    return;
-                const goldAmount = inventoryUtils.getAmount(player, { typeId: goldId });
-                if (goldAmount < 10) return;
-                inventoryUtils.set(player, 0, "minecraft:bow", { itemLock: minecraft.ItemLockMode.slot });
-                inventoryUtils.add(player, "minecraft:arrow", { itemLock: minecraft.ItemLockMode.slot });
-                lib.ItemUtils.removeItem(player, goldId, -1, 10);
-                lib.PlayerUtils.sendMessage(player, {
-                    message: { translate: "chat.10GoldCollected" },
-                    title: "§1",
-                    subtitle: { translate: "subtitle.10GoldCollected" },
-                    titleOptions: { fadeInDuration: 0, stayDuration: 60, fadeOutDuration: 20 },
-                });
+                if (inventoryUtils.getAmount(player, { typeId: goldId }) < 10) return;
+                system.getPlayer(player)?.getNormalBow();
             },
             { entityFilter: { type: "minecraft:player" }, itemFilter: { includeTypes: [goldId] } }
         );
     }
 
     /** 玩家击杀检测。
-     * @description 当杀手手持剑击打其他玩家时，将其他玩家标记为已死亡
+     * @description 当杀手手持剑击打其他玩家时，将其他玩家标记为已死亡。
+     * @description 当杀手被射中时，杀手死亡，游戏结束。
+     * @description 当侦探或平民被射中时，标记死亡，并奖励杀手/惩罚误杀之人。
      */
     static playerKillTest(system: MurderMysterySystem) {
         // 击打检测，仅杀手拿剑时可以击杀其他玩家
@@ -900,9 +1040,86 @@ class MurderMysteryComponents {
             // 杀手必须拿剑
             const attackerMainhandItem = lib.ItemUtils.equipment.getItem(attacker, minecraft.EquipmentSlot.Mainhand);
             if (attackerMainhandItem?.typeId !== "minecraft:iron_sword") return;
-            // 被击杀者标记为已死亡
-            victimData.setDead();
+            // 记录击杀
+            attackerData.killPlayer(victimData);
         });
+        // 弓箭射杀检测
+        lib.gameSystem.subscribeEvent("playerKillTestArrow", minecraft.world.afterEvents.projectileHitEntity, event => {
+            const { projectile, source: attacker } = event;
+            if (projectile.typeId !== "minecraft:arrow") return;
+            if (!attacker) return;
+            const attackerData = system.getPlayer(attacker);
+            if (!attackerData) return;
+            const victim = event.getEntityHit().entity;
+            if (!victim) return;
+            const victimData = system.getPlayer(victim);
+            if (!victimData) return;
+            // 考虑各个角色被射中时：
+            switch (victimData.role) {
+                case MurderMysteryPlayerRole.Murderer:
+                    attackerData.killPlayer(victimData, DeathType.Player);
+                    break;
+                case MurderMysteryPlayerRole.Innocent:
+                case MurderMysteryPlayerRole.Detective:
+                    // 如果平民/侦探被杀手杀死，则记录为杀手射杀
+                    if (attackerData.role === MurderMysteryPlayerRole.Murderer)
+                        attackerData.killPlayer(victimData, DeathType.MurdererShot);
+                    // 如果平民/侦探被自己杀死，则记录为自杀
+                    else if (attacker.id === victim.id) attackerData.killPlayer(victimData, DeathType.ShotSelf);
+                    // 如果平民/侦探被其他人杀死，则记录为其他玩家射杀，并将射杀之人处死
+                    else {
+                        attackerData.killPlayer(victimData, DeathType.Player);
+                        attackerData.setDead(DeathType.Manslaughter);
+                    }
+                    break;
+                case MurderMysteryPlayerRole.Spectator:
+                    break;
+            }
+        });
+    }
+
+    /** 玩家拾取弓检测。 */
+    static playerPickupBowTest(system: MurderMysterySystem) {
+        const pickupBowMethod = system.settings.game.pickupBowMethod;
+        const isAliveInnocentData = (
+            playerData: MurderMysteryPlayer | undefined
+        ): playerData is MurderMysteryPlayer => {
+            if (!playerData) return false;
+            if (playerData.role !== MurderMysteryPlayerRole.Innocent) return false;
+            if (playerData.isDead) return false;
+            return true;
+        };
+        if (pickupBowMethod === "nearby")
+            lib.gameSystem.subscribeTimeline(
+                "playerGetBowTestNearby",
+                () => {
+                    const bowEntity = lib.EntityUtils.getType(bowEntityId)[0];
+                    if (!bowEntity) return;
+                    // 获取拾取者（必须为存活的平民）
+                    const picker = [
+                        ...lib.EntityUtils.getNearby("minecraft:player", bowEntity.location, 1.5),
+                        ...lib.EntityUtils.getNearby("murder_mystery:fake_player", bowEntity.location, 1.5),
+                    ].find(player => isAliveInnocentData(system.getPlayer(player)));
+                    if (!picker) return;
+                    // 令拾取者拾取弓
+                    system.getPlayer(picker)?.pickupBow(bowEntity);
+                },
+                3
+            );
+        if (pickupBowMethod === "rightClick")
+            lib.gameSystem.subscribeEvent(
+                "playerGetBowTestRightClick",
+                minecraft.world.afterEvents.playerInteractWithEntity,
+                event => {
+                    const { player: picker, target: bowEntity } = event;
+                    if (bowEntity.typeId !== bowEntityId) return;
+                    // 获取拾取者（必须为存活的平民）
+                    const pickerData = system.getPlayer(picker);
+                    if (!isAliveInnocentData(pickerData)) return;
+                    // 令拾取者拾取弓
+                    pickerData.pickupBow(bowEntity);
+                }
+            );
     }
 
     /** 旁观玩家出界检测。 */
@@ -925,36 +1142,28 @@ class MurderMysteryComponents {
                 if (playerData.role === MurderMysteryPlayerRole.Detective) {
                     playerData.dropBow(false);
                     system.alivePlayers.innocent.forEach(innocent => {
-                        if (!lib.PlayerUtils.isPlayer(innocent.player)) return;
+                        if (!isPlayer(innocent.player)) return;
                         innocent.player.sendMessage({ translate: "chat.detectiveQuit" });
                     });
+                    // 尝试检查游戏是否已结束
+                    system.gameOverTest(MurderMysteryGameOverReason.AllPlayersDied);
                     return;
                 }
                 // 如果退出玩家是杀手：
                 if (playerData.role === MurderMysteryPlayerRole.Murderer) {
-                    const gameOver = () => {
-                        system.enterGameOverStage();
-                        system.players.allPlayers.forEach(playerData => {
-                            if (lib.PlayerUtils.isPlayer(playerData.player)) {
-                                playerData.player.sendMessage({ translate: "chat.murdererQuit.gameOver" });
-                            }
-                        });
-                    };
-                    // 如果已给刀，则游戏结束
-                    if (system.murdererGetSword) {
-                        gameOver();
+                    // 如果已给刀，或者未给刀但只剩下侦探时，则游戏结束
+                    if (
+                        system.murdererGetSword ||
+                        system.alivePlayers.detective.length === system.alivePlayers.allPlayers.length
+                    ) {
+                        system.gameOverTest(MurderMysteryGameOverReason.MurdererQuit);
                         return;
                     }
-                    // 如果未给刀，但不再有平民，则游戏结束
-                    if (system.alivePlayers.innocent.length === 0) {
-                        gameOver();
-                        return;
-                    }
-                    // 如果未给刀则重新分配一个杀手
+                    // 否则，重新分配一个杀手
                     const innocents = system.alivePlayers.innocent;
                     const randomInnocent = lib.JSUtils.array.randomElement(innocents);
                     system.transformRole(randomInnocent, MurderMysteryPlayerRole.Murderer);
-                    if (lib.PlayerUtils.isPlayer(randomInnocent.player)) {
+                    if (isPlayer(randomInnocent.player)) {
                         randomInnocent.showRole();
                         randomInnocent.player.sendMessage({ translate: "chat.murdererQuit" });
                     }
@@ -1052,7 +1261,7 @@ enum DeathType {
     /** 射杀了自己。 */
     ShotSelf = "shotSelf",
 
-    /** 被其他玩家误杀。 */
+    /** 被其他玩家杀死。 */
     Player = "player",
 
     /** 误杀了其他玩家。 */
@@ -1110,14 +1319,13 @@ class MurderMysteryPlayer {
         // 如果是侦探，标记为首位侦探并给予弓
         if (this.role === MurderMysteryPlayerRole.Detective) {
             this.isFirstDetective = true;
-            this.detectiveGetBow();
+            this.getDetectiveBow();
         }
 
         // 为玩家展示身份
         this.showRole();
 
-        // [debug]
-        if (!lib.PlayerUtils.isPlayer(this.player)) {
+        if (!isPlayer(this.player)) {
             switch (this.role) {
                 case MurderMysteryPlayerRole.Innocent:
                     this.player.nameTag = "§a平民";
@@ -1140,7 +1348,7 @@ class MurderMysteryPlayer {
      */
     showRole() {
         const { player, role } = this;
-        if (!lib.PlayerUtils.isPlayer(player)) return;
+        if (!isPlayer(player)) return;
         const sendMessage = (sound: string) =>
             lib.PlayerUtils.sendMessage(player, {
                 title: { translate: `title.gameStart.${role}` },
@@ -1165,7 +1373,7 @@ class MurderMysteryPlayer {
         }
     }
 
-    /** 设置玩家为已死亡，并对玩家播放死因。如果是侦探死亡，则全体公告。 */
+    /** 设置玩家为已死亡，并对玩家播放死因。如果是侦探死亡，则全体公告。如果触发特定条件，会导致游戏结束。 */
     setDead(deathType: DeathType = DeathType.MurdererStab) {
         // 若该玩家已死亡，则跳过之
         if (this.isDead) return;
@@ -1174,12 +1382,14 @@ class MurderMysteryPlayer {
         this.isDead = true;
         this.system.removePlayer(this, true);
 
-        // 设置失明
+        // 生成尸体
+        const deadPlayer = lib.EntityUtils.add(deadPlayerId, this.player.location, this.player.dimension);
+        deadPlayer.setRotation(this.player.getRotation());
+
+        // 设置失明，设置为旁观模式并对该玩家显示死因
         this.player.addEffect("minecraft:blindness", 60);
-        if (lib.PlayerUtils.isPlayer(this.player)) {
-            // 设置为旁观模式
+        if (isPlayer(this.player)) {
             this.player.setGameMode(minecraft.GameMode.Spectator);
-            // 对该玩家显示死因
             lib.PlayerUtils.sendMessage(this.player, {
                 title: { translate: "title.youDied" },
                 subtitle: { translate: `deathMessage.${deathType}` },
@@ -1191,22 +1401,29 @@ class MurderMysteryPlayer {
             });
         } else {
             // 传送假玩家到出生点
-            this.player.teleport(this.system.mapData.description.waitHall.location);
+            minecraft.system.run(() => this.player.teleport(this.system.mapData.description.waitHall.location));
         }
 
         // 对所有玩家播放音效
         this.system.alivePlayers.allPlayers.forEach(playerData => {
-            if (!lib.PlayerUtils.isPlayer(playerData.player)) return;
+            if (!isPlayer(playerData.player)) return;
             playerData.player.playSound("game.player.hurt");
         });
 
         // 如果是侦探死亡，则掉落弓
         if (this.role === MurderMysteryPlayerRole.Detective) this.dropBow();
+
+        // 判断一次游戏有没有结束
+        const reason: MurderMysteryGameOverReason =
+            this.role === MurderMysteryPlayerRole.Murderer
+                ? MurderMysteryGameOverReason.MurdererDied
+                : MurderMysteryGameOverReason.AllPlayersDied;
+        this.system.gameOverTest(reason);
     }
 
     /** 显示信息板。 */
     showInfoboard() {
-        if (!lib.PlayerUtils.isPlayer(this.player)) return;
+        if (!isPlayer(this.player)) return;
         const alivePlayers = this.system.alivePlayers;
         const bowLine: minecraft.RawMessage = (() => {
             if (!this.system.firstDetectiveDied) return { translate: "infoboard.detectiveAlive" };
@@ -1224,7 +1441,7 @@ class MurderMysteryPlayer {
         })();
         const texts: minecraft.RawMessage[] = [
             { translate: "infoboard.title" },
-            { text: `§8${this.system.gameId}§r` },
+            { text: `§7${lib.JSUtils.timeDisplay.formatDateToYYMMDD()} §8${this.system.gameId}§r` },
             { text: "" },
             {
                 translate: "infoboard.role",
@@ -1258,7 +1475,7 @@ class MurderMysteryPlayer {
     /** 给予杀手剑。 */
     getSword() {
         if (this.role !== MurderMysteryPlayerRole.Murderer) return;
-        if (!lib.PlayerUtils.isPlayer(this.player)) return;
+        if (!isPlayer(this.player)) return;
         lib.ItemUtils.inventory.set(this.player, 1, "minecraft:iron_sword", {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,
@@ -1270,22 +1487,63 @@ class MurderMysteryPlayer {
         });
     }
 
-    /** 侦探获取弓 */
-    detectiveGetBow() {
-        if (this.role === MurderMysteryPlayerRole.Murderer) return;
+    /** 获取平民或杀手的弓，并添加箭。 */
+    getNormalBow() {
+        // 如果不是平民或杀手，阻止之
+        if (this.role !== MurderMysteryPlayerRole.Innocent && this.role !== MurderMysteryPlayerRole.Murderer) return;
+        // 新增箭并移除金锭，并提示玩家
+        lib.ItemUtils.inventory.set(this.player, 0, "minecraft:bow", {
+            unbreakable: true,
+            itemLock: minecraft.ItemLockMode.slot,
+        });
+        lib.ItemUtils.inventory.add(this.player, "minecraft:arrow", { itemLock: minecraft.ItemLockMode.slot });
+        if (isPlayer(this.player)) {
+            lib.ItemUtils.removeItem(this.player, goldId, -1, 10);
+            lib.PlayerUtils.sendMessage(this.player, {
+                message: { translate: "chat.10GoldCollected" },
+                title: "§1",
+                subtitle: { translate: "subtitle.10GoldCollected" },
+                titleOptions: { fadeInDuration: 0, stayDuration: 60, fadeOutDuration: 20 },
+            });
+        }
+    }
+
+    /** 获取侦探的弓，并添加箭。 */
+    getDetectiveBow() {
         lib.ItemUtils.inventory.set(this.player, 1, "minecraft:bow", {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,
         });
-        lib.ItemUtils.inventory.set(this.player, 6, "minecraft:arrow", {
+        lib.ItemUtils.inventory.addSlot(this.player, 6, 1, "minecraft:arrow", {
             itemLock: minecraft.ItemLockMode.slot,
         });
     }
 
+    /** 平民拾取弓。 */
+    pickupBow(bowEntity: minecraft.Entity) {
+        this.system.transformRole(this, MurderMysteryPlayerRole.Detective);
+        if (isPlayer(this.player)) this.player.sendMessage({ translate: "chat.bowPicked.picker" });
+        // 获取弓
+        if (isPlayer(this.player)) {
+            lib.ItemUtils.removeItem(this.player, "minecraft:bow");
+            lib.ItemUtils.removeItem(this.player, "minecraft:arrow");
+        }
+        this.getDetectiveBow();
+        // 通知其他玩家
+        this.system.alivePlayers.allPlayers.forEach(playerData => {
+            const player = playerData.player;
+            if (player.id === this.player.id) return;
+            if (isPlayer(player)) player.sendMessage({ translate: "chat.bowPicked" });
+        });
+        // 移除弓实体
+        bowEntity.remove();
+    }
+
     /** 掉落弓。
      * @param shouldAnnounce 是否对其他玩家公告弓已掉落。 | 默认值：`true`。
+     * @param forceLocation 强制在某个位置生成弓。
      */
-    dropBow(shouldAnnounce = true) {
+    dropBow(shouldAnnounce = true, forceLocation?: minecraft.Vector3) {
         if (this.role !== MurderMysteryPlayerRole.Detective) return;
         // 如果是首位侦探，则标记为首位侦探已死亡
         if (this.isFirstDetective) this.system.firstDetectiveDied = true;
@@ -1293,7 +1551,7 @@ class MurderMysteryPlayer {
         if (shouldAnnounce) {
             const message = this.isFirstDetective ? "detectiveKilled" : "bowDropped";
             this.system.alivePlayers.allPlayers.forEach(playerData => {
-                if (!lib.PlayerUtils.isPlayer(playerData.player)) return;
+                if (!isPlayer(playerData.player)) return;
                 lib.PlayerUtils.sendMessage(playerData.player, {
                     message: { translate: `chat.${message}` },
                     title: { text: "§1" },
@@ -1302,13 +1560,25 @@ class MurderMysteryPlayer {
                 });
             });
         }
+        // 生成弓
+        const bowLocation = forceLocation ?? this.player.location;
+        lib.EntityUtils.add(bowEntityId, bowLocation);
+    }
+
+    /** 杀死了另一名玩家。 */
+    killPlayer(victimData: MurderMysteryPlayer, killType?: DeathType) {
+        this.kills++;
+        victimData.setDead(killType);
     }
 }
 
 // #endregion
 // #region 创建实例
-minecraft.world.afterEvents.worldLoad.subscribe(event => {
-    const murderMysterySystem = new MurderMysterySystem();
+minecraft.world.afterEvents.worldLoad.subscribe(() => {
+    let murderMysterySystem: MurderMysterySystem = new MurderMysterySystem();
+    minecraft.system.runInterval(() => {
+        if (!murderMysterySystem.isValid) murderMysterySystem = new MurderMysterySystem();
+    }, 20);
     lib.gameSystem.showDebugMessage = true;
 });
 
