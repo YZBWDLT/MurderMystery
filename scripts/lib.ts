@@ -1120,7 +1120,7 @@ class InventoryUtils {
             // 如果没有设定默认物品，直接终止
             if (!itemId) return 0;
             // 如果设定了默认物品，则设定之，返回成功设定的数量
-            return this.set(entity, slot, itemId, options)?.amount ?? 0;
+            return this.set(entity, slot, itemId, { ...options, amount })?.amount ?? 0;
         }
         // 在原本的基础上添加特定数量的物品
         const newItem = oldItem.clone();
@@ -1976,6 +1976,15 @@ class TimeDisplayUtils {
         const seconds = Math.floor(absSecond % 60);
         const formattedSeconds = seconds.toString().padStart(2, "0");
         return `${sign}${minutes}:${formattedSeconds}`;
+    }
+
+    /** 返回 YY/MM/DD 形式的日期字符串。例：26/06/28。 */
+    static formatDateToYYMMDD(date?: Date): string {
+        const d = date ? new Date(date) : new Date(); // 确保传入的值也能转为有效Date
+        const year = d.getFullYear().toString().slice(-2); // 取年份后两位
+        const month = (d.getMonth() + 1).toString().padStart(2, "0");
+        const day = d.getDate().toString().padStart(2, "0");
+        return `${year}/${month}/${day}`;
     }
 }
 
