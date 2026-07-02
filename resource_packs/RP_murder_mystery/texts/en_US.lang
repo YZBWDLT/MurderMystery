@@ -147,4 +147,4 @@ infoboard.kills=Kills: §a%s§r
 infoboard.detectiveAlive=Detective: §aAlive§r
 infoboard.bowNotDropped=Bow: §aNot Dropped§r
 infoboard.bowDropped=Bow: §cDropped§r
-infoboard.arrowCharging=Charging: §a%ss§r
+infoboard.charging=Charging: §a%ss§r

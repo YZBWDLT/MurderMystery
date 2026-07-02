@@ -3,6 +3,7 @@
 
 // TODO LIST:
 // - 实现侦探补箭
+// - [警告！] 杀手或侦探退出可能会导致游戏在游戏结束时报错！
 // - 实现杀手飞刀和穿过玻璃板的破碎效果
 // - 实装箭重力包
 // - 实现杀手长时间未击杀玩家的提示
@@ -373,9 +374,11 @@ class MurderMysterySystem {
         MurderMysteryComponents.playerCollectGold(this);
         MurderMysteryComponents.playerKillTest(this);
         MurderMysteryComponents.playerPickupBowTest(this);
+        MurderMysteryComponents.chargeAmmunition(this);
         MurderMysteryComponents.spectatorOutOfBorderTest(this);
         MurderMysteryComponents.playerLeaveTest(this);
         MurderMysteryComponents.playerJoinTest(this);
+        MurderMysteryComponents.preventPlayerPickupArrow();
 
         // 注册可选组件
         const { playerIntoVoid, preventOpeningChest, mysteryPotion } = this.mapData.components;
@@ -783,26 +786,22 @@ class MurderMysteryComponents {
      */
     static infoboard(system: MurderMysterySystem) {
         lib.gameSystem.unsubscribeTimeline("infoboard");
-        lib.gameSystem.subscribeTimeline(
-            "infoboard",
-            () => {
-                switch (system.gameStage) {
-                    case GameStage.ClearStage:
-                    case GameStage.LoadStage:
-                    case GameStage.WaitingStage:
-                        const texts = system.getBeforeGameInfoboard();
-                        lib.PlayerUtils.getAll().forEach(player =>
-                            player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts))
-                        );
-                        break;
-                    case GameStage.GamingStage:
-                    case GameStage.GameOverStage:
-                        system.players.allPlayers.forEach(playerData => playerData.showInfoboard());
-                        break;
-                }
-            },
-            20
-        );
+        lib.gameSystem.subscribeTimeline("infoboard", () => {
+            switch (system.gameStage) {
+                case GameStage.ClearStage:
+                case GameStage.LoadStage:
+                case GameStage.WaitingStage:
+                    const texts = system.getBeforeGameInfoboard();
+                    lib.PlayerUtils.getAll().forEach(player =>
+                        player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts))
+                    );
+                    break;
+                case GameStage.GamingStage:
+                case GameStage.GameOverStage:
+                    system.players.allPlayers.forEach(playerData => playerData.showInfoboard());
+                    break;
+            }
+        });
     }
 
     /** 阻止玩家和假玩家受到伤害。 */
@@ -923,7 +922,7 @@ class MurderMysteryComponents {
 
     /** 游戏计时器。
      * @description 每秒进行倒计时。
-     * @description 若超时则直接游戏结束
+     * @description 若超时则直接游戏结束。
      */
     static gameTimer(system: MurderMysterySystem) {
         lib.gameSystem.subscribeTimeline(
@@ -1094,7 +1093,11 @@ class MurderMysteryComponents {
         });
     }
 
-    /** 玩家拾取弓检测。 */
+    /** 玩家拾取弓检测。
+     * @description 判断设置中使用何种拾取弓的方式，并采用不同的逻辑。
+     * @description 如果是靠近拾取，则循环检查弓附近的玩家，如果是存活的平民则令其拾取。
+     * @description 如果是右键拾取，则检查玩家与实体交互，如果是存活的平民则令其拾取。
+     */
     static playerPickupBowTest(system: MurderMysterySystem) {
         const pickupBowMethod = system.settings.game.pickupBowMethod;
         const isAliveInnocentData = (
@@ -1138,7 +1141,9 @@ class MurderMysteryComponents {
             );
     }
 
-    /** 旁观玩家出界检测。 */
+    /** 旁观玩家出界检测。
+     * @description 如果玩家是死亡玩家，则进行循环检查，检查玩家从哪个面出界，距离是多少，如果出界则拉回来。
+     */
     static spectatorOutOfBorderTest(system: MurderMysterySystem) {
         const { from, to } = system.mapData.description.range;
         const gameVolume = new minecraft.BlockVolume(from, to);
@@ -1256,6 +1261,48 @@ class MurderMysteryComponents {
         });
     }
 
+    /** 为侦探和杀手填充弓箭/飞刀。
+     * @description 若侦探和杀手的冷却时间不为 0，则进行倒计时，倒计时结束后填充之。
+     */
+    static chargeAmmunition(system: MurderMysterySystem) {
+        lib.gameSystem.subscribeEvent("chargeAmmunition", minecraft.world.afterEvents.itemReleaseUse, event => {
+            const { source: player, itemStack } = event;
+            if (!itemStack) return;
+            const playerData = system.getPlayer(player);
+            if (!playerData) return;
+            const role = playerData.role;
+            // 侦探使用弓箭
+            if (role === MurderMysteryPlayerRole.Detective && itemStack.typeId === "minecraft:bow") {
+                playerData.chargingTime = 100;
+            }
+            // 杀手使用飞刀
+        });
+        lib.gameSystem.subscribeTimeline("chargeAmmunition", () => {
+            // 为侦探填充弓箭
+            system.alivePlayers.detective
+                .filter(detective => detective.chargingTime > 0)
+                .forEach(detective => {
+                    detective.chargingTime--;
+                    if (detective.chargingTime <= 0) detective.getDetectiveBow();
+                });
+            // 为杀手填充飞刀
+            system.alivePlayers.murderer.filter(murderer => murderer.chargingTime > 0).forEach(murderer => {});
+        });
+    }
+
+    /** 防止玩家捡起射出的箭。 */
+    static preventPlayerPickupArrow() {
+        lib.gameSystem.subscribeEvent(
+            "preventPlayerPickupArrow",
+            minecraft.world.afterEvents.projectileHitBlock,
+            event => {
+                const arrow = event.projectile;
+                if (event.projectile.typeId !== "minecraft:arrow") return;
+                arrow.triggerEvent("murder_mystery:remove_player_arrow");
+            }
+        );
+    }
+
     // #endregion
     // #region - 游戏开始后（可选组件）
 
@@ -1362,6 +1409,9 @@ class MurderMysteryPlayer {
 
     /** 击杀数。该选项只对杀手可用。 */
     kills = 0;
+
+    /** 侦探的箭或杀手的飞刀剩余的冷却时间。单位：游戏刻。 */
+    chargingTime = 0;
 
     /** @remarks 这里的构造函数应当仅在游戏开始时执行。若要转换职业，应使用 {@link MurderMysterySystem} 的`transformRole`方法。 */
     constructor(system: MurderMysterySystem, playerData: PlayerData) {
@@ -1503,6 +1553,11 @@ class MurderMysteryPlayer {
             if (this.isDead) return "dead";
             return this.role;
         })();
+        const chargeLine: minecraft.RawMessage[] = (() => {
+            if (this.chargingTime <= 0) return [];
+            const chargingTimeSecond = lib.JSUtils.timeDisplay.showSecondsByTick(this.chargingTime);
+            return [{ translate: "infoboard.charging", with: [chargingTimeSecond] }, { text: "" }];
+        })();
         const texts: minecraft.RawMessage[] = [
             { translate: "infoboard.title" },
             { text: `§7${lib.JSUtils.timeDisplay.formatDateToYYMMDD()} §8${this.system.gameId}§r` },
@@ -1531,6 +1586,7 @@ class MurderMysteryPlayer {
                 with: { rawtext: [{ translate: `map.${this.system.mapData.description.id}` }] },
             },
             { text: "" },
+            ...chargeLine,
             { text: `§e${this.system.settings.miscellaneous.infoboardLastLine}` },
         ];
         this.player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts));
@@ -1572,8 +1628,9 @@ class MurderMysteryPlayer {
         }
     }
 
-    /** 获取侦探的弓，并添加箭。 */
+    /** 获取侦探的弓，添加箭。这会重置弓箭的冷却时间。 */
     getDetectiveBow() {
+        this.chargingTime = 0;
         lib.ItemUtils.inventory.set(this.player, 1, "minecraft:bow", {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,

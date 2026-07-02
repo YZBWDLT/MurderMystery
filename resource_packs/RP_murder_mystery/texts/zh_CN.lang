@@ -147,4 +147,4 @@ infoboard.kills=击杀数：§a%s§r
 infoboard.detectiveAlive=侦探：§a存活§r
 infoboard.bowNotDropped=弓：§a未掉落§r
 infoboard.bowDropped=弓：§c已掉落§r
-infoboard.arrowCharging=填充中：§a%s秒§r
+infoboard.charging=填充中：§a%s秒§r
