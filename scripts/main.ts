@@ -2,10 +2,7 @@
 // 实现密室杀手的主体逻辑。
 
 // TODO LIST:
-// - 实现侦探补箭
-// - [警告！] 杀手或侦探退出可能会导致游戏在游戏结束时报错！
 // - 实现杀手飞刀和穿过玻璃板的破碎效果
-// - 实装箭重力包
 // - 实现杀手长时间未击杀玩家的提示
 // - 实现神秘药水效果
 // - 实现在只剩余 1 名平民/侦探的时候对杀手的额外 buff 加成
@@ -360,6 +357,9 @@ class MurderMysterySystem {
             if (isPlayer(player)) {
                 player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getOverworld() });
             }
+
+            // 隐藏玩家的名称
+            player.nameTag = "";
         });
 
         // 移除多余实体
@@ -409,61 +409,80 @@ class MurderMysterySystem {
             TimeOut: true,
         };
         const playerWin = playerWinList[reason];
-        this.players.allPlayers.forEach(playerData => {
-            if (!isPlayer(playerData.player)) return;
-            const player = playerData.player;
-            /** 发送消息。 */
-            const sendMessage = (title: minecraft.RawMessage) => {
-                /** 游戏结束后返回的副标题。 */
-                const subtitle: minecraft.RawMessage = (() => {
-                    // 如果是超时，返回超时信息
-                    if (reason === MurderMysteryGameOverReason.TimeOut) {
-                        // 杀手和其他玩家显示的内容不同
-                        if (playerData.role === MurderMysteryPlayerRole.Murderer)
-                            return { translate: "subtitle.murdererLose.timeOut" };
-                        return { translate: "subtitle.playerWin.timeOut" };
-                    }
-                    // 如果正常获胜，返回一般的获胜信息
-                    if (playerWin) return { translate: "subtitle.playerWin" };
-                    // 否则，返回失败信息
-                    return { translate: "subtitle.murdererWin" };
-                })();
-                /** 游戏结束后返回的消息。 */
-                const message: minecraft.RawMessage[] = [
-                    { text: "§a§l---------------§r" },
-                    { text: "" },
-                    { translate: "chat.title" },
-                    { text: "" },
-                    { translate: `chat.winner.${playerWin ? "innocent" : "murderer"}` },
-                    { text: "" },
-                    { translate: "chat.detective", with: [this.players.detective[0].player.nameTag] },
-                    {
-                        translate: "chat.murderer",
-                        with: [this.players.murderer[0].player.nameTag, `${this.players.murderer[0].kills}`],
-                    },
-                ];
-                if (hero) {
-                    message.push({ translate: "chat.hero", with: [hero.player.nameTag] });
+        // 侦探的名字
+        const firstDetective = this.players.detective.find(detective => detective.isFirstDetective);
+        const firstDetectiveName: string = (() => {
+            if (!firstDetective) return "§c--";
+            if (isPlayer(firstDetective.player)) return firstDetective.player.name;
+            return firstDetective.player.nameTag;
+        })();
+        // 杀手的名字和击杀数
+        const murderer = this.players.murderer[0];
+        const murdererName: string = (() => {
+            if (!murderer) return "§c--";
+            if (isPlayer(murderer.player)) return murderer.player.name;
+            return murderer.player.nameTag;
+        })();
+        const murdererKills = `${murderer.kills ?? "§c--"}`;
+        // 英雄的名字
+        const heroName: string = (() => {
+            if (!hero) return "§c--";
+            if (isPlayer(hero.player)) return hero.player.name;
+            return hero.player.nameTag;
+        })();
+
+        /** 发送消息。 */
+        const sendMessage = (playerData: MurderMysteryPlayer, title: minecraft.RawMessage) => {
+            /** 游戏结束后返回的副标题。 */
+            const subtitle: minecraft.RawMessage = (() => {
+                // 如果是超时，返回超时信息
+                if (reason === MurderMysteryGameOverReason.TimeOut) {
+                    // 杀手和其他玩家显示的内容不同
+                    if (playerData.role === MurderMysteryPlayerRole.Murderer)
+                        return { translate: "subtitle.murdererLose.timeOut" };
+                    return { translate: "subtitle.playerWin.timeOut" };
                 }
-                message.push({ text: "" }, { text: "§a§l---------------§r" });
-                // 发送消息
-                lib.PlayerUtils.sendMessage(player, {
+                // 如果正常获胜，返回一般的获胜信息
+                if (playerWin) return { translate: "subtitle.playerWin" };
+                // 否则，返回失败信息
+                return { translate: "subtitle.murdererWin" };
+            })();
+            /** 游戏结束后返回的消息。 */
+            const message: minecraft.RawMessage[] = [
+                { text: "§a§l---------------§r" },
+                { text: "" },
+                { translate: "chat.title" },
+                { text: "" },
+                { translate: `chat.winner.${playerWin ? "innocent" : "murderer"}` },
+                { text: "" },
+                { translate: "chat.detective", with: [firstDetectiveName] },
+                { translate: "chat.murderer", with: [murdererName, murdererKills] },
+            ];
+            if (hero) message.push({ translate: "chat.hero", with: [heroName] });
+            message.push({ text: "" }, { text: "§a§l---------------§r" });
+            // 发送消息
+            if (isPlayer(playerData.player))
+                lib.PlayerUtils.sendMessage(playerData.player, {
                     title: title,
                     subtitle: subtitle,
                     titleOptions: { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 },
                     message: lib.JSUtils.lineText(message),
                 });
-            };
+        };
+        this.players.allPlayers.forEach(playerData => {
+            if (!isPlayer(playerData.player)) return;
+            const player = playerData.player;
+
             switch (playerData.role) {
                 case MurderMysteryPlayerRole.Innocent:
                 case MurderMysteryPlayerRole.Detective:
-                    sendMessage({ translate: `${playerWin ? "title.win" : "title.lose"}` });
+                    sendMessage(playerData, { translate: `${playerWin ? "title.win" : "title.lose"}` });
                     return;
                 case MurderMysteryPlayerRole.Murderer:
-                    sendMessage({ translate: `${playerWin ? "title.lose" : "title.win"}` });
+                    sendMessage(playerData, { translate: `${playerWin ? "title.lose" : "title.win"}` });
                     return;
                 case MurderMysteryPlayerRole.Spectator:
-                    sendMessage({ translate: "title.gameOver" });
+                    sendMessage(playerData, { translate: "title.gameOver" });
                     return;
             }
         });
@@ -641,6 +660,7 @@ class MurderMysterySystem {
      * @description 会清除玩家的物品。
      * @description 会传送玩家到等待大厅，并将玩家的重生点设置在这里。
      * @description 会将玩家的游戏模式设为冒险模式。
+     * @description 会恢复玩家的命名牌。
      */
     initPlayer(player: minecraft.Entity) {
         player.getComponent("inventory")?.container.clearAll();
@@ -649,10 +669,8 @@ class MurderMysterySystem {
         player.teleport(location, { facingLocation });
         if (isPlayer(player)) {
             player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getDefault() });
-        }
-
-        if (isPlayer(player)) {
             player.setGameMode(minecraft.GameMode.Adventure);
+            player.nameTag = player.name;
         }
     }
 
@@ -702,12 +720,9 @@ class MurderMysterySystem {
 
     /** 移除场内所有实体（玩家与假玩家除外）。 */
     removeAllEntities() {
-        // 移除所有掉落物
-        lib.ItemUtils.removeEntity();
-        // 移除所有尸体
-        lib.EntityUtils.getType(deadPlayerId).forEach(deadPlayer => deadPlayer.remove());
-        // 移除所有弓
-        lib.EntityUtils.getType(bowEntityId).forEach(bowEntity => bowEntity.remove());
+        lib.EntityUtils.get("overworld", { excludeTypes: ["minecraft:player", "murder_mystery:fake_player"] }).forEach(
+            entity => entity.remove()
+        );
     }
     // #endregion
 }
@@ -1430,23 +1445,6 @@ class MurderMysteryPlayer {
 
         // 为玩家展示身份
         this.showRole();
-
-        if (!isPlayer(this.player)) {
-            switch (this.role) {
-                case MurderMysteryPlayerRole.Innocent:
-                    this.player.nameTag = "§a平民";
-                    break;
-                case MurderMysteryPlayerRole.Murderer:
-                    this.player.nameTag = "§c杀手";
-                    break;
-                case MurderMysteryPlayerRole.Detective:
-                    this.player.nameTag = "§b侦探";
-                    break;
-                case MurderMysteryPlayerRole.Spectator:
-                    this.player.nameTag = "§7旁观者";
-                    break;
-            }
-        }
     }
 
     /** 对玩家展示身份。

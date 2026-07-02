@@ -47,7 +47,7 @@
                     },
                     "hit_sound": "bow.hit",
                     "power": 5.0,
-                    "gravity": 0.05,
+                    "gravity": 0.115, // 原版为0.05
                     "uncertainty_base": 1,
                     "uncertainty_multiplier": 0,
                     "anchor": 1,
