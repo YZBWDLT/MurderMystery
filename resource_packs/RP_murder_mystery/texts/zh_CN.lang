@@ -120,7 +120,6 @@ subtitle.playerWin=§6杀手已被阻止！
 subtitle.playerWin.timeOut=§6杀手已经没有时间了！
 subtitle.murdererWin=§6所有幸存者都死了！
 subtitle.murdererLose.timeOut=§6时间耗尽！
-chat.line=§a§l---------------
 chat.title=§l     密室杀手
 chat.winner.innocent=§l胜利者：§r§a所有平民与侦探
 chat.winner.detective=§l胜利者：§r§a所有平民与侦探
@@ -131,6 +130,7 @@ chat.hero=§7英雄：§a%s
 
 ### 其他消息
 chat.chestLocked=此箱子已被上锁！
+subtitle.spectatorOutOfBorder=§c你跑的太远了！
 
 ## ===== 信息板消息 =====
 
@@ -147,3 +147,4 @@ infoboard.kills=击杀数：§a%s§r
 infoboard.detectiveAlive=侦探：§a存活§r
 infoboard.bowNotDropped=弓：§a未掉落§r
 infoboard.bowDropped=弓：§c已掉落§r
+infoboard.arrowCharging=填充中：§a%s秒§r

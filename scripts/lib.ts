@@ -614,6 +614,14 @@ export class BlockUtils {
 // #endregion
 // #region 坐标
 
+/** 代表一个坐标与一个区域相对位置的关系。 */
+type VolumeSector = {
+    /** 是否超出这个区域。如果超出，代表超出的方位。 */
+    direction?: minecraft.Direction;
+    /** 超出区域的距离。若未超出则为 0。 */
+    distance: number;
+};
+
 /** Vector2 的操作方法 */
 export class Vector2Utils {
     /** 返回两个坐标是否相同。 */
@@ -649,24 +657,30 @@ export class Vector3Utils {
         return locationList.some(position => this.isEqual(testLocation, position));
     }
 
-    /** 返回两个坐标之间的距离。 */
-    static distance(location1: minecraft.Vector3, location2: minecraft.Vector3) {
+    /** 返回两个坐标之间的距离。
+     * @param squared 是否返回模长的平方值以避免运算根号。| 默认值：`false`
+     */
+    static distance(location1: minecraft.Vector3, location2: minecraft.Vector3, squared = false) {
         const { x: x1, y: y1, z: z1 } = location1;
         const { x: x2, y: y2, z: z2 } = location2;
-        return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2);
+        return this.magnitude({ x: x2 - x1, y: y2 - y1, z: z2 - z1 }, squared);
     }
 
-    /** 返回向量模长。 */
-    static vectorLength(location: minecraft.Vector3) {
-        return Math.sqrt(location.x ** 2 + location.y ** 2 + location.z ** 2);
+    /** 返回向量模长。
+     * @param squared 是否返回模长的平方值以避免运算根号。| 默认值：`false`
+     */
+    static magnitude(location: minecraft.Vector3, squared = false) {
+        const lengthSquared = location.x ** 2 + location.y ** 2 + location.z ** 2;
+        if (squared) return lengthSquared;
+        return Math.sqrt(lengthSquared);
     }
 
     /** 返回归一化的向量。 */
     static normalize(location: minecraft.Vector3): minecraft.Vector3 {
         return {
-            x: location.x / this.vectorLength(location),
-            y: location.y / this.vectorLength(location),
-            z: location.z / this.vectorLength(location),
+            x: location.x / this.magnitude(location),
+            y: location.y / this.magnitude(location),
+            z: location.z / this.magnitude(location),
         };
     }
 
@@ -716,9 +730,42 @@ export class Vector3Utils {
 
     /** 返回两向量所成的角度（rad） */
     static angle(location1: minecraft.Vector3, location2: minecraft.Vector3) {
-        const cosAlpha =
-            this.dotProduct(location1, location2) / this.vectorLength(location1) / this.vectorLength(location2);
+        const cosAlpha = this.dotProduct(location1, location2) / this.magnitude(location1) / this.magnitude(location2);
         return Math.acos(cosAlpha);
+    }
+
+    /** 返回`locationArray`中距离`location`最近的坐标。
+     * @remarks 不要对`locationArray`传入一个空数组，否则会报错。
+     */
+    static getClosest(location: minecraft.Vector3, locationArray: minecraft.Vector3[]) {
+        let closestLocation = locationArray[0];
+        let closestDistance = this.distance(location, closestLocation, true);
+        locationArray.forEach(thisLocation => {
+            const thisDistance = this.distance(location, thisLocation);
+            if (thisDistance < closestDistance) {
+                closestDistance = thisDistance;
+                closestLocation = thisLocation;
+            }
+        });
+        return closestLocation;
+    }
+
+    /** 返回给定坐标与给定区域相对位置的关系。
+     * @returns 若返回`Direction`，代表给定坐标在给定区域外侧，偏向何方。若返回`undefined`，代表给定坐标在给定区域内侧。
+     */
+    static getVolumeSector(location: minecraft.Vector3, volume: minecraft.BlockVolume): VolumeSector {
+        const { x: xMax, y: yMax, z: zMax } = volume.getMax();
+        const { x: xMin, y: yMin, z: zMin } = volume.getMin();
+        // 北 ↑
+        // <- O -> X
+        //    ↓ Z
+        if (location.x > xMax) return { direction: minecraft.Direction.East, distance: location.x - xMax };
+        if (location.x < xMin) return { direction: minecraft.Direction.West, distance: xMin - location.x };
+        if (location.z > zMax) return { direction: minecraft.Direction.South, distance: location.z - zMax };
+        if (location.z < zMin) return { direction: minecraft.Direction.North, distance: zMin - location.z };
+        if (location.y > yMax) return { direction: minecraft.Direction.Up, distance: location.y - yMax };
+        if (location.y < yMin) return { direction: minecraft.Direction.Down, distance: yMin - location.y };
+        return { distance: 0 };
     }
 }
 

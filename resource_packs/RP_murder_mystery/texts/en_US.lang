@@ -120,7 +120,6 @@ subtitle.playerWin=§6The Murderer has been stopped!
 subtitle.playerWin.timeOut=§6The Murderer ran out of time!
 subtitle.murdererWin=§6Every survivor died!
 subtitle.murdererLose.timeOut=§6Time ran out!
-chat.line=§a§l---------------
 chat.title=§l MURDER MYSTERY
 chat.winner.innocent=§lWinner: §r§aPlayers
 chat.winner.detective=§lWinner: §r§aPlayers
@@ -131,6 +130,7 @@ chat.hero=§7Hero: §a%s
 
 ### Other message
 chat.chestLocked=The chest is locked!
+subtitle.spectatorOutOfBorder=§cYou ran too far!
 
 ## ===== Infoboard Message =====
 
@@ -147,3 +147,4 @@ infoboard.kills=Kills: §a%s§r
 infoboard.detectiveAlive=Detective: §aAlive§r
 infoboard.bowNotDropped=Bow: §aNot Dropped§r
 infoboard.bowDropped=Bow: §cDropped§r
+infoboard.arrowCharging=Charging: §a%ss§r
