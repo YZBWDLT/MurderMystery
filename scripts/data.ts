@@ -37,23 +37,25 @@ type MurderMysteryWaitHallDescription = {
 type MurderMysteryMapDataComponent = {
     /** 玩家进入虚空组件，如果玩家落入虚空，则直接杀死之。 */
     readonly playerIntoVoid?: MurderMysteryPlayerIntoVoidComponent;
-    /** 禁止打开箱子组件，阻止玩家打开场景内绝大多数的箱子。 */
-    readonly preventOpeningChest?: MurderMysteryPreventOpeningChestComponent;
+    /** 禁止与方块交互组件，阻止玩家与方块交互。若不指定则默认取消所有方块的交互。 */
+    readonly allowInteractingWithBlock?: MurderMysteryAllowInteractingWithBlockComponent;
     /** 神秘药水组件，当玩家和特定位置的炼药锅交互后为玩家添加药水。 */
     readonly mysteryPotion?: MurderMysteryMysteryPotionComponent;
 };
 
-export type MurderMysteryPlayerIntoVoidComponent = {
+type MurderMysteryAllowInteractingWithBlockComponent = {
+    /** 允许交互的方块。 */
+    blocks?: string[];
+    /** 允许交互的方块坐标。 */
+    location?: minecraft.Vector3[];
+};
+
+type MurderMysteryPlayerIntoVoidComponent = {
     /** 判定虚空高度，当玩家的高度低于此高度时即认定为落入虚空。 | 默认值：0 */
     readonly voidHeight?: number;
 };
 
-export type MurderMysteryPreventOpeningChestComponent = {
-    /** 允许打开的箱子坐标。 | 默认值：[] */
-    allowedChest?: minecraft.Vector3[];
-};
-
-export type MurderMysteryMysteryPotionComponent = {
+type MurderMysteryMysteryPotionComponent = {
     /** 可触发神秘药水的酿造台的坐标。 */
     location?: minecraft.Vector3[];
 };
@@ -78,7 +80,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             playerIntoVoid: { voidHeight: 40 },
-            preventOpeningChest: {},
+            allowInteractingWithBlock: { blocks: ["minecraft:cauldron"] },
         },
     },
 };

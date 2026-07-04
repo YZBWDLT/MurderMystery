@@ -2,14 +2,30 @@
 // 实现密室杀手的主体逻辑。
 
 // TODO LIST:
-// - 实现杀手飞刀和穿过玻璃板的破碎效果
-// - 实现杀手长时间未击杀玩家的提示
-// - 实现神秘药水效果
-// - 实现在只剩余 1 名平民/侦探的时候对杀手的额外 buff 加成
-// - 【待定】实现杀死玩家后显示遗言
+// - 杀手飞刀
+//   - 飞刀蓄力0.5s后投出
+//   - 蓄力期间会受到缓慢 I 的效果，冷却时间5s
+//   - 蓄力期间的音效为音符盒，投出飞刀的音效为给盔甲架穿上皮革装备
+//   - 飞刀的运行轨道为准星指向的直线，碰撞箱和箭矢大小一样
+//   - 飞刀可以穿透玻璃板这类薄方块和屏障方块，但无法穿透完整方块
+//   - 飞刀与箭矢相撞的时候会相互抵消，音效为物品耐久耗尽破碎
+// - 杀手长时间未击杀玩家的提示
+// - 地图组件
+//   - 虚空（完善特定区域）
+//   - 神秘药水效果
+//   - 开启暗道
+// - 在只剩余 1 名平民/侦探的时候对杀手添加速度 I，并给予有效的位置提示
+// - 杀死玩家后显示遗言
 // - 移除假玩家的名字显示
-// - 实现设置 UI
-// - 实现弓的明显显示
+// - 设置 UI
+// - 弓的明显显示
+// - 神秘的箭矢/飞刀轨迹特效
+// - 双倍模式
+//   - 多个杀手的对局，杀手不能杀队友，杀队友会获得缓慢2失明2效果1秒并提示“你不能击杀你的杀手队友”。
+// 上个版本待修复的bug
+// 2. 添加抬头tp
+// 7. 还原hyp 特殊职业概率
+// 8. 书架加屏障
 
 // #region 模块导入
 import * as minecraft from "@minecraft/server";
@@ -286,6 +302,7 @@ class MurderMysterySystem {
         // 注册通用组件
         MurderMysteryComponents.infoboard(this);
         MurderMysteryComponents.preventDamage();
+        MurderMysteryComponents.preventInteractingWithBlock(this);
     }
 
     /** 令游戏进入清除阶段，在清除阶段清空原有的地图。 */
@@ -381,15 +398,13 @@ class MurderMysterySystem {
         MurderMysteryComponents.preventPlayerPickupArrow();
 
         // 注册可选组件
-        const { playerIntoVoid, preventOpeningChest, mysteryPotion } = this.mapData.components;
-        if (playerIntoVoid) MurderMysteryComponents.playerIntoVoid(playerIntoVoid, this);
-        if (preventOpeningChest) MurderMysteryComponents.preventOpeningChest(preventOpeningChest);
+        MurderMysteryComponents.playerIntoVoid(this);
     }
 
     /** 令游戏进入结束阶段。
      * @description 转换阶段并移除所有正在监听的时间线和事件。
-     * @description 通知玩家游戏结束。
      * @description 注册结束阶段的组件。
+     * @description 通知玩家游戏结束。
      */
     enterGameOverStage(reason: MurderMysteryGameOverReason, hero?: MurderMysteryPlayer) {
         // 转换阶段并移除所有正在监听的时间线和事件
@@ -400,6 +415,9 @@ class MurderMysterySystem {
             this.removeAllEntities();
             this.isValid = false;
         }, 200);
+
+        // 注册组件
+        this.general();
 
         // 提示玩家胜负情况
         const playerWinList: Record<MurderMysteryGameOverReason, boolean> = {
@@ -423,7 +441,7 @@ class MurderMysterySystem {
             if (isPlayer(murderer.player)) return murderer.player.name;
             return murderer.player.nameTag;
         })();
-        const murdererKills = `${murderer.kills ?? "§c--"}`;
+        const murdererKills = `${murderer?.kills ?? "§c--"}`;
         // 英雄的名字
         const heroName: string = (() => {
             if (!hero) return "§c--";
@@ -493,9 +511,6 @@ class MurderMysterySystem {
                 if (isPlayer(playerData.player))
                     playerData.player.sendMessage({ translate: "chat.murdererQuit.gameOver" });
             });
-
-        // 注册组件
-        this.general();
     }
 
     // #endregion
@@ -1212,11 +1227,12 @@ class MurderMysteryComponents {
             const playerData = system.getPlayer(player);
             if (!playerData) return;
             system.removePlayer(playerData);
+            const location = player.location;
 
             minecraft.system.run(() => {
                 // 如果退出玩家是侦探，掉落弓
                 if (playerData.role === MurderMysteryPlayerRole.Detective) {
-                    playerData.dropBow(false);
+                    playerData.dropBow(false, lib.Vector3Utils.getClosest(location, system.spawnPoints));
                     system.alivePlayers.innocent.forEach(innocent => {
                         if (!isPlayer(innocent.player)) return;
                         innocent.player.sendMessage({ translate: "chat.detectiveQuit" });
@@ -1253,8 +1269,8 @@ class MurderMysteryComponents {
         // 虚拟玩家退出
         lib.gameSystem.subscribeEvent(
             "fakePlayerLeaveTest",
-            minecraft.world.afterEvents.entityDie,
-            event => playerLeaveLogic(event.deadEntity),
+            minecraft.world.beforeEvents.entityRemove,
+            event => playerLeaveLogic(event.removedEntity),
             { entityTypes: ["murder_mystery:fake_player"] }
         );
     }
@@ -1268,11 +1284,13 @@ class MurderMysteryComponents {
             if (!initialSpawn) return;
             system.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
             player.setGameMode(minecraft.GameMode.Spectator);
+            player.teleport(lib.JSUtils.array.randomElement(system.spawnPoints));
         });
         lib.gameSystem.subscribeEvent("fakePlayerJoinTest", minecraft.world.afterEvents.entitySpawn, event => {
             const player = event.entity;
             if (player.typeId !== "murder_mystery:fake_player") return;
             system.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
+            player.teleport(lib.JSUtils.array.randomElement(system.spawnPoints));
         });
     }
 
@@ -1318,43 +1336,47 @@ class MurderMysteryComponents {
         );
     }
 
+    /** 防止玩家和方块交互。 */
+    static preventInteractingWithBlock(system: MurderMysterySystem) {
+        lib.gameSystem.subscribeEvent(
+            "preventInteractingWithBlock",
+            minecraft.world.beforeEvents.playerInteractWithBlock,
+            event => {
+                const { isFirstEvent, block, player } = event;
+                // 如果不是首次交互，直接终止
+                if (!isFirstEvent) {
+                    event.cancel = true;
+                    return;
+                }
+                // 如果是创造模式玩家，直接终止
+                if (player.getGameMode() === minecraft.GameMode.Creative) return;
+                // 解析允许交互的组件，如果交互的方块是 allowedBlocks 中的方块列表，或交互的坐标是 allowedLocation 中的坐标列表，则终止之
+                const { blocks: allowedBlocks = [], location: allowedLocation = [] } =
+                    system.mapData.components.allowInteractingWithBlock ?? {};
+                if (allowedBlocks.includes(block.typeId)) return;
+                if (allowedLocation.some(location => lib.Vector3Utils.isEqual(location, block.location))) return;
+                // 阻止玩家交互
+                event.cancel = true;
+            }
+        );
+    }
+
     // #endregion
     // #region - 游戏开始后（可选组件）
 
-    /** 玩家进入虚空组件。 */
-    static playerIntoVoid(component: data.MurderMysteryPlayerIntoVoidComponent, system: MurderMysterySystem) {
+    /** 玩家进入虚空组件。
+     * @description 会自动判断系统的地图数据是否含有`playerIntoVoid`信息，若不含该信息则不会注册该组件。
+     * @description 当玩家掉到特定高度后，将玩家处死。
+     */
+    static playerIntoVoid(system: MurderMysterySystem) {
+        const component = system.mapData.components.playerIntoVoid;
+        if (!component) return;
         lib.gameSystem.subscribeTimeline("playerIntoVoid", () => {
             const { voidHeight = 0 } = component;
             system.alivePlayers.allPlayers
                 .filter(data => data.player.location.y <= voidHeight)
                 .forEach(data => data.setDead(DeathType.Void));
         });
-    }
-
-    /** 玩家禁止开箱组件。 */
-    static preventOpeningChest(component: data.MurderMysteryPreventOpeningChestComponent) {
-        lib.gameSystem.subscribeEvent(
-            "preventOpeningChest",
-            minecraft.world.beforeEvents.playerInteractWithBlock,
-            event => {
-                // 初步的条件检查
-                const { isFirstEvent, block: chest, player } = event;
-                if (chest.typeId !== "minecraft:chest") return;
-                if (!isFirstEvent) {
-                    event.cancel = true;
-                    return;
-                }
-                // 检查箱子是否为给定坐标的箱子（可打开）
-                const { allowedChest = [] } = component;
-                if (allowedChest.some(location => lib.Vector3Utils.isEqual(location, chest.location))) return;
-                // 其余情况，阻止玩家打开箱子，并且提示玩家
-                event.cancel = true;
-                minecraft.system.run(() => {
-                    player.sendMessage({ translate: "chat.chestLocked" });
-                    player.playSound("open.wooden_door");
-                });
-            }
-        );
     }
 
     // #endregion
@@ -1484,6 +1506,7 @@ class MurderMysteryPlayer {
 
         // 标记为该玩家已死亡
         this.isDead = true;
+        this.chargingTime = 0;
         this.system.removePlayer(this, true);
 
         // 生成尸体

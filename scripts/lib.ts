@@ -767,6 +767,12 @@ export class Vector3Utils {
         if (location.y < yMin) return { direction: minecraft.Direction.Down, distance: yMin - location.y };
         return { distance: 0 };
     }
+
+    /** 将向量等比例延长。 */
+    static scale(vector: minecraft.Vector3, scale: number): minecraft.Vector3 {
+        const { x, y, z } = vector;
+        return { x: x * scale, y: y * scale, z: z * scale };
+    }
 }
 
 // #endregion
@@ -885,8 +891,9 @@ export class EntityUtils {
 
 /** 玩家操作工具。 */
 export class PlayerUtils {
-    /** 判断实体是否为玩家。 */
+    /** 判断实体是否为有效玩家。 */
     static isPlayer(entity: minecraft.Entity): entity is minecraft.Player {
+        if (!entity.isValid) return false;
         return entity.typeId === "minecraft:player";
     }
 
