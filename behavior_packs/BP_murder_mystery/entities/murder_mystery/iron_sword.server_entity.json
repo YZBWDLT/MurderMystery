@@ -1,0 +1,42 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "murder_mystery:iron_sword",
+            "is_spawnable": false,
+            "is_summonable": true,
+            "runtime_identifier": "minecraft:arrow"
+        },
+        "components": {
+            "minecraft:collision_box": { "height": 0.25, "width": 0.25 },
+            "minecraft:physics": {},
+            "minecraft:conditional_bandwidth_optimization": {
+                "default_values": {
+                    "max_dropped_ticks": 7,
+                    "max_optimized_distance": 80.0,
+                    "use_motion_prediction_hints": true
+                }
+            }
+        },
+        "events": {
+            "minecraft:entity_spawned": {
+                "add": { "component_groups": ["murder_mystery:as_projectile"] }
+            },
+            "murder_mystery:stick_in_ground": {
+                "remove": { "component_groups": ["murder_mystery:as_projectile"] }
+            }
+        },
+        "component_groups": {
+            "murder_mystery:as_projectile": {
+                "minecraft:projectile": {
+                    "gravity": 0,
+                    "anchor": 1,
+                    "power": 0.5,
+                    "inertia": 1,
+                    "should_bounce": true,
+                    "on_hit": { "impact_damage": { "destroy_on_hit": true } }
+                }
+            }
+        }
+    }
+}

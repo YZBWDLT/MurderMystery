@@ -11,7 +11,6 @@ tile.murder_mystery:mark_goldpoint.name=金生成点
 
 ## ===== 实体 =====
 
-### --- NPC ---
 entity.murder_mystery:npc.name=NPC
 item.spawn_egg.entity.murder_mystery:npc.name=NPC 刷怪蛋
 entity.murder_mystery:fake_player.name=假玩家
@@ -20,6 +19,10 @@ entity.murder_mystery:dead_player.name=死去的玩家
 item.spawn_egg.entity.murder_mystery:dead_player.name=死去的玩家 刷怪蛋
 entity.murder_mystery:item_bow.name=弓
 item.spawn_egg.entity.murder_mystery:item_bow.name=弓 刷怪蛋
+entity.murder_mystery:iron_sword.name=刀
+item.spawn_egg.entity.murder_mystery:iron_sword.name=刀 刷怪蛋
+entity.murder_mystery:glass_pane_crack.name=玻璃板裂纹
+item.spawn_egg.entity.murder_mystery:glass_pane_crack.name=玻璃板裂纹 刷怪蛋
 
 ## ===== 物品组 =====
 murder_mystery:itemGroup.name.mark_block=方块标记
@@ -72,7 +75,6 @@ subtitle.murderGetSword.murder=§6右键§e掷出手中的剑！
 ### 杀手杀死玩家
 chat.youDied=§c你死了！§e%s
 title.youDied=§c你死了！
-deathMessage.murderer=§e杀手捅了你一刀！
 deathMessage.murdererStab=§e杀手捅了你一刀！
 deathMessage.murdererShot=§e杀手射中了你！
 deathMessage.murdererKnife=§e杀手的飞刀击中了你！
@@ -84,6 +86,8 @@ deathMessage.hitGround=§e你撞到了地上！
 deathMessage.trap=§e你踩到了一个陷阱！
 deathMessage.potion=§e毒药杀死了你。
 deathMessage.other=§e你死了！
+chat.knifeKilledPlayer=§e在%s米外击杀了目标！
+#### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
 
 ### 杀手杀死侦探
 chat.detectiveKilled=§6侦探已被杀死！

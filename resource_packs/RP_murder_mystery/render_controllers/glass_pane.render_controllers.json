@@ -1,0 +1,26 @@
+{
+    "format_version": "1.10.0",
+    "render_controllers": {
+        "controller.render.glass_pane_crack": {
+            "geometry": "geometry.default",
+            "materials": [{ "*": "material.default" }],
+            "textures": ["array.stage[v.stage]"],
+            "arrays": {
+                "textures": {
+                    "array.stage": [
+                        "texture.stage_0",
+                        "texture.stage_1",
+                        "texture.stage_2",
+                        "texture.stage_3",
+                        "texture.stage_4",
+                        "texture.stage_5",
+                        "texture.stage_6",
+                        "texture.stage_7",
+                        "texture.stage_8",
+                        "texture.stage_9"
+                    ]
+                }
+            }
+        }
+    }
+}

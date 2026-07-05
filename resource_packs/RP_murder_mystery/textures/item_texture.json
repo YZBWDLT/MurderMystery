@@ -1,6 +1,7 @@
 {
     "resource_pack_name": "test",
     "texture_data": {
-        "bed_red": { "textures": "textures/items/bed_red" }
+        "bed_red": { "textures": "textures/items/bed_red" },
+        "murder_mystery_iron_sword": { "textures": "textures/items/iron_sword" }
     }
 }

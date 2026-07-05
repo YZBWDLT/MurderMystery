@@ -3,19 +3,19 @@
     "header": {
         "name": "量筒的密室杀手 行为包",
         "description": "仿照Hypixel在基岩版上实现的密室杀手！",
-        "uuid": "459363a0-9008-4654-a350-496c402f2223",
-        "version": [1, 0, 0],
+        "uuid": "6047457d-1640-4f5b-acbd-edbf0acae1fc",
+        "version": [1, 0, 1],
         "min_engine_version": [1, 26, 10]
     },
     "modules": [
         {
             "type": "data",
-            "uuid": "957e511b-05b3-465d-afa3-13b6d94d57ec",
+            "uuid": "c501620e-85c2-456a-8c00-d53a07438410",
             "version": [1, 0, 0]
         },
         {
             "type": "script",
-            "uuid": "ec90562e-ee59-46c1-997b-bc55ac078fa5",
+            "uuid": "1c17a6c5-4dab-4974-8e9e-d5fd92c6b772",
             "version": [1, 0, 0],
             "entry": "scripts/main.js"
         }

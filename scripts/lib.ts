@@ -25,6 +25,9 @@ class GameSystem {
     /** 所有时间线对应的数字 ID。 */
     private readonly gameTimeline: Record<string, number> = {};
 
+    /** 所有延迟对应的数字 ID。 */
+    private readonly gameDelay: Record<string, number> = {};
+
     /** 所有事件对应的 EventSignal 和 gameEventCallback 函数。 */
     private readonly gameEvent: Record<
         string,
@@ -75,6 +78,49 @@ class GameSystem {
     /** 取消订阅所有时间线。 */
     unsubscribeAllTimelines() {
         this.getAllTimelineIds().forEach(timelineId => this.unsubscribeTimeline(timelineId));
+    }
+
+    // ===== 延迟管理器 =====
+
+    /** 订阅特定 ID 的延迟。
+     * @param callback 若为 false 则终止延迟的运行
+     * @returns 返回是否成功订阅延迟。
+     */
+    subscribeDelay(id: string, callback: () => boolean | void, tickDelay = 1) {
+        // 检查延迟是否重叠，若存在重叠则阻止运行
+        if (this.getAllDelayIds().includes(id)) return false;
+        // 订阅延迟，并记录到延迟列表中，同时追踪该延迟
+        const numberId = minecraft.system.runTimeout(() => {
+            const shouldExist = callback();
+            if (shouldExist === false) this.unsubscribeDelay(id);
+        }, tickDelay);
+        this.gameDelay[id] = numberId;
+        if (this.showDebugMessage) minecraft.world.sendMessage(`§a+ 延迟 ${id}`);
+        return true;
+    }
+
+    /** 取消订阅特定 ID 的延迟。
+     * @returns 返回是否成功取消订阅延迟。
+     */
+    unsubscribeDelay(id: string) {
+        // 检查延迟是否存在，若不存在则终止运行
+        const numberId = this.gameDelay[id];
+        if (!numberId) return false;
+        // 取消延迟
+        minecraft.system.clearRun(numberId);
+        delete this.gameDelay[id];
+        if (this.showDebugMessage) minecraft.world.sendMessage(`§c- 延迟 ${id}`);
+        return true;
+    }
+
+    /** 获取所有延迟的 ID。 */
+    getAllDelayIds() {
+        return Object.keys(this.gameDelay);
+    }
+
+    /** 取消订阅所有延迟。 */
+    unsubscribeAllDelays() {
+        this.getAllDelayIds().forEach(delayId => this.unsubscribeDelay(delayId));
     }
 
     // ===== 事件管理器 =====

@@ -1,0 +1,57 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "murder_mystery:glass_pane_crack",
+            "is_spawnable": false,
+            "is_summonable": true,
+            "properties": {
+                "murder_mystery:crack_stage": { "type": "int", "client_sync": true, "default": 9, "range": [0, 9] }
+            }
+        },
+        "components": {
+            "minecraft:physics": { "has_collision": false, "has_gravity": false },
+            "minecraft:collision_box": { "height": 0, "width": 0 },
+            "minecraft:damage_sensor": { "triggers": [{ "cause": "all", "deals_damage": "no" }] },
+            "minecraft:timer": {
+                "time": 3,
+                "looping": true,
+                "time_down_event": { "event": "murder_mystery:change_stage", "target": "self" }
+            }
+        },
+        "events": {
+            "murder_mystery:change_stage": {
+                "sequence": [
+                    {
+                        "filters": {
+                            "test": "int_property",
+                            "domain": "murder_mystery:crack_stage",
+                            "value": 0,
+                            "operator": "<="
+                        },
+                        "trigger": "murder_mystery:remove_immediately"
+                    },
+                    {
+                        "filters": {
+                            "test": "int_property",
+                            "domain": "murder_mystery:crack_stage",
+                            "value": 1,
+                            "operator": ">="
+                        },
+                        "set_property": {
+                            "murder_mystery:crack_stage": "query.property('murder_mystery:crack_stage') - 1"
+                        }
+                    }
+                ]
+            },
+            "murder_mystery:remove_immediately": {
+                "add": { "component_groups": ["remove_immediately"] }
+            }
+        },
+        "component_groups": {
+            "remove_immediately": {
+                "minecraft:instant_despawn": {}
+            }
+        }
+    }
+}

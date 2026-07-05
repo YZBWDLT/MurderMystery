@@ -1,0 +1,26 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "murder_mystery:glass_pane_crack",
+            "materials": { "default": "entity_alphatest" },
+            "textures": {
+                "stage_0": "textures/environment/destroy_stage_0",
+                "stage_1": "textures/environment/destroy_stage_1",
+                "stage_2": "textures/environment/destroy_stage_2",
+                "stage_3": "textures/environment/destroy_stage_3",
+                "stage_4": "textures/environment/destroy_stage_4",
+                "stage_5": "textures/environment/destroy_stage_5",
+                "stage_6": "textures/environment/destroy_stage_6",
+                "stage_7": "textures/environment/destroy_stage_7",
+                "stage_8": "textures/environment/destroy_stage_8",
+                "stage_9": "textures/environment/destroy_stage_9"
+            },
+            "geometry": { "default": "geometry.glass_pane_crack" },
+            "render_controllers": ["controller.render.glass_pane_crack"],
+            "scripts": {
+                "pre_animation": ["v.stage=query.property('murder_mystery:crack_stage');"]
+            }
+        }
+    }
+}

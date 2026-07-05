@@ -11,7 +11,6 @@ tile.murder_mystery:mark_goldpoint.name=Gold Point
 
 ## ===== Entities =====
 
-### --- NPC ---
 entity.murder_mystery:npc.name=NPC
 item.spawn_egg.entity.murder_mystery:npc.name=NPC Spawn Egg
 entity.murder_mystery:fake_player.name=Fake Player
@@ -20,6 +19,10 @@ entity.murder_mystery:dead_player.name=Dead Player
 item.spawn_egg.entity.murder_mystery:dead_player.name=Dead Player Spawn Egg
 entity.murder_mystery:item_bow.name=Bow
 item.spawn_egg.entity.murder_mystery:item_bow.name=Bow Spawn Egg
+entity.murder_mystery:iron_sword.name=Knife
+item.spawn_egg.entity.murder_mystery:iron_sword.name=Knife Spawn Egg
+entity.murder_mystery:glass_pane_crack.name=Glass Pane Crack
+item.spawn_egg.entity.murder_mystery:glass_pane_crack.name=Glass Pane Crack Spawn Egg
 
 ## ===== Item Group =====
 murder_mystery:itemGroup.name.mark_block=Mark Blocks
@@ -72,7 +75,6 @@ subtitle.murderGetSword.murder=§6Right Cilck §eto throw your sword!
 ### Murderer killed player
 chat.youDied=§cYOU DIED!§e%s
 title.youDied=§cYOU DIED!
-deathMessage.murderer=§eThe Murderer threw their knife at you!
 deathMessage.murdererStab=§eA Murderer stabbed you!
 deathMessage.murdererShot=§eA Murderer shot you!
 deathMessage.murdererKnife=§eA Murderer threw his Knife at you!
@@ -84,6 +86,8 @@ deathMessage.hitGround=§eYou hit the ground!
 deathMessage.trap=§eYou fell into a trap!
 deathMessage.potion=§eThe poison killed you.
 deathMessage.other=§eYou Died!
+chat.knifeKilledPlayer=§eKilled target at %s meters away!
+#### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
 
 ### Murderer killed Detective
 chat.detectiveKilled=§6The Detective has been killed!
