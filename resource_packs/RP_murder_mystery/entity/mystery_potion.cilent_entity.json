@@ -1,0 +1,18 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "murder_mystery:mystery_potion",
+            "materials": { "default": "entity_alphatest" },
+            "textures": { "default": "textures/items/mystery_potion_speed" },
+            "geometry": { "default": "geometry.mystery_potion" },
+            "render_controllers": ["controller.render.default"],
+            "scripts": {
+                "animate": ["get_potion"]
+            },
+            "animations": {
+                "get_potion": "animation.mystery_potion.get_potion"
+            }
+        }
+    }
+}

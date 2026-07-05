@@ -1,0 +1,25 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.mystery_potion.get_potion": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 1.5,
+			"bones": {
+				"body": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"1.0": [0, -720, 0]
+					},
+					"position": {
+						"0.0": ["6 * math.sin(360 * query.anim_time)", "24 * query.anim_time", "-6 * math.cos(360 * query.anim_time)"],
+						"0.5": ["6 * math.sin(360 * query.anim_time)", 24, "-6 * math.cos(360 * query.anim_time)"],
+						"0.9583": ["6 * math.sin(360 * query.anim_time)", 24, "-6 * math.cos(360 * query.anim_time)"],
+						"1.0": [0, 24, -6],
+						"1.5": [0, 24, -6]
+					},
+					"scale": 0.5
+				}
+			}
+		}
+	}
+}

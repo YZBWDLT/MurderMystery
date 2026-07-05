@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "murder_mystery:mystery_potion",
+            "is_spawnable": false,
+            "is_summonable": true
+        },
+        "components": {
+            "minecraft:physics": { "has_collision": false, "has_gravity": false },
+            "minecraft:collision_box": { "height": 0, "width": 0 },
+            "minecraft:damage_sensor": { "triggers": [{ "cause": "all", "deals_damage": "no" }] }
+        }
+    }
+}

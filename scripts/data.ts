@@ -39,7 +39,9 @@ type MurderMysteryMapDataComponent = {
     readonly playerIntoVoid?: MurderMysteryPlayerIntoVoidComponent;
     /** 禁止与方块交互组件，阻止玩家与方块交互。若不指定则默认取消所有方块的交互。 */
     readonly allowInteractingWithBlock?: MurderMysteryAllowInteractingWithBlockComponent;
-    /** 神秘药水组件，当玩家和特定位置的炼药锅交互后为玩家添加药水。 */
+    /** 神秘药水组件，当玩家和特定位置的炼药锅交互后为玩家添加药水。
+     * @remarks 必须要规定`allowInteractingWithBlock`组件并允许炼药锅的使用，否则该组件可能无法正常使用。
+     */
     readonly mysteryPotion?: MurderMysteryMysteryPotionComponent;
 };
 
@@ -81,6 +83,15 @@ export const maps: Record<string, MurderMysteryMapData> = {
         components: {
             playerIntoVoid: { voidHeight: 40 },
             allowInteractingWithBlock: { blocks: ["minecraft:cauldron"] },
+            mysteryPotion: {
+                location: [
+                    { x: -884, y: 102, z: 1923 },
+                    { x: -907, y: 102, z: 1909 },
+                    { x: -927, y: 102, z: 1935 },
+                    { x: -853, y: 102, z: 1953 },
+                    { x: -884, y: 111, z: 1966 },
+                ],
+            },
         },
     },
 };

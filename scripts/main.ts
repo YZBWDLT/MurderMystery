@@ -6,6 +6,10 @@
 // - 地图组件
 //   - 虚空（完善特定区域）
 //   - 神秘药水效果
+//   - 地图中有多处像这样的炼药锅结构，
+// 使用2金锭后玩家会在3s后获得随机药水，
+// 炼药锅每次只允许1人使用
+// (随机药水卡池：15s缓慢I，10s失明，15s迅捷II，15s隐身，10s无敌(此时你可以免疫除虚空外的所有伤害))
 //   - 开启暗道
 // - 在只剩余 1 名平民/侦探的时候对杀手添加速度 I，并给予有效的位置提示
 // - 杀死玩家后显示遗言
@@ -393,6 +397,7 @@ class MurderMysterySystem {
 
         // 注册可选组件
         MurderMysteryComponents.playerIntoVoid(this);
+        MurderMysteryComponents.mysteryPotion(this);
     }
 
     /** 令游戏进入结束阶段。
@@ -770,6 +775,9 @@ type MurderMysteryGameSettings = {
 
     /** 杀手飞刀距离箭多近时视为相碰。 */
     thrownKnifeCollideArrowDistance: number;
+
+    /** 神秘药水的价格。 */
+    mysteryPotionPrice: number;
 };
 
 type MurderMysteryMiscellaneousSettings = {
@@ -797,6 +805,7 @@ class MurderMysterySettings {
         pickupBowMethod: "nearby",
         thrownKnifeSpeed: 1.0,
         thrownKnifeCollideArrowDistance: 5,
+        mysteryPotionPrice: 1,
     };
 
     /** 杂项设置，控制游戏中一些其他内容的设置项。 */
@@ -1340,7 +1349,10 @@ class MurderMysteryComponents {
         );
     }
 
-    /** 防止玩家和方块交互。 */
+    /** 防止玩家和方块交互。
+     * @description 阻止玩家和地图组件`allowInteractingWithBlock`中指定之外的方块交互。
+     * @description 不会阻止创造模式玩家和方块交互。
+     */
     static preventInteractingWithBlock(system: MurderMysterySystem) {
         lib.gameSystem.subscribeEvent(
             "preventInteractingWithBlock",
@@ -1365,7 +1377,14 @@ class MurderMysteryComponents {
         );
     }
 
-    /** 杀手飞刀。 */
+    /** 杀手飞刀。
+     * @description 杀手蓄力时播放音效，杀手飞刀需要用 1s 蓄力才能飞刀，若未满 1s 则停止播放音效。
+     * @description 若满 1s 则飞刀，并注册相关事件，检查飞刀是否击中玩家、方块、箭或出界。
+     * @description 若飞刀击中玩家，该玩家死亡。
+     * @description 若飞刀击中方块，玻璃板可以穿过并留下裂痕，屏障可以穿过，其余方块则销毁飞刀。
+     * @description 若飞刀击中箭，二者俱被销毁。
+     * @description 若飞刀出界则销毁。
+     */
     static murdererKnife(system: MurderMysterySystem) {
         // 【备注】因为原版不能通过`minecraft:throwable`自动到点射出，所以不使用`minecraft:throwable`
         //        又因为原版试图使用就会触发`minecraft:cooldown`，而不是使用完毕后触发，所以不使用`minecraft:cooldown`
@@ -1388,10 +1407,10 @@ class MurderMysteryComponents {
             });
         }
 
-        /** 检查杀手是否蓄力了 0.5 秒，并在蓄力结束后投刀。 */
+        /** 检查杀手是否蓄力了 1 秒，并在蓄力结束后投刀。 */
         function throwKnife(murderer: minecraft.Player, murdererData: MurderMysteryPlayer) {
             lib.gameSystem.subscribeEvent("murdererKnifeThrowTest", minecraft.world.afterEvents.itemStopUse, event => {
-                // 如果蓄力没有满 0.5s，则直接终止本事件
+                // 如果蓄力没有满 1s，则直接终止本事件
                 if (event.useDuration !== 0) return false;
                 // 生成飞刀并掷出
                 const ironSwordEntity = lib.EntityUtils.add("murder_mystery:iron_sword", murderer.getHeadLocation());
@@ -1570,7 +1589,7 @@ class MurderMysteryComponents {
     // #region - 游戏开始后（可选组件）
 
     /** 玩家进入虚空组件。
-     * @description 会自动判断系统的地图数据是否含有`playerIntoVoid`信息，若不含该信息则不会注册该组件。
+     * @description 会自动判断系统的地图数据是否含有`playerIntoVoid`组件，若不含该组件则不会注册该组件。
      * @description 当玩家掉到特定高度后，将玩家处死。
      */
     static playerIntoVoid(system: MurderMysterySystem) {
@@ -1582,6 +1601,65 @@ class MurderMysteryComponents {
                 .filter(data => data.player.location.y <= voidHeight)
                 .forEach(data => data.setDead(DeathType.Void));
         });
+    }
+
+    /** 神秘药水组件。
+     * @description 会自动判断系统的地图数据是否含有`mysteryPotion`组件，若不含该组件则不会注册该组件。
+     * @description 会在游戏开始时尝试在规定的位置生成展示文本。
+     * @description 当玩家与炼药锅交互时，会检查是否为规定的炼药锅，以及是否有足够的金锭，若不符合条件则不会酿造神秘药水。
+     */
+    static mysteryPotion(system: MurderMysterySystem) {
+        const component = system.mapData.components.mysteryPotion;
+        if (!component) return;
+        // 生成展示文本
+        const cauldronLocation = component.location ?? [];
+        const mysteryPotionPrice = system.settings.game.mysteryPotionPrice;
+        cauldronLocation.forEach(location => {
+            const spawnLocation = lib.Vector3Utils.add(location, 0.5, 1, 0.5);
+            const textDisplay = lib.EntityUtils.add("murder_mystery:text_display", spawnLocation);
+            textDisplay.nameTag = `神秘药水 - ${mysteryPotionPrice}§6块金锭`;
+        });
+        lib.gameSystem.subscribeEvent("mysteryPotion", minecraft.world.afterEvents.playerInteractWithBlock, event => {
+            const { isFirstEvent, player, block } = event;
+            if (!isFirstEvent) return;
+            if (!lib.Vector3Utils.hasPosition(cauldronLocation, block.location)) return;
+            if (lib.ItemUtils.inventory.getAmount(player, { typeId: goldId }) < mysteryPotionPrice) {
+                lib.PlayerUtils.sendMessage(player, {
+                    message: { translate: "chat.goldNotEnough", with: [`${mysteryPotionPrice}`] },
+                    sound: "random.anvil_land",
+                });
+                return;
+            }
+            // 金锭足够后，兑换神秘药水
+            lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, 1);
+            const mysteryPotionEntity = lib.EntityUtils.add(
+                "murder_mystery:mystery_potion",
+                lib.Vector3Utils.add(block.location, 0.5, 0, 0.5)
+            );
+            minecraft.system.runTimeout(() => {
+                lib.ItemUtils.inventory.add(player, "murder_mystery:mystery_potion", {
+                    itemLock: minecraft.ItemLockMode.inventory,
+                });
+                mysteryPotionEntity.remove();
+            }, 30);
+        });
+        // 神秘药水的药效
+        lib.gameSystem.subscribeEvent(
+            "mysteryPotionRandomEffect",
+            minecraft.world.afterEvents.itemCompleteUse,
+            event => {
+                const { itemStack: mysteryPotion, source: player } = event;
+                if (mysteryPotion.typeId !== "murder_mystery:mystery_potion") return;
+                const randomEffect = [
+                    { id: "invisibility", duration: 300, amplifier: 0 },
+                    { id: "slowness", duration: 300, amplifier: 0 },
+                    { id: "speed", duration: 300, amplifier: 1 },
+                    { id: "blindness", duration: 200, amplifier: 0 },
+                ][lib.JSUtils.number.randomInt(0, 3)];
+                player.addEffect(randomEffect.id, randomEffect.duration, { amplifier: randomEffect.amplifier });
+                // (随机药水卡池：15s缓慢I，10s失明，15s迅捷II，15s隐身，10s无敌(此时你可以免疫除虚空外的所有伤害))
+            }
+        );
     }
 
     // #endregion
@@ -1926,7 +2004,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
     minecraft.system.runInterval(() => {
         if (!murderMysterySystem.isValid) murderMysterySystem = new MurderMysterySystem();
     }, 20);
-    lib.gameSystem.showDebugMessage = true;
+    lib.gameSystem.showDebugMessage = false;
 });
 
 // #endregion

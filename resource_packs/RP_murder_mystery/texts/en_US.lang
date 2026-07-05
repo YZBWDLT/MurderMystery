@@ -23,6 +23,13 @@ entity.murder_mystery:iron_sword.name=Knife
 item.spawn_egg.entity.murder_mystery:iron_sword.name=Knife Spawn Egg
 entity.murder_mystery:glass_pane_crack.name=Glass Pane Crack
 item.spawn_egg.entity.murder_mystery:glass_pane_crack.name=Glass Pane Crack Spawn Egg
+entity.murder_mystery:text_display.name=Text Display
+item.spawn_egg.entity.murder_mystery:text_display.name=Text Display Spawn Egg
+entity.murder_mystery:mystery_potion.name=Mystery Potion
+item.spawn_egg.entity.murder_mystery:mystery_potion.name=Mystery Potion Spawn Egg
+
+## ===== Item =====
+item.murder_mystery:mystery_potion=§a??? Mystery Potion ???
 
 ## ===== Item Group =====
 murder_mystery:itemGroup.name.mark_block=Mark Blocks
@@ -131,6 +138,9 @@ chat.winner.murderer=§lWinner: §r§cMurderer
 chat.detective=§7Detective: §a%s
 chat.murderer=§7Murderer: §a%s§7（§a%s§7Kills）
 chat.hero=§7Hero: §a%s
+
+### Gold Not Enough
+chat.goldNotEnough=§cYou need at least §6%s gold§c to use this!
 
 ### Other message
 chat.chestLocked=The chest is locked!

@@ -23,6 +23,13 @@ entity.murder_mystery:iron_sword.name=刀
 item.spawn_egg.entity.murder_mystery:iron_sword.name=刀 刷怪蛋
 entity.murder_mystery:glass_pane_crack.name=玻璃板裂纹
 item.spawn_egg.entity.murder_mystery:glass_pane_crack.name=玻璃板裂纹 刷怪蛋
+entity.murder_mystery:text_display.name=文本展示实体
+item.spawn_egg.entity.murder_mystery:text_display.name=文本展示实体 刷怪蛋
+entity.murder_mystery:mystery_potion.name=神秘药水
+item.spawn_egg.entity.murder_mystery:mystery_potion.name=神秘药水 刷怪蛋
+
+## ===== 物品 =====
+item.murder_mystery:mystery_potion=§a？？？神秘药水？？？
 
 ## ===== 物品组 =====
 murder_mystery:itemGroup.name.mark_block=方块标记
@@ -131,6 +138,9 @@ chat.winner.murderer=§l胜利者：§r§c杀手
 chat.detective=§7侦探：§a%s
 chat.murderer=§7杀手：§a%s§7（§a%s§7击杀）
 chat.hero=§7英雄：§a%s
+
+### 金锭不足
+chat.goldNotEnough=§c你需要§6%s个金锭§c才能使用它！
 
 ### 其他消息
 chat.chestLocked=此箱子已被上锁！
