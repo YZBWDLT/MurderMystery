@@ -233,8 +233,8 @@ class MurderMysterySystem {
     /** 首位侦探是否已经死亡。 */
     firstDetectiveDied = false;
 
-    /** 是否已给予杀手刀。 */
-    murdererGetSword = false;
+    /** 是否已给予杀手和侦探道具。 */
+    getSpecialItem = false;
 
     /** 是否是一个有效的系统。在游戏结束后，该系统将变得无效化。 */
     isValid = true;
@@ -332,7 +332,7 @@ class MurderMysterySystem {
         // 注册必选组件
         this.general();
         MurderMysteryComponents.gameTimer(this);
-        MurderMysteryComponents.murdererGetSword(this);
+        MurderMysteryComponents.getSpecialItem(this);
         MurderMysteryComponents.infoboard(this); // 重新注册信息板组件，以防时间错位
         MurderMysteryComponents.generateGold(this);
         MurderMysteryComponents.playerCollectGold(this);
@@ -680,8 +680,8 @@ type MurderMysteryGameSettings = {
     /** 一局的游戏时长。单位：秒。 */
     timePerGame: number;
 
-    /** 在游戏开始多久后给予杀手剑。单位：秒。 */
-    murdererGetSwordDelay: number;
+    /** 在游戏开始多久后给予杀手和侦探物品。单位：秒。 */
+    getSpecialItemDelay: number;
 
     /** 平民如何拾取弓。可以选择右键拾取或接近拾取。 */
     pickupBowMethod: "rightClick" | "nearby";
@@ -726,7 +726,7 @@ class MurderMysterySettings {
     /** 游戏设置，在游戏期间可以调控的设置项。 */
     readonly game: MurderMysteryGameSettings = {
         timePerGame: 270,
-        murdererGetSwordDelay: 15,
+        getSpecialItemDelay: 15,
         pickupBowMethod: "nearby",
         thrownKnifeSpeed: 1.0,
         thrownKnifeCollideArrowDistance: 5,
@@ -912,42 +912,43 @@ class MurderMysteryComponents {
 
     /** 杀手获得剑。
      * @description 剩余 0-5 秒时，对玩家公告杀手将拿到剑。
-     * @description 剩余 0 秒时，杀手将拿到剑并注销此组件。
+     * @description 剩余 0 秒时，杀手将拿到剑，侦探将拿到弓，并注销此组件。
      */
-    static murdererGetSword(system: MurderMysterySystem) {
+    static getSpecialItem(system: MurderMysterySystem) {
         lib.gameSystem.subscribeTimeline(
-            "murdererGetSword",
+            "getSpecialItem",
             () => {
-                const murdererGetSwordTimeLeft =
-                    system.settings.game.murdererGetSwordDelay - (system.settings.game.timePerGame - system.timeLeft);
+                const getSpecialItemTimeLeft =
+                    system.settings.game.getSpecialItemDelay - (system.settings.game.timePerGame - system.timeLeft);
 
                 // 当给杀手刀剩余 1-5 秒时，对所有玩家提示
-                if (murdererGetSwordTimeLeft > 0 && murdererGetSwordTimeLeft <= 5) {
+                if (getSpecialItemTimeLeft > 0 && getSpecialItemTimeLeft <= 5) {
                     system.alivePlayers.allPlayers.forEach(playerData => {
                         if (!isPlayer(playerData.player)) return;
                         lib.PlayerUtils.sendMessage(playerData.player, {
                             message: {
                                 translate: `chat.murderWillGetSword.${playerData.role}`,
-                                with: [`§c${murdererGetSwordTimeLeft}`],
+                                with: [`§c${getSpecialItemTimeLeft}`],
                             },
                             sound: "note.hat",
                         });
                     });
                 }
-                // 当倒计时结束后，给予杀手剑并对所有玩家提示
-                if (murdererGetSwordTimeLeft <= 0) {
+                // 当倒计时结束后，给予杀手和侦探道具并对所有玩家提示
+                if (getSpecialItemTimeLeft <= 0) {
                     system.alivePlayers.allPlayers.forEach(playerData => {
                         if (!isPlayer(playerData.player)) return;
                         lib.PlayerUtils.sendMessage(playerData.player, {
                             message: {
                                 translate: `chat.murderGetSword.${playerData.role}`,
-                                with: [`§c${murdererGetSwordTimeLeft}`],
+                                with: [`§c${getSpecialItemTimeLeft}`],
                             },
                             sound: "note.hat",
                         });
                     });
                     system.alivePlayers.murderer.forEach(murderer => murderer.getSword());
-                    system.murdererGetSword = true;
+                    system.alivePlayers.detective.forEach(detective => detective.getDetectiveBow());
+                    system.getSpecialItem = true;
                     return false;
                 }
             },
@@ -1213,7 +1214,7 @@ class MurderMysteryComponents {
                 if (playerData.role === MurderMysteryPlayerRole.Murderer) {
                     // 如果已给刀，或者未给刀但只剩下侦探时，则游戏结束
                     if (
-                        system.murdererGetSword ||
+                        system.getSpecialItem ||
                         system.alivePlayers.detective.length === system.alivePlayers.allPlayers.length
                     ) {
                         system.gameOverTest(MurderMysteryGameOverReason.MurdererQuit);
@@ -1861,10 +1862,9 @@ class MurderMysteryPlayer {
         // 如果是旁观者，标记为已死亡
         if (this.role === MurderMysteryPlayerRole.Spectator) this.isDead = true;
 
-        // 如果是侦探，标记为首位侦探并给予弓
+        // 如果是侦探，标记为首位侦探
         if (this.role === MurderMysteryPlayerRole.Detective) {
             this.isFirstDetective = true;
-            this.getDetectiveBow();
         }
 
         // 为玩家展示身份
