@@ -1,5 +1,5 @@
 {
-    "resource_pack_name": "player_head",
+    "resource_pack_name": "murder_mystery",
     "texture_data": {
         "player_head_fudgiethewhale": { "textures": "textures/entity/fudgiethewhale" },
         "player_head_cheesey": { "textures": "textures/entity/cheesey" },

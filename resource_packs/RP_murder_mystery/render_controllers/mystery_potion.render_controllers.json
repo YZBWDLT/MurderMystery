@@ -1,0 +1,21 @@
+{
+    "format_version": "1.10.0",
+    "render_controllers": {
+        "controller.render.mystery_potion": {
+            "geometry": "geometry.default",
+            "materials": [{ "*": "material.default" }],
+            "textures": ["array.type[v.type]"],
+            "arrays": {
+                "textures": {
+                    "array.type": [
+                        "texture.type_1",
+                        "texture.type_2",
+                        "texture.type_3",
+                        "texture.type_4",
+                        "texture.type_5"
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -6,9 +6,6 @@ tile.player_head:violetmiaw.name=VioletMiaw's Head
 tile.player_head:cheesey.name=Cheesey's Head
 tile.player_head:fudgiethewhale.name=_fudgiethewhale's Head
 
-tile.murder_mystery:mark_spawnpoint.name=Spawn Point
-tile.murder_mystery:mark_goldpoint.name=Gold Point
-
 ## ===== Entities =====
 
 entity.murder_mystery:npc.name=NPC
@@ -29,10 +26,11 @@ entity.murder_mystery:mystery_potion.name=Mystery Potion
 item.spawn_egg.entity.murder_mystery:mystery_potion.name=Mystery Potion Spawn Egg
 
 ## ===== Item =====
-item.murder_mystery:mystery_potion=§a??? Mystery Potion ???
-
-## ===== Item Group =====
-murder_mystery:itemGroup.name.mark_block=Mark Blocks
+item.murder_mystery:mystery_potion_1=§a??? Mystery Potion ???
+item.murder_mystery:mystery_potion_2=§a??? Mystery Potion ???
+item.murder_mystery:mystery_potion_3=§a??? Mystery Potion ???
+item.murder_mystery:mystery_potion_4=§a??? Mystery Potion ???
+item.murder_mystery:mystery_potion_5=§a??? Mystery Potion ???
 
 ## ===== Noun Translations =====
 
@@ -80,7 +78,7 @@ chat.murderGetSword.detective=§eThe Murderer has received their sword!
 subtitle.murderGetSword.murder=§6Right Cilck §eto throw your sword!
 
 ### Murderer killed player
-chat.youDied=§cYOU DIED!§e%s
+chat.youDied=§cYOU DIED! §e%s
 title.youDied=§cYOU DIED!
 deathMessage.murdererStab=§eA Murderer stabbed you!
 deathMessage.murdererShot=§eA Murderer shot you!
@@ -111,7 +109,7 @@ subtitle.10GoldCollected=§a+1 Bow Shot!
 
 ### Innocents pick up bow
 chat.bowPicked=§6A player has picked up the bow!
-chat.bowPicked.picker=§aYou picked up the Bow!§6GOAL: §eFind and kill the Murderer!
+chat.bowPicked.picker=§aYou picked up the Bow! §6GOAL: §eFind and kill the Murderer!
 
 ### Player quit
 chat.detectiveQuit=§6The Detective has left!§eFind the Bow for a chance to kill the Murderer.
@@ -136,15 +134,25 @@ chat.winner.innocent=§lWinner: §r§aPlayers
 chat.winner.detective=§lWinner: §r§aPlayers
 chat.winner.murderer=§lWinner: §r§cMurderer
 chat.detective=§7Detective: §a%s
-chat.murderer=§7Murderer: §a%s§7（§a%s§7Kills）
+chat.murderer=§7Murderer: §a%s §7(§a%s§7Kills)
 chat.hero=§7Hero: §a%s
 
-### Gold Not Enough
-chat.goldNotEnough=§cYou need at least §6%s gold§c to use this!
+### Mystery Potion Purchase Failed
+chat.mysteryPotion.goldNotEnough=§cYou need at least §6%s gold§c to use this!
+chat.mysteryPotion.occupied=§cSomeone is already using it!
+chat.mysteryPotion.inventoryFull=§cYour inventory is full!
+chat.mysteryPotion.onlyOneEffect=§cYou can only have one effect at the same time!
+subtitle.mysteryPotion.blindness=§c10S OF BLINDNESS
+subtitle.mysteryPotion.slowness=§c10S OF SLOWNESS
+subtitle.mysteryPotion.speed=§a20S OF SPEED
+subtitle.mysteryPotion.invisibility=§a14S OF INVISIBILITY
+subtitle.mysteryPotion.invincibility=§a20S OF INVINCIBILITY
 
-### Other message
-chat.chestLocked=The chest is locked!
+### Spectator Leave Gaming Area
 subtitle.spectatorOutOfBorder=§cYou ran too far!
+
+### Game Will Over
+chat.gameWillOver=§eInnocents will win in §c60§e seconds!
 
 ## ===== Infoboard Message =====
 

@@ -1050,8 +1050,8 @@ export interface ItemOptions {
  * @remarks 暂时不支持附魔查询。
  */
 export interface ItemMatchOptions {
-    /** 物品 ID。 */
-    readonly typeId?: string;
+    /** 包含的物品 ID。 */
+    readonly includeTypeId?: string[];
 
     /** 物品数量。
      * @remarks 指定为数组形式时，应为一个二元数组，第一个元素为最小值，第二个元素为最大值。
@@ -1402,7 +1402,7 @@ export class ItemUtils {
     static match(itemStack: minecraft.ItemStack, options: ItemMatchOptions) {
         // 获取选项信息和物品相关信息
         const {
-            typeId: optionsTypeId,
+            includeTypeId: optionsTypeId,
             name: optionsName,
             itemLock: optionsItemLock,
             keepOnDeath: optionsKeepOnDeath,
@@ -1427,7 +1427,7 @@ export class ItemUtils {
         const itemCanPlaceOn = itemStack.getCanPlaceOn();
         const itemUnbreakable = itemStack.getComponent("durability")?.unbreakable ?? false;
         // 如果指定了筛选某变量 var，当某变量 var 无法匹配时返回 false
-        if (optionsTypeId && optionsTypeId !== itemTypeId) return false;
+        if (optionsTypeId && !optionsTypeId.includes(itemTypeId)) return false;
         if (optionsAmountRange && (optionsAmountRange[0] > itemAmount || optionsAmountRange[1] < itemAmount))
             return false;
         if (optionsName && optionsName !== itemName) return false;
@@ -1497,7 +1497,9 @@ export class ItemUtils {
     }
 
     // ===== 物品掉落物 =====
-    /** 在特定位置生成物品掉落物。 */
+    /** 在特定位置生成物品掉落物。
+     * @param clearVelocity 是否清除掉落物生成时的向量，若不清除则掉落物会随机存在一个向量。 | 默认值：`false`
+     */
     static addEntity(
         location: minecraft.Vector3,
         itemId: string,

@@ -4,12 +4,37 @@
         "description": {
             "identifier": "murder_mystery:mystery_potion",
             "is_spawnable": false,
-            "is_summonable": true
+            "is_summonable": true,
+            "properties": {
+                "murder_mystery:potion_type": {
+                    "client_sync": true,
+                    "type": "int",
+                    "range": [1, 5],
+                    "default": 1
+                }
+            }
         },
         "components": {
             "minecraft:physics": { "has_collision": false, "has_gravity": false },
             "minecraft:collision_box": { "height": 0, "width": 0 },
             "minecraft:damage_sensor": { "triggers": [{ "cause": "all", "deals_damage": "no" }] }
+        },
+        "events": {
+            "murder_mystery:mystery_potion_1": {
+                "set_property": { "murder_mystery:potion_type": 1 }
+            },
+            "murder_mystery:mystery_potion_2": {
+                "set_property": { "murder_mystery:potion_type": 2 }
+            },
+            "murder_mystery:mystery_potion_3": {
+                "set_property": { "murder_mystery:potion_type": 3 }
+            },
+            "murder_mystery:mystery_potion_4": {
+                "set_property": { "murder_mystery:potion_type": 4 }
+            },
+            "murder_mystery:mystery_potion_5": {
+                "set_property": { "murder_mystery:potion_type": 5 }
+            }
         }
     }
 }

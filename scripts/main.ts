@@ -3,6 +3,8 @@
 
 // TODO LIST:
 // - 杀手长时间未击杀玩家的提示
+// - 杀手击杀数错误
+// - 飞刀杀假人报错
 // - 地图组件
 //   - 虚空（完善特定区域）
 //   - 神秘药水效果
@@ -23,60 +25,13 @@
 // 2. 添加抬头tp
 // 7. 还原hyp 特殊职业概率
 // 8. 书架加屏障
+// 遗言机制也有必要研究一下 因为 遗言好像过一段时间会消失
+// 密室杀手有个村规可以做进去，在单挑模式下（1v1）的情况，杀手和侦探开局获得武器的时间节点为4:05
 
 // #region 模块导入
 import * as minecraft from "@minecraft/server";
 import * as lib from "./lib";
 import * as data from "./data";
-
-// #endregion
-// #region 自定义组件注册
-
-/** 【方块组件】自定义屏障组件。该组件允许玩家在手持该物品或特定标签的物品时，在方块内部展示粒子。 */
-type CustomBarrierParams = {
-    /** 展示的粒子效果。 */
-    particle: string;
-
-    /** 是否只对创造模式的玩家展示粒子。 | 默认值：true */
-    only_creative_player?: boolean;
-
-    /** 仅当该玩家在何范围内时展示粒子。 | 默认值：64 */
-    show_range?: number;
-
-    /** 当玩家手持何标签的物品时，也展示粒子。 | 默认值：[] */
-    also_show_with_tag?: string[];
-};
-
-minecraft.system.beforeEvents.startup.subscribe(event => {
-    event.blockComponentRegistry.registerCustomComponent("murder_mystery:custom_barrier", {
-        onTick: (compEvent, arg) => {
-            const {
-                particle,
-                only_creative_player: onlyCreativePlayer = true,
-                show_range: showRange = 64,
-                also_show_with_tag: alsoShowWithTag = [],
-            } = arg.params as CustomBarrierParams;
-            // 获取玩家
-            const block = compEvent.block;
-            const players = minecraft.world.getPlayers().filter(player => {
-                // 如果要求必须创造模式，但玩家不是创造模式，则直接终止
-                if (onlyCreativePlayer && player.getGameMode() !== minecraft.GameMode.Creative) return false;
-                // 如果位置过远，则直接终止
-                if (lib.Vector3Utils.distance(player.location, block.center()) > showRange) return false;
-                // 如果玩家没有手持物品，则直接终止
-                const holdingItem = lib.ItemUtils.equipment.getItem(player, minecraft.EquipmentSlot.Mainhand);
-                if (!holdingItem) return false;
-                // 如果玩家手持的物品不是该物品，并且手持的物品也不是规定标签的物品时，则直接终止
-                const typeCondition = holdingItem.typeId !== block.typeId;
-                const tagCondition = !alsoShowWithTag.some(tag => holdingItem.hasTag(tag));
-                if (typeCondition && tagCondition) return false;
-                // 其余情况通过
-                return true;
-            });
-            players.forEach(player => player.spawnParticle(particle, block.center()));
-        },
-    });
-});
 
 // #endregion
 // #region 类型与变量声明
@@ -144,6 +99,9 @@ const deadPlayerId = "murder_mystery:dead_player";
 
 /** 判断实体是否为玩家。 */
 const isPlayer = lib.PlayerUtils.isPlayer;
+
+/** 瞬间显示标题的选项。 */
+const instantTitleDisplay: minecraft.TitleDisplayOptions = { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 };
 
 // #endregion
 // #region 系统
@@ -269,16 +227,6 @@ class MurderMysterySystem {
         countdownStarted: false,
     };
 
-    /** 地图的所有重生点。
-     * @remarks 在游戏正式开始前，无法获取这些重生点。
-     */
-    readonly spawnPoints: minecraft.Vector3[] = [];
-
-    /** 地图的所有金锭生成点。
-     * @remarks 在游戏正式开始前，无法获取这些金锭生成点。
-     */
-    readonly goldPoints: minecraft.Vector3[] = [];
-
     /** 剩余时间。单位：秒。 */
     timeLeft: number = 270;
 
@@ -290,6 +238,9 @@ class MurderMysterySystem {
 
     /** 是否是一个有效的系统。在游戏结束后，该系统将变得无效化。 */
     isValid = true;
+
+    /** 全局金锭的生成次数。该值将会决定每次生成会在哪个玩家周围生成金锭。 */
+    globalGoldSpawnTimes: number = 0;
 
     // #endregion
     // #region - 游戏阶段转换
@@ -319,6 +270,7 @@ class MurderMysterySystem {
         // 转换阶段并移除所有正在监听的时间线和事件
         lib.gameSystem.unsubscribeAllTimelines();
         lib.gameSystem.unsubscribeAllEvents();
+        lib.gameSystem.unsubscribeAllDelays();
         this.gameStage = GameStage.WaitingStage;
 
         // 初始化所有玩家
@@ -332,9 +284,6 @@ class MurderMysterySystem {
         this.general();
         MurderMysteryComponents.gameStartTest(this);
         MurderMysteryComponents.initJoinedPlayer(this);
-
-        // 获取标记方块的坐标
-        this.getMarkPoint();
     }
 
     /** 令游戏进入游戏阶段。
@@ -347,11 +296,12 @@ class MurderMysterySystem {
         // 转换阶段并移除所有正在监听的时间线和事件
         lib.gameSystem.unsubscribeAllTimelines();
         lib.gameSystem.unsubscribeAllEvents();
+        lib.gameSystem.unsubscribeAllDelays();
         this.gameStage = GameStage.GamingStage;
 
         // 选取并随机传送玩家
         const players = lib.JSUtils.array.shuffle(this.getPlayersBeforeGame());
-        const locations = lib.JSUtils.array.shuffle(this.spawnPoints);
+        const locations = lib.JSUtils.array.shuffle(this.mapData.description.spawnPoints);
         const maxPlayerCount = this.settings.waiting.maxPlayerCount;
         const maxLocationCount = locations.length;
         players.forEach((player, index) => {
@@ -409,14 +359,20 @@ class MurderMysterySystem {
         // 转换阶段并移除所有正在监听的时间线和事件
         lib.gameSystem.unsubscribeAllTimelines();
         lib.gameSystem.unsubscribeAllEvents();
+        lib.gameSystem.unsubscribeAllDelays();
         this.gameStage = GameStage.GameOverStage;
-        minecraft.system.runTimeout(() => {
-            this.removeAllEntities();
-            this.isValid = false;
-        }, 200);
+        lib.gameSystem.subscribeDelay(
+            "resetSystem",
+            () => {
+                this.removeAllEntities();
+                this.isValid = false;
+            },
+            200
+        );
 
         // 注册组件
         this.general();
+        MurderMysteryComponents.preventPlayerPickupGold();
 
         // 提示玩家胜负情况
         const playerWinList: Record<MurderMysteryGameOverReason, boolean> = {
@@ -482,7 +438,7 @@ class MurderMysterySystem {
                 lib.PlayerUtils.sendMessage(playerData.player, {
                     title: title,
                     subtitle: subtitle,
-                    titleOptions: { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 },
+                    titleOptions: instantTitleDisplay,
                     message: lib.JSUtils.lineText(message),
                 });
         };
@@ -519,40 +475,6 @@ class MurderMysterySystem {
         // 选择其中一张地图
         const maps = Object.values(data.maps);
         return mapName ? data.maps[mapName] : lib.JSUtils.array.randomElement(maps);
-    }
-
-    /** 获取标记方块的位置并自动注册到系统上。 */
-    getMarkPoint() {
-        // 确定地图范围，先添加常加载区域再注册方块位置
-        const { from, to } = this.mapData.description.range;
-        const overworld = lib.DimensionUtils.getOverworld();
-        lib.TickingAreaUtils.add("temp", from, to)
-            .then(() => {
-                /** 所有特殊标记方块的位置。 */
-                const markPoints = overworld
-                    .getBlocks(new minecraft.BlockVolume(from, to), {
-                        includeTypes: ["murder_mystery:mark_spawnpoint", "murder_mystery:mark_goldpoint"],
-                    })
-                    .getBlockLocationIterator();
-
-                // 对所有方块位置进行遍历，注册其位置
-                while (true) {
-                    const { value: location, done } = markPoints.next() as {
-                        value: minecraft.Vector3 | undefined;
-                        done: boolean;
-                    };
-                    if (done) break;
-                    if (!location) continue;
-                    const block = lib.BlockUtils.get(location) as minecraft.Block;
-                    if (block.typeId === "murder_mystery:mark_spawnpoint") this.spawnPoints.push(block.center());
-                    else this.goldPoints.push(block.center());
-                }
-                minecraft.world.sendMessage(`检索到并添加了 ${this.spawnPoints.length} 个重生点。`);
-                minecraft.world.sendMessage(`检索到并添加了 ${this.goldPoints.length} 个金锭生成点。`);
-            })
-            .then(() => {
-                lib.TickingAreaUtils.remove("temp");
-            });
     }
 
     // #endregion
@@ -761,12 +683,6 @@ type MurderMysteryGameSettings = {
     /** 在游戏开始多久后给予杀手剑。单位：秒。 */
     murdererGetSwordDelay: number;
 
-    /** 金锭的生成间隔。单位：秒。 */
-    generateGoldInterval: number;
-
-    /** 金锭的生成间隔是否会随玩家人数变化。若设定为`true`，则将金锭生成间隔等比例放大`最大玩家数/玩家数`倍。 */
-    goldIntervalMultipliedByPlayerAmount: boolean;
-
     /** 平民如何拾取弓。可以选择右键拾取或接近拾取。 */
     pickupBowMethod: "rightClick" | "nearby";
 
@@ -778,6 +694,17 @@ type MurderMysteryGameSettings = {
 
     /** 神秘药水的价格。 */
     mysteryPotionPrice: number;
+};
+
+type MurderMysteryGoldSpawnSettings = {
+    /** 在玩家附近多少格的金锭会尝试生成。 */
+    spawnRadius: number;
+
+    /** 待生成金锭的金点中，有多少概率能够实际生成。 */
+    spawnChance: number;
+
+    /** 对于每位玩家，金锭的平均生成间隔。单位：秒。 */
+    spawnInterval: number;
 };
 
 type MurderMysteryMiscellaneousSettings = {
@@ -793,19 +720,23 @@ class MurderMysterySettings {
     readonly waiting: MurderMysteryWaitingSettings = {
         minPlayerCount: 2,
         maxPlayerCount: 16,
-        startCountdown: 10,
+        startCountdown: 16,
     };
 
     /** 游戏设置，在游戏期间可以调控的设置项。 */
     readonly game: MurderMysteryGameSettings = {
         timePerGame: 270,
         murdererGetSwordDelay: 15,
-        generateGoldInterval: 10,
-        goldIntervalMultipliedByPlayerAmount: true,
         pickupBowMethod: "nearby",
         thrownKnifeSpeed: 1.0,
         thrownKnifeCollideArrowDistance: 5,
         mysteryPotionPrice: 1,
+    };
+
+    readonly goldSpawn: MurderMysteryGoldSpawnSettings = {
+        spawnRadius: 5,
+        spawnChance: 0.15,
+        spawnInterval: 16,
     };
 
     /** 杂项设置，控制游戏中一些其他内容的设置项。 */
@@ -915,11 +846,7 @@ class MurderMysteryComponents {
                                 with: [countdown],
                             },
                             title: showTitle ? countdown : void 0,
-                            titleOptions: {
-                                fadeInDuration: 0,
-                                stayDuration: 40,
-                                fadeOutDuration: 0,
-                            },
+                            titleOptions: instantTitleDisplay,
                             sound: "note.hat",
                         });
                     });
@@ -970,6 +897,13 @@ class MurderMysteryComponents {
             "gameTimer",
             () => {
                 system.timeLeft--;
+                if (system.timeLeft === 60)
+                    lib.PlayerUtils.getAll().forEach(player => {
+                        lib.PlayerUtils.sendMessage(player, {
+                            message: { translate: "chat.gameWillOver" },
+                            sound: "note.hat",
+                        });
+                    });
                 if (system.timeLeft <= 0) system.enterGameOverStage(MurderMysteryGameOverReason.TimeOut);
             },
             20
@@ -1022,25 +956,45 @@ class MurderMysteryComponents {
     }
 
     /** 金锭生成。
-     * @description 每隔一段时间在所有金点处生成金锭。
+     * @description 根据 Hypixel 的实测数据，Hypixel 的金点行为更类似于大量定点 + 玩家附近生成，平均 2 分钟出弓。
+     * @description 对每位玩家会尝试每隔 16s 在玩家附近 5 格的位置检索所有金点，并挑出其中的 15% 生成金锭。
      */
     static generateGold(system: MurderMysterySystem) {
-        const locations = system.goldPoints;
-
-        const maxPlayerCount = system.players.allPlayers.filter(
-            playerData => playerData.role !== MurderMysteryPlayerRole.Spectator
-        ).length;
-        const goldIntervalMultiplier = system.settings.game.goldIntervalMultipliedByPlayerAmount
-            ? Math.floor(system.settings.waiting.maxPlayerCount / maxPlayerCount)
-            : 1;
-        const intervalTick = system.settings.game.generateGoldInterval * 20 * goldIntervalMultiplier;
-        lib.gameSystem.subscribeTimeline(
-            "generateGold",
-            () => {
-                locations.forEach(location => lib.ItemUtils.addEntity(location, goldId, {}, true));
-            },
-            intervalTick
-        );
+        const { spawnChance, spawnInterval, spawnRadius } = system.settings.goldSpawn;
+        const goldPoints = lib.JSUtils.array.shuffle(system.mapData.description.goldPoints);
+        /** 返回两坐标在 xz 平面上的距离平方。 */
+        function xzDistanceSquared(location1: minecraft.Vector3, location2: minecraft.Vector3) {
+            return (location2.x - location1.x) ** 2 + (location2.z - location1.z) ** 2;
+        }
+        lib.gameSystem.subscribeTimeline("generateGold", () => {
+            // 1. 判断现在是不是时机生成
+            // 默认来讲，平均每位玩家有 16s（spawnInterval）的生成时间，这 16s 中所有玩家依次轮流生成。
+            // 因此，每 spawnInterval/alivePlayersCount 秒尝试生成一次。
+            const alivePlayersCount = system.alivePlayers.allPlayers.length;
+            const realSpawnInterval = Math.floor((20 * spawnInterval) / alivePlayersCount);
+            if (minecraft.system.currentTick % realSpawnInterval !== 0) return;
+            // 2. 确定生成时机后，判断对哪个玩家生成
+            system.globalGoldSpawnTimes++;
+            const index = system.globalGoldSpawnTimes % alivePlayersCount;
+            const playerData = system.alivePlayers.allPlayers[index] ?? system.alivePlayers.allPlayers[0];
+            // 3. 查找距离该玩家平面距离（xz）最近的可生成金点，并在选中的金点位置生成金锭
+            goldPoints
+                .filter((goldPoint, index) => {
+                    // 如果距离过远，则排除之
+                    if (xzDistanceSquared(playerData.player.location, goldPoint) > spawnRadius ** 2) return false;
+                    // 如果不幸没随机到，则排除之
+                    if (Math.random() > spawnChance) return false;
+                    return true;
+                })
+                .filter((goldPoint, index) => {
+                    // 最多取 8 个金点
+                    if (index > 8) return false;
+                    return true;
+                })
+                .forEach(goldPoint => {
+                    lib.ItemUtils.addEntity(goldPoint, goldId);
+                });
+        });
     }
 
     /** 当玩家收集到金锭时的组件。
@@ -1071,7 +1025,7 @@ class MurderMysteryComponents {
                         }
                     });
                 // 如果玩家集齐 10 个金锭，则给予一把弓和一根箭
-                if (inventoryUtils.getAmount(player, { typeId: goldId }) < 10) return;
+                if (inventoryUtils.getAmount(player, { includeTypeId: [goldId] }) < 10) return;
                 system.getPlayer(player)?.getNormalBow();
             },
             { entityFilter: { type: "minecraft:player" }, itemFilter: { includeTypes: [goldId] } }
@@ -1216,7 +1170,7 @@ class MurderMysteryComponents {
                             lib.PlayerUtils.sendMessage(player, {
                                 title: "§1",
                                 subtitle: { translate: "subtitle.spectatorOutOfBorder" },
-                                titleOptions: { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 },
+                                titleOptions: instantTitleDisplay,
                                 sound: "mob.villager.no",
                                 soundDelay: 3,
                             });
@@ -1243,7 +1197,10 @@ class MurderMysteryComponents {
             minecraft.system.run(() => {
                 // 如果退出玩家是侦探，掉落弓
                 if (playerData.role === MurderMysteryPlayerRole.Detective) {
-                    playerData.dropBow(false, lib.Vector3Utils.getClosest(location, system.spawnPoints));
+                    playerData.dropBow(
+                        false,
+                        lib.Vector3Utils.getClosest(location, system.mapData.description.spawnPoints)
+                    );
                     system.alivePlayers.innocent.forEach(innocent => {
                         if (!isPlayer(innocent.player)) return;
                         innocent.player.sendMessage({ translate: "chat.detectiveQuit" });
@@ -1293,13 +1250,13 @@ class MurderMysteryComponents {
             if (!initialSpawn) return;
             system.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
             player.setGameMode(minecraft.GameMode.Spectator);
-            player.teleport(lib.JSUtils.array.randomElement(system.spawnPoints));
+            player.teleport(lib.JSUtils.array.randomElement(system.mapData.description.spawnPoints));
         });
         lib.gameSystem.subscribeEvent("fakePlayerJoinTest", minecraft.world.afterEvents.entitySpawn, event => {
             const player = event.entity;
             if (player.typeId !== "murder_mystery:fake_player") return;
             system.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
-            player.teleport(lib.JSUtils.array.randomElement(system.spawnPoints));
+            player.teleport(lib.JSUtils.array.randomElement(system.mapData.description.spawnPoints));
         });
     }
 
@@ -1606,12 +1563,15 @@ class MurderMysteryComponents {
     /** 神秘药水组件。
      * @description 会自动判断系统的地图数据是否含有`mysteryPotion`组件，若不含该组件则不会注册该组件。
      * @description 会在游戏开始时尝试在规定的位置生成展示文本。
-     * @description 当玩家与炼药锅交互时，会检查是否为规定的炼药锅，以及是否有足够的金锭，若不符合条件则不会酿造神秘药水。
+     * @description 会在游戏开始时决定 5 种药水对应何种药效。
+     * @description 当玩家与炼药锅交互时，会检查是否允许酿造神秘药水。
+     * @description 当玩家喝下神秘药水时，会导致玩家拥有不同的药效。
      */
     static mysteryPotion(system: MurderMysterySystem) {
         const component = system.mapData.components.mysteryPotion;
         if (!component) return;
-        // 生成展示文本
+
+        // ===== 生成展示文本 =====
         const cauldronLocation = component.location ?? [];
         const mysteryPotionPrice = system.settings.game.mysteryPotionPrice;
         cauldronLocation.forEach(location => {
@@ -1619,51 +1579,207 @@ class MurderMysteryComponents {
             const textDisplay = lib.EntityUtils.add("murder_mystery:text_display", spawnLocation);
             textDisplay.nameTag = `神秘药水 - ${mysteryPotionPrice}§6块金锭`;
         });
-        lib.gameSystem.subscribeEvent("mysteryPotion", minecraft.world.afterEvents.playerInteractWithBlock, event => {
-            const { isFirstEvent, player, block } = event;
-            if (!isFirstEvent) return;
-            if (!lib.Vector3Utils.hasPosition(cauldronLocation, block.location)) return;
-            if (lib.ItemUtils.inventory.getAmount(player, { typeId: goldId }) < mysteryPotionPrice) {
-                lib.PlayerUtils.sendMessage(player, {
-                    message: { translate: "chat.goldNotEnough", with: [`${mysteryPotionPrice}`] },
-                    sound: "random.anvil_land",
-                });
-                return;
+
+        // ===== 初始化本局神秘药水的信息列表 =====
+        /** 药水信息。 */
+        type PotionData = {
+            /** 药水名称。 */
+            name: "失明" | "缓慢" | "迅捷" | "隐身" | "无敌";
+            /** 使用的药水效果。若不指定则为无敌效果。 */
+            id: "blindness" | "slowness" | "speed" | "invisibility" | "invincibility";
+            /** 使用的药水放大等级。 | 默认值：`0` */
+            amplifier?: number;
+            /** 使用的药水时长。单位：游戏刻。 | 默认值：`200` */
+            duration?: number;
+        };
+        /** 本局使用的药水效果（已打乱）。 */
+        const potionData: PotionData[] = lib.JSUtils.array.shuffle([
+            { name: "失明", id: "blindness" },
+            { name: "缓慢", id: "slowness" },
+            { name: "迅捷", id: "speed", amplifier: 1, duration: 400 },
+            { name: "隐身", id: "invisibility", duration: 280 },
+            { name: "无敌", id: "invincibility", amplifier: 4, duration: 400 },
+        ]);
+        function getPotionData(id: string) {
+            switch (id) {
+                case "murder_mystery:mystery_potion_1":
+                    return potionData[0];
+                case "murder_mystery:mystery_potion_2":
+                    return potionData[1];
+                case "murder_mystery:mystery_potion_3":
+                    return potionData[2];
+                case "murder_mystery:mystery_potion_4":
+                    return potionData[3];
+                case "murder_mystery:mystery_potion_5":
+                    return potionData[4];
+                default:
+                    return;
             }
-            // 金锭足够后，兑换神秘药水
-            lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, 1);
-            const mysteryPotionEntity = lib.EntityUtils.add(
-                "murder_mystery:mystery_potion",
-                lib.Vector3Utils.add(block.location, 0.5, 0, 0.5)
-            );
-            minecraft.system.runTimeout(() => {
-                lib.ItemUtils.inventory.add(player, "murder_mystery:mystery_potion", {
-                    itemLock: minecraft.ItemLockMode.inventory,
-                });
-                mysteryPotionEntity.remove();
-            }, 30);
-        });
-        // 神秘药水的药效
+        }
+        function getPotionIndex(id: string) {
+            switch (id) {
+                case "murder_mystery:mystery_potion_1":
+                    return 0;
+                case "murder_mystery:mystery_potion_2":
+                    return 1;
+                case "murder_mystery:mystery_potion_3":
+                    return 2;
+                case "murder_mystery:mystery_potion_4":
+                    return 3;
+                case "murder_mystery:mystery_potion_5":
+                    return 4;
+                default:
+                    return 0;
+            }
+        }
+        const defaultLore: string[] = ["§r§7这是一瓶药水。天知道它会给你什么效果。"];
+
+        // ===== 给予玩家神秘药水 =====
         lib.gameSystem.subscribeEvent(
-            "mysteryPotionRandomEffect",
+            "playerGetMysteryPotionTest",
+            minecraft.world.afterEvents.playerInteractWithBlock,
+            event => {
+                const { isFirstEvent, player, block } = event;
+                if (!isFirstEvent) return;
+
+                // 如果不是密室杀手玩家，终止运行
+                const playerData = system.getPlayer(player);
+                if (!playerData) return;
+
+                // 如果不是规定的炼药锅，终止运行
+                const location = block.location;
+                if (!lib.Vector3Utils.hasPosition(cauldronLocation, location)) return;
+
+                // 如果玩家的金锭不足，提示玩家后终止运行
+                if (lib.ItemUtils.inventory.getAmount(player, { includeTypeId: [goldId] }) < mysteryPotionPrice) {
+                    lib.PlayerUtils.sendMessage(player, {
+                        message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${mysteryPotionPrice}`] },
+                        sound: "random.anvil_land",
+                    });
+                    return;
+                }
+
+                // 如果已有人在使用，提示玩家后终止运行
+                if (lib.EntityUtils.getNearby("murder_mystery:mystery_potion", location, 2).length > 0) {
+                    lib.PlayerUtils.sendMessage(player, {
+                        message: { translate: "chat.mysteryPotion.occupied" },
+                        sound: "random.anvil_land",
+                    });
+                    return;
+                }
+
+                // 如果玩家拥有超过 3 瓶药水，提示玩家后终止运行
+                const potionCount = lib.ItemUtils.inventory.getAmount(player, {
+                    includeTypeId: [
+                        "murder_mystery:mystery_potion_1",
+                        "murder_mystery:mystery_potion_2",
+                        "murder_mystery:mystery_potion_3",
+                        "murder_mystery:mystery_potion_4",
+                        "murder_mystery:mystery_potion_5",
+                    ],
+                });
+                if (potionCount >= 3) {
+                    lib.PlayerUtils.sendMessage(player, {
+                        message: { translate: "chat.mysteryPotion.inventoryFull" },
+                        sound: "random.anvil_land",
+                    });
+                    return;
+                }
+
+                // 金锭足够后，兑换一种随机的神秘药水，展示动画
+                lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, mysteryPotionPrice);
+                const randomPotionIndex = lib.JSUtils.number.randomInt(1, 5);
+                const randomPotionId = `murder_mystery:mystery_potion_${randomPotionIndex}`;
+                const mysteryPotionEntity = lib.EntityUtils.add(
+                    "murder_mystery:mystery_potion",
+                    lib.Vector3Utils.add(location, 0.5, 0, 0.5),
+                    player.dimension,
+                    { initialRotation: player.getRotation().y + 180, spawnEvent: randomPotionId }
+                );
+
+                // 在1.5秒后给予玩家神秘药水，并将神秘药水动画实体移除
+                /** 将替换到的快捷栏位置。 */
+                const replaceSlot = (() => {
+                    const container = player.getComponent("inventory")?.container;
+                    if (!container) return 0;
+                    // 如果 5 号位没有物品，则放到 5 号位
+                    if (!container.getItem(5)) return 5;
+                    // 如果 7 号位没有物品，则放到 7 号位
+                    if (!container.getItem(7)) return 7;
+                    return 0;
+                })();
+                const randomPotionName = getPotionData(randomPotionId)?.name ?? "失明";
+                const thisPotionUnlocked = playerData.mysteryPotionUnlocked[randomPotionIndex - 1];
+                minecraft.system.runTimeout(() => {
+                    lib.ItemUtils.inventory.set(player, replaceSlot, randomPotionId, {
+                        itemLock: minecraft.ItemLockMode.slot,
+                        name: thisPotionUnlocked ? `§r§a${randomPotionName}药水` : void 0,
+                        lore: thisPotionUnlocked ? [`§r§7这瓶药水将会使你获得${randomPotionName}效果！`] : defaultLore,
+                    });
+                    mysteryPotionEntity.remove();
+                }, 30);
+            }
+        );
+
+        // ===== 喝下神秘药水 =====
+        lib.gameSystem.subscribeEvent(
+            "playerUseMysteryPotionTest",
             minecraft.world.afterEvents.itemCompleteUse,
             event => {
                 const { itemStack: mysteryPotion, source: player } = event;
-                if (mysteryPotion.typeId !== "murder_mystery:mystery_potion") return;
-                const randomEffect = [
-                    { id: "invisibility", duration: 300, amplifier: 0 },
-                    { id: "slowness", duration: 300, amplifier: 0 },
-                    { id: "speed", duration: 300, amplifier: 1 },
-                    { id: "blindness", duration: 200, amplifier: 0 },
-                ][lib.JSUtils.number.randomInt(0, 3)];
-                player.addEffect(randomEffect.id, randomEffect.duration, { amplifier: randomEffect.amplifier });
-                // (随机药水卡池：15s缓慢I，10s失明，15s迅捷II，15s隐身，10s无敌(此时你可以免疫除虚空外的所有伤害))
+                const potionId = mysteryPotion.typeId;
+
+                // 如果玩家已有药效，则不给予药效，重新给予药水并提示玩家
+                if (player.getEffects().length > 0) {
+                    lib.ItemUtils.equipment.set(player, potionId, minecraft.EquipmentSlot.Mainhand, {
+                        itemLock: minecraft.ItemLockMode.slot,
+                    });
+                    player.sendMessage({ translate: "chat.mysteryPotion.onlyOneEffect" });
+                    return;
+                }
+
+                // 获取药效信息和玩家信息
+                const potionData = getPotionData(potionId);
+                if (!potionData) return;
+                const playerData = system.getPlayer(player);
+                if (!playerData) return;
+
+                // 显示副标题
+                lib.PlayerUtils.sendMessage(player, {
+                    title: "§1",
+                    subtitle: { translate: `subtitle.mysteryPotion.${potionData.id}` },
+                    titleOptions: instantTitleDisplay,
+                });
+
+                // 标记为玩家已解锁该药水
+                playerData.mysteryPotionUnlocked[getPotionIndex(potionId)] = true;
+
+                // 给予药效
+                player.addEffect(
+                    potionData.id === "invincibility" ? "resistance" : potionData.id,
+                    potionData.duration ?? 200,
+                    { amplifier: potionData.amplifier }
+                );
             }
         );
     }
 
     // #endregion
     // #region - 游戏结束
+
+    /** 阻止玩家在游戏结束后拾取金锭。 */
+    static preventPlayerPickupGold() {
+        lib.gameSystem.subscribeEvent(
+            "preventPlayerPickupItem",
+            minecraft.world.beforeEvents.entityItemPickup,
+            event => {
+                event.cancel = true;
+            },
+            {
+                itemFilter: { includeTypes: [goldId] },
+            }
+        );
+    }
     // #endregion
 }
 
@@ -1733,6 +1849,9 @@ class MurderMysteryPlayer {
     /** 侦探的箭或杀手的飞刀剩余的冷却时间。单位：游戏刻。 */
     chargingTime = 0;
 
+    /** 神秘药水的解锁情况。 */
+    readonly mysteryPotionUnlocked: [boolean, boolean, boolean, boolean, boolean] = [false, false, false, false, false];
+
     /** @remarks 这里的构造函数应当仅在游戏开始时执行。若要转换职业，应使用 {@link MurderMysterySystem} 的`transformRole`方法。 */
     constructor(system: MurderMysterySystem, playerData: PlayerData) {
         this.system = system;
@@ -1762,7 +1881,7 @@ class MurderMysteryPlayer {
             lib.PlayerUtils.sendMessage(player, {
                 title: { translate: `title.gameStart.${role}` },
                 subtitle: { translate: `subtitle.gameStart.${role}` },
-                titleOptions: { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 },
+                titleOptions: instantTitleDisplay,
                 message: { translate: `chat.teaming.${role}` },
                 sound: sound,
                 soundDelay: 3,
@@ -1787,6 +1906,11 @@ class MurderMysteryPlayer {
         // 若该玩家已死亡，则跳过之
         if (this.isDead) return;
 
+        // 若该玩家正处于无敌状态，播放音效和粒子并跳过之
+        if (this.player.getEffect("resistance")) {
+            return;
+        }
+
         // 标记为该玩家已死亡
         this.isDead = true;
         this.chargingTime = 0;
@@ -1803,7 +1927,7 @@ class MurderMysteryPlayer {
             lib.PlayerUtils.sendMessage(this.player, {
                 title: { translate: "title.youDied" },
                 subtitle: { translate: `deathMessage.${deathType}` },
-                titleOptions: { fadeInDuration: 0, stayDuration: 60, fadeOutDuration: 20 },
+                titleOptions: instantTitleDisplay,
                 message: {
                     translate: "chat.youDied",
                     with: { rawtext: [{ translate: `deathMessage.${deathType}` }] },
@@ -1824,7 +1948,10 @@ class MurderMysteryPlayer {
         if (this.role === MurderMysteryPlayerRole.Detective) {
             // 如果是掉到虚空或摔到地上等出图的死亡方法，把弓的位置强行设定到其中一个出生点上
             if (deathType === DeathType.Void || deathType === DeathType.HitGround) {
-                const closestSpawnPoint = lib.Vector3Utils.getClosest(this.player.location, this.system.spawnPoints);
+                const closestSpawnPoint = lib.Vector3Utils.getClosest(
+                    this.player.location,
+                    this.system.mapData.description.spawnPoints
+                );
                 this.dropBow(true, lib.Vector3Utils.up(closestSpawnPoint, 1));
             }
             // 否则就设置到侦探本身的位置上
@@ -1907,7 +2034,7 @@ class MurderMysteryPlayer {
         lib.PlayerUtils.sendMessage(this.player, {
             title: "§1",
             subtitle: { translate: "subtitle.murderGetSword.murder" },
-            titleOptions: { fadeInDuration: 0, stayDuration: 60, fadeOutDuration: 20 },
+            titleOptions: instantTitleDisplay,
         });
     }
 
@@ -1927,7 +2054,7 @@ class MurderMysteryPlayer {
                 message: { translate: "chat.10GoldCollected" },
                 title: "§1",
                 subtitle: { translate: "subtitle.10GoldCollected" },
-                titleOptions: { fadeInDuration: 0, stayDuration: 60, fadeOutDuration: 20 },
+                titleOptions: instantTitleDisplay,
             });
         }
     }
@@ -1981,7 +2108,7 @@ class MurderMysteryPlayer {
                     message: { translate: `chat.${message}` },
                     title: { text: "§1" },
                     subtitle: { translate: `subtitle.${message}` },
-                    titleOptions: { fadeInDuration: 0, stayDuration: 80, fadeOutDuration: 20 },
+                    titleOptions: instantTitleDisplay,
                 });
             });
         }

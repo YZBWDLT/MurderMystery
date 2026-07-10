@@ -6,9 +6,6 @@ tile.player_head:violetmiaw.name=VioletMiaw 的头
 tile.player_head:cheesey.name=Cheesey 的头
 tile.player_head:fudgiethewhale.name=_fudgiethewhale 的头
 
-tile.murder_mystery:mark_spawnpoint.name=重生点
-tile.murder_mystery:mark_goldpoint.name=金生成点
-
 ## ===== 实体 =====
 
 entity.murder_mystery:npc.name=NPC
@@ -29,10 +26,11 @@ entity.murder_mystery:mystery_potion.name=神秘药水
 item.spawn_egg.entity.murder_mystery:mystery_potion.name=神秘药水 刷怪蛋
 
 ## ===== 物品 =====
-item.murder_mystery:mystery_potion=§a？？？神秘药水？？？
-
-## ===== 物品组 =====
-murder_mystery:itemGroup.name.mark_block=方块标记
+item.murder_mystery:mystery_potion_1=§a？？？神秘药水？？？
+item.murder_mystery:mystery_potion_2=§a？？？神秘药水？？？
+item.murder_mystery:mystery_potion_3=§a？？？神秘药水？？？
+item.murder_mystery:mystery_potion_4=§a？？？神秘药水？？？
+item.murder_mystery:mystery_potion_5=§a？？？神秘药水？？？
 
 ## ===== 名词翻译 =====
 
@@ -139,12 +137,22 @@ chat.detective=§7侦探：§a%s
 chat.murderer=§7杀手：§a%s§7（§a%s§7击杀）
 chat.hero=§7英雄：§a%s
 
-### 金锭不足
-chat.goldNotEnough=§c你需要§6%s个金锭§c才能使用它！
+### 神秘药水的失败消息
+chat.mysteryPotion.goldNotEnough=§c你需要§6%s个金锭§c才能使用它！
+chat.mysteryPotion.occupied=§c已经有人在使用了！
+chat.mysteryPotion.inventoryFull=§c你的背包满了！
+chat.mysteryPotion.onlyOneEffect=§c你同时只能拥有一种药水效果！
+subtitle.mysteryPotion.blindness=§c10秒失明效果
+subtitle.mysteryPotion.slowness=§c10秒缓慢效果
+subtitle.mysteryPotion.speed=§a20秒速度效果
+subtitle.mysteryPotion.invisibility=§a14秒隐身效果
+subtitle.mysteryPotion.invincibility=§a20秒无敌效果
 
-### 其他消息
-chat.chestLocked=此箱子已被上锁！
+### 旁观者离开游戏区域
 subtitle.spectatorOutOfBorder=§c你跑的太远了！
+
+### 游戏即将结束提醒
+chat.gameWillOver=§c60§e秒后，平民将会胜出！
 
 ## ===== 信息板消息 =====
 
