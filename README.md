@@ -35,6 +35,16 @@
 - 现在每局有 5 种不同的神秘药水
 - 每一局，不同颜色的药水都对应不同的药效，例如这一局中蓝色药水对应隐身，下一局就可能对应失明
 - 在一开始，并不知道神秘药水有什么药效，只有喝下才能从名字看出是什么药效
+- 最多同时拥有 3 瓶药水
+- 最多同时拥有 1 种药效
+- 不能在炼药锅正在酿造时酿造新药水
+- 新增了无敌效果，该效果会阻碍所有除掉出地图之外的伤害实施
+
+### 杀手飞刀
+
+- 现在杀手的飞刀模型会横过来
+- 现在杀手的飞刀需要短按右键触发，再次短按右键取消蓄力，以同步 Hypixel
+- 修改了杀手飞刀碰到箭的粒子效果
 
 ### 特性更改&漏洞修复
 
@@ -46,6 +56,9 @@
 - 现在游戏开始倒计时设置为了 15 秒
 - 现在会在游戏剩余 60 秒时通知平民将取得胜利
 - 现在侦探会在杀手获得剑的同时获得弓
+- 统一了侦探、杀手和平民的弓箭位置，除了杀手的弓在 3 号位外，正常情况的弓都在 2 号位，箭都在 4 号位
+- 现在右侧的信息板的剩余平民会同时显示侦探的数量
+- 现在会在游戏开始 60 秒后提醒未杀过玩家的杀手杀人
 
 ### 技术性
 
@@ -54,10 +67,21 @@
 - 现在地图不再从地图内的标记方块获得信息，而是从`mapData`的描述中获取信息
 - 为`lib.ItemMatchOptions`扩展了`typeId: string`为`includeTypeId: string[]`，接收字符串数组，只要在数组内的物品就都会检查通过
 - 提取出了多个瞬间显示的标题选项`instantTitleDisplay: minecraft.TitleDisplayOptions`可用
-- 显性移除了`MurderMysterySystem`的`goldPoints`和`spawnPoints`属性，和`MurderMysterySystem`的`getMarkPoint`方法，现在需要在`mapData`属性中获取
-- 为`MurderMysterySystem`新增了`globalGoldSpawnTimes`属性，以判断一共尝试了多少次金锭生成、
-- 新增了`MurderMysterySettings.goldSpawn`，及其子设置项`spawnRadius: number`、`spawnChance: number`、`spawnInterval: number`
-- 移除了`MurderMysterySettings.game`的`generateGoldInterval`属性和`goldIntervalMultipliedByPlayerAmount`属性，现在迁移到了`MurderMysterySettings.goldSpawn`中
-- 重新设计了`MurderMysteryComponents`的`generateGold`组件，使之特性如前文所述
-- 重新设计了`MurderMysteryComponents`的`mysteryPotion`组件，使之特性如前文所述
-- 为`MurderMysteryPlayer`新增了`mysteryPotionUnlocked: [boolean, boolean, boolean, boolean, boolean]`属性，代表神秘药水的解锁情况
+- 移除了飞刀物品`murder_mystery:iron_sword`
+- `MurderMysterySystem`类：
+  - 显性移除了`goldPoints`和`spawnPoints`属性，和`getMarkPoint`方法，现在需要在`mapData`属性中获取
+  - 新增`globalGoldSpawnTimes`属性，以判断一共尝试了多少次金锭生成
+- `MurderMysteryComponents`类：
+  - 重新设计`generateGold`组件，使之特性如前文所述
+  - 重新设计`mysteryPotion`组件，使之特性如前文所述
+  - 重新设计`murdererKnife`组件的部分功能，使之特性如前文所述
+- `MurderMysterySettings`类：
+  - 新增了`goldSpawn`属性，及其子设置项`spawnRadius: number`、`spawnChance: number`、`spawnInterval: number`
+  - 新增了`murdererSword`属性，及其子设置项`knifeSpeed: number`、`knifeCollideArrowDistance: number`、`knifeThrowTime: number`
+  - 移除了`game`的`generateGoldInterval`属性和`goldIntervalMultipliedByPlayerAmount`属性，现在迁移到了`goldSpawn`中
+- `MurderMysteryPlayer`类：
+  - 新增了`mysteryPotionUnlocked: [boolean, boolean, boolean, boolean, boolean]`属性，代表神秘药水的解锁情况
+  - 新增了`throwingTime`属性，标记杀手飞刀蓄力时长，单位游戏刻
+  - 移除了`killPlayer`方法，该方法的功能与`setDead`重复且在玩家无敌时难以控制
+  - 更新了`setDead`方法，现在返回布尔值，并且当玩家拥有抗性提升药效时不能杀死该玩家
+  - 合并了`getDetectiveBow`方法和`getNormalBow`方法为`getBow`方法，现在所有角色在获得弓箭时都调用此方法

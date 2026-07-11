@@ -94,6 +94,9 @@ deathMessage.other=§eYou Died!
 chat.knifeKilledPlayer=§eKilled target at %s meters away!
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
 
+### Murderer throwing knife
+chat.murdererThrowingKnife.stopped=§cStopped Throwing!
+
 ### Murderer killed Detective
 chat.detectiveKilled=§6The Detective has been killed!
 subtitle.detectiveKilled=§6The Detective has been killed!
@@ -169,4 +172,5 @@ infoboard.kills=Kills: §a%s§r
 infoboard.detectiveAlive=Detective: §aAlive§r
 infoboard.bowNotDropped=Bow: §aNot Dropped§r
 infoboard.bowDropped=Bow: §cDropped§r
+infoboard.throwing=Throwing: §a%ss§r
 infoboard.charging=Charging: §a%ss§r

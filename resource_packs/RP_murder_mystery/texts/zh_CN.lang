@@ -94,6 +94,9 @@ deathMessage.other=§e你死了！
 chat.knifeKilledPlayer=§e在%s米外击杀了目标！
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
 
+### 杀手飞刀
+chat.murdererThrowingKnife.stopped=§c已停止蓄力！
+
 ### 杀手杀死侦探
 chat.detectiveKilled=§6侦探已被杀死！
 subtitle.detectiveKilled=§6侦探已被杀死！
@@ -117,9 +120,9 @@ chat.murdererQuit=§a一名杀手已经离开，你取代了他的位置！
 chat.murdererQuit.gameOver=§a杀手已离开，游戏结束！
 
 ### 杀手长时间未杀人的提示
-chat.remindMurderer=§e别忘了：你是§c杀手§e！你的目标是杀死其他玩家！
+chat.remindMurderer=§e记住：你是§c杀手§e！你的任务是杀死所有玩家！
 title.remindMurderer=§e你是§c杀手§e！
-subtitle.remindMurderer=§e别忘了：杀死所有玩家！
+subtitle.remindMurderer=§e记住：你要杀死所有玩家！
 
 ### 游戏结束
 title.win=§a你赢了！
@@ -128,7 +131,7 @@ title.gameOver=§c游戏结束！
 subtitle.playerWin=§6杀手已被阻止！
 subtitle.playerWin.timeOut=§6杀手已经没有时间了！
 subtitle.murdererWin=§6所有幸存者都死了！
-subtitle.murdererLose.timeOut=§6时间耗尽！
+subtitle.murdererLose.timeOut=§6时间已经到了！
 chat.title=§l     密室杀手
 chat.winner.innocent=§l胜利者：§r§a所有平民与侦探
 chat.winner.detective=§l胜利者：§r§a所有平民与侦探
@@ -169,4 +172,5 @@ infoboard.kills=击杀数：§a%s§r
 infoboard.detectiveAlive=侦探：§a存活§r
 infoboard.bowNotDropped=弓：§a未掉落§r
 infoboard.bowDropped=弓：§c已掉落§r
+infoboard.throwing=投掷中：§a%s秒§r
 infoboard.charging=填充中：§a%s秒§r

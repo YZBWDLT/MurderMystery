@@ -1,7 +1,6 @@
 {
     "resource_pack_name": "murder_mystery",
     "texture_data": {
-        "murder_mystery_iron_sword": { "textures": "textures/items/iron_sword" },
         "mystery_potion_1": { "textures": "textures/items/mystery_potion_1" },
         "mystery_potion_2": { "textures": "textures/items/mystery_potion_2" },
         "mystery_potion_3": { "textures": "textures/items/mystery_potion_3" },
