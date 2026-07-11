@@ -52,6 +52,7 @@
   **已知问题**：_目前神秘药水无法追随当前所使用的版本，可能会在后续解决_
 - 修复了地图中栅栏门无法交互的问题
 - 修复了地图中可能会因存在标记方块而导致无法近战打中标记方块内部玩家的问题
+- 修复了因游戏区域未添加常加载区域导致神秘药水未能正确工作的问题
 - 现在游戏结束后不再能够拾取金锭
 - 现在游戏开始倒计时设置为了 15 秒
 - 现在会在游戏剩余 60 秒时通知平民将取得胜利
@@ -65,9 +66,11 @@
 - 更新了行为包和资源包的版本
 - 拆分出了标记方块`goldblock`和`spawnpoint`为一个简易工具，从该工具中获取坐标数组
 - 现在地图不再从地图内的标记方块获得信息，而是从`mapData`的描述中获取信息
-- 为`lib.ItemMatchOptions`扩展了`typeId: string`为`includeTypeId: string[]`，接收字符串数组，只要在数组内的物品就都会检查通过
 - 提取出了多个瞬间显示的标题选项`instantTitleDisplay: minecraft.TitleDisplayOptions`可用
 - 移除了飞刀物品`murder_mystery:iron_sword`
+- `lib.ts`：
+  - 为`ItemMatchOptions`接口扩展了`typeId: string`为`includeTypeId: string[]`，接收字符串数组，只要在数组内的物品就都会检查通过
+  - 更新了`TickingAreaUtils`的`remove`方法，现在试图移除不存在的常加载区域时不会报错
 - `MurderMysterySystem`类：
   - 显性移除了`goldPoints`和`spawnPoints`属性，和`getMarkPoint`方法，现在需要在`mapData`属性中获取
   - 新增`globalGoldSpawnTimes`属性，以判断一共尝试了多少次金锭生成

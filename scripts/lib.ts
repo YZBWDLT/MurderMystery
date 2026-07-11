@@ -261,9 +261,16 @@ export class TickingAreaUtils {
         return minecraft.world.tickingAreaManager.getTickingArea(id);
     }
 
-    /** 移除特定 ID 的常加载区域。 */
+    /** 移除特定 ID 的常加载区域。
+     * @returns 返回是否成功移除常加载区域。
+     */
     static remove(id: string) {
-        minecraft.world.tickingAreaManager.removeTickingArea(id);
+        try {
+            minecraft.world.tickingAreaManager.removeTickingArea(id);
+            return true;
+        } catch {
+            return false;
+        }
     }
 }
 

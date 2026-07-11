@@ -280,6 +280,11 @@ class MurderMysterySystem {
         // 移除多余实体
         this.removeAllEntities();
 
+        // 注册常加载区域
+        const { from, to } = this.mapData.description.range;
+        lib.TickingAreaUtils.remove("gamingArea");
+        lib.TickingAreaUtils.add("gamingArea", from, to);
+
         // 注册组件
         this.general();
         MurderMysteryComponents.gameStartTest(this);
