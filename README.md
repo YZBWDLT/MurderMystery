@@ -20,6 +20,11 @@
 
 > 版本：1.0 - Exp 2
 
+### 新地图
+
+- 新增地图：档案馆
+- 档案馆中有岩浆，跳进去就会死亡
+
 ### 金锭生成机制
 
 - 全面更新了金锭生成机制
@@ -60,10 +65,12 @@
 - 统一了侦探、杀手和平民的弓箭位置，除了杀手的弓在 3 号位外，正常情况的弓都在 2 号位，箭都在 4 号位
 - 现在右侧的信息板的剩余平民会同时显示侦探的数量
 - 现在会在游戏开始 60 秒后提醒未杀过玩家的杀手杀人
+- 现在地图图书馆会尝试恢复 10 扇栅栏门的状态
 
 ### 技术性
 
 - 更新了行为包和资源包的版本
+- 更改了注释内的译名“角色”为“身份”
 - 拆分出了标记方块`goldblock`和`spawnpoint`为一个简易工具，从该工具中获取坐标数组
 - 现在地图不再从地图内的标记方块获得信息，而是从`mapData`的描述中获取信息
 - 提取出了多个瞬间显示的标题选项`instantTitleDisplay: minecraft.TitleDisplayOptions`可用
@@ -71,13 +78,18 @@
 - `lib.ts`：
   - 为`ItemMatchOptions`接口扩展了`typeId: string`为`includeTypeId: string[]`，接收字符串数组，只要在数组内的物品就都会检查通过
   - 更新了`TickingAreaUtils`的`remove`方法，现在试图移除不存在的常加载区域时不会报错
+  - 新增了`DimensionUtils`的`getLocationsFromVolume`方法，从`BlockVolumeBase`中提取出该区域的所有坐标点
+  - 更新了`BlockUtils`的`fill`方法，现在支持使用特定的方块状态
 - `MurderMysterySystem`类：
   - 显性移除了`goldPoints`和`spawnPoints`属性，和`getMarkPoint`方法，现在需要在`mapData`属性中获取
   - 新增`globalGoldSpawnTimes`属性，以判断一共尝试了多少次金锭生成
 - `MurderMysteryComponents`类：
+  - 新增了`playerIntoLava`组件，当玩家落入岩浆则视为掉入岩浆死亡
+  - 新增了`recover`组件，用于恢复地图场景
   - 重新设计`generateGold`组件，使之特性如前文所述
   - 重新设计`mysteryPotion`组件，使之特性如前文所述
   - 重新设计`murdererKnife`组件的部分功能，使之特性如前文所述
+  - 更新了`preventDamage`组件，现在在拥有`playerIntoLava`组件时不再阻碍熔岩伤害
 - `MurderMysterySettings`类：
   - 新增了`goldSpawn`属性，及其子设置项`spawnRadius: number`、`spawnChance: number`、`spawnInterval: number`
   - 新增了`murdererSword`属性，及其子设置项`knifeSpeed: number`、`knifeCollideArrowDistance: number`、`knifeThrowTime: number`
@@ -87,4 +99,6 @@
   - 新增了`throwingTime`属性，标记杀手飞刀蓄力时长，单位游戏刻
   - 移除了`killPlayer`方法，该方法的功能与`setDead`重复且在玩家无敌时难以控制
   - 更新了`setDead`方法，现在返回布尔值，并且当玩家拥有抗性提升药效时不能杀死该玩家
-  - 合并了`getDetectiveBow`方法和`getNormalBow`方法为`getBow`方法，现在所有角色在获得弓箭时都调用此方法
+  - 合并了`getDetectiveBow`方法和`getNormalBow`方法为`getBow`方法，现在所有身份在获得弓箭时都调用此方法
+- 数据文件 `data.ts`
+  - 新增了`playerIntoLava?: MurderMysteryPlayerIntoLavaComponent`组件、`endPortal?: MurderMysteryEndPortalComponent`组件、`door?: MurderMysteryDoorComponent`组件、`recover?: MurderMysteryRecoverComponent[]`组件，实装了`playerIntoLava`和`recover`组件的功能

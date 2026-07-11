@@ -590,6 +590,22 @@ export class DimensionUtils {
             hollowedVolume,
         };
     }
+
+    /** 获取一个区域内的所有位置。 */
+    static getLocationsFromVolume(volume: minecraft.BlockVolumeBase) {
+        const iterator = volume.getBlockLocationIterator();
+        const locations: minecraft.Vector3[] = [];
+        while (true) {
+            const { value: location, done } = iterator.next() as {
+                value: minecraft.Vector3 | undefined;
+                done: boolean;
+            };
+            if (done) break;
+            if (!location) continue;
+            locations.push(location);
+        }
+        return locations;
+    }
 }
 
 // #endregion
@@ -604,22 +620,33 @@ export class BlockUtils {
         return DimensionUtils.getDefault(dimension).getBlock(location);
     }
 
-    /** 在两个坐标间填充方块。
-     * @param replaceBlockIds 要被替换的特定类型方块。
-     */
+    /** 在两个坐标间填充方块。 */
     static fill(
         dimension: string | minecraft.Dimension,
         from: minecraft.Vector3,
         to: minecraft.Vector3,
         blockId: string,
-        replaceBlockIds?: string[]
+        options?: minecraft.BlockFillOptions,
+        states?: { name: string; value?: number | boolean | string }[]
     ) {
+        const volumes: minecraft.ListBlockVolume[] = [];
         DimensionUtils.divideVolume(new minecraft.BlockVolume(from, to)).forEach(volume =>
-            DimensionUtils.getDefault(dimension).fillBlocks(volume, blockId, {
-                blockFilter: { includeTypes: replaceBlockIds },
-                ignoreChunkBoundErrors: true,
-            })
+            volumes.push(DimensionUtils.getDefault(dimension).fillBlocks(volume, blockId, options))
         );
+        if (states) {
+            volumes
+                .flatMap(volume => DimensionUtils.getLocationsFromVolume(volume))
+                .forEach(location => {
+                    const block = DimensionUtils.getOverworld().getBlock(location);
+                    if (!block) return;
+                    let permutation = block.permutation;
+                    // @ts-ignore
+                    states.forEach(({ name, value }) => (permutation = permutation.withState(name, value)));
+                    block.setPermutation(permutation);
+                });
+        }
+
+        return volumes;
     }
 
     /** 在两个坐标间以镂空的形式填充方块。 */

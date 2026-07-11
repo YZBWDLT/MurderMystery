@@ -35,6 +35,7 @@ item.murder_mystery:mystery_potion_5=§a？？？神秘药水？？？
 ## ===== 名词翻译 =====
 
 ### 地图名
+map.archives=档案馆
 map.library=图书馆
 
 ### 模式名
@@ -87,6 +88,7 @@ deathMessage.shotSelf=§e你成功地射杀了你自己！
 deathMessage.player=§e一名玩家杀了你！
 deathMessage.manslaughter=§e你杀死了一位平民！
 deathMessage.void=§e你掉入了虚空！
+deathMessage.lava=§e你在熔岩里游泳了！
 deathMessage.hitGround=§e你撞到了地上！
 deathMessage.trap=§e你踩到了一个陷阱！
 deathMessage.potion=§e毒药杀死了你。

@@ -35,6 +35,7 @@ item.murder_mystery:mystery_potion_5=§a??? Mystery Potion ???
 ## ===== Noun Translations =====
 
 ### Map name
+map.archives=Archives
 map.library=Library
 
 ### Mode name
@@ -87,6 +88,7 @@ deathMessage.shotSelf=§eYou managed to shoot yourself!
 deathMessage.player=§eA player killed you!
 deathMessage.manslaughter=§eYou killed an Innocent player!
 deathMessage.void=§eYou fell into the void!
+deathMessage.lava=§eYou swam in the lava!
 deathMessage.hitGround=§eYou hit the ground!
 deathMessage.trap=§eYou fell into a trap!
 deathMessage.potion=§eThe poison killed you.

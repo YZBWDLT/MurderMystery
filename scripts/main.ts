@@ -2,31 +2,23 @@
 // 实现密室杀手的主体逻辑。
 
 // TODO LIST:
-// - 杀手长时间未击杀玩家的提示
 // - 杀手击杀数错误
 // - 飞刀杀假人报错
 // - 地图组件
 //   - 虚空（完善特定区域）
-//   - 神秘药水效果
-//   - 地图中有多处像这样的炼药锅结构，
-// 使用2金锭后玩家会在3s后获得随机药水，
-// 炼药锅每次只允许1人使用
-// (随机药水卡池：15s缓慢I，10s失明，15s迅捷II，15s隐身，10s无敌(此时你可以免疫除虚空外的所有伤害))
 //   - 开启暗道
 // - 在只剩余 1 名平民/侦探的时候对杀手添加速度 I，并给予有效的位置提示
 // - 杀死玩家后显示遗言
-// - 移除假玩家的名字显示
+//   - “遗言机制也有必要研究一下 因为 遗言好像过一段时间会消失”
 // - 设置 UI
 // - 弓的明显显示
-// - 神秘的箭矢/飞刀轨迹特效
+// - 箭矢/飞刀轨迹特效
 // - 双倍模式
 //   - 多个杀手的对局，杀手不能杀队友，杀队友会获得缓慢2失明2效果1秒并提示“你不能击杀你的杀手队友”。
-// 上个版本待修复的bug
-// 2. 添加抬头tp
-// 7. 还原hyp 特殊职业概率
-// 8. 书架加屏障
-// 遗言机制也有必要研究一下 因为 遗言好像过一段时间会消失
-// 密室杀手有个村规可以做进去，在单挑模式下（1v1）的情况，杀手和侦探开局获得武器的时间节点为4:05
+// - 添加抬头tp
+// - 还原hyp 特殊职业概率
+// - 书架加屏障
+// - “密室杀手有个村规可以做进去，在单挑模式下（1v1）的情况，杀手和侦探开局获得武器的时间节点为4:05”
 
 // #region 模块导入
 import * as minecraft from "@minecraft/server";
@@ -62,13 +54,13 @@ enum MurderMysteryPlayerRole {
     Innocent = "innocent",
 
     /** 杀手。
-     * 杀手的任务为杀光场上所有的非杀手角色。
+     * 杀手的任务为杀光场上所有的非杀手身份。
      * 杀手将获得一把飞刀，使用飞刀近战攻击或掷出攻击都可以杀死其他玩家。
      */
     Murderer = "murderer",
 
     /** 侦探。
-     * 侦探的任务为杀死场上的杀手角色。在杀手死亡后，侦探和平民获胜。
+     * 侦探的任务为杀死场上的杀手身份。在杀手死亡后，侦探和平民获胜。
      * 侦探将获得一把弓。若侦探死亡，则场上会掉落一把弓，平民捡到后则变为侦探。
      */
     Detective = "detective",
@@ -84,7 +76,7 @@ interface PlayerData {
     /** 玩家信息所对应的玩家（实体） */
     player: minecraft.Player | minecraft.Entity;
 
-    /** 玩家角色 */
+    /** 玩家身份 */
     role: MurderMysteryPlayerRole;
 }
 
@@ -249,7 +241,7 @@ class MurderMysterySystem {
     general() {
         // 注册通用组件
         MurderMysteryComponents.infoboard(this);
-        MurderMysteryComponents.preventDamage();
+        MurderMysteryComponents.preventDamage(this);
         MurderMysteryComponents.preventInteractingWithBlock(this);
     }
 
@@ -310,7 +302,7 @@ class MurderMysterySystem {
         const maxPlayerCount = this.settings.waiting.maxPlayerCount;
         const maxLocationCount = locations.length;
         players.forEach((player, index) => {
-            // 分配角色，第 1 名玩家设置为杀手，第 2 名玩家设置为侦探，
+            // 分配身份，第 1 名玩家设置为杀手，第 2 名玩家设置为侦探，
             // 第 3 ~ maxPlayerCount 名玩家设置为平民，其余玩家设置为旁观者
             if (index === 0) {
                 this.addPlayer({ player, role: MurderMysteryPlayerRole.Murderer });
@@ -352,7 +344,9 @@ class MurderMysterySystem {
 
         // 注册可选组件
         MurderMysteryComponents.playerIntoVoid(this);
+        MurderMysteryComponents.playerIntoLava(this);
         MurderMysteryComponents.mysteryPotion(this);
+        MurderMysteryComponents.recover(this);
     }
 
     /** 令游戏进入结束阶段。
@@ -491,7 +485,7 @@ class MurderMysterySystem {
         if (this.players.allPlayers.some(data => data.player.id === playerData.player.id)) return;
         // 创建一个玩家数据实例
         const murderMysteryPlayer = new MurderMysteryPlayer(this, playerData);
-        // 根据玩家角色向玩家信息数组推入不同玩家
+        // 根据玩家身份向玩家信息数组推入不同玩家
         const playerRole = playerData.role;
         this.players.allPlayers.push(murderMysteryPlayer);
         switch (playerRole) {
@@ -793,8 +787,15 @@ class MurderMysteryComponents {
     }
 
     /** 阻止玩家和假玩家受到伤害。 */
-    static preventDamage() {
+    static preventDamage(system: MurderMysterySystem) {
         lib.gameSystem.subscribeEvent("preventDamage", minecraft.world.beforeEvents.entityHurt, event => {
+            // 如果是熔岩伤害，检查是否存在 playerIntoLava 组件，
+            // 如果存在则不阻止熔岩伤害，交给 playerIntoLava 组件阻止
+            if (
+                system.mapData.components.playerIntoLava &&
+                event.damageSource.cause === minecraft.EntityDamageCause.lava
+            )
+                return;
             if (
                 event.hurtEntity.typeId !== "minecraft:player" &&
                 event.hurtEntity.typeId !== "murder_mystery:fake_player"
@@ -805,7 +806,7 @@ class MurderMysteryComponents {
     }
 
     // #endregion
-    // #region - 游戏开始前
+    // #region - 开始前必选
 
     /** 游戏开始检测器。
      * @description 进行人数检测。
@@ -902,7 +903,7 @@ class MurderMysteryComponents {
     }
 
     // #endregion
-    // #region - 游戏开始后（必选组件）
+    // #region - 开始后必选
 
     /** 游戏计时器。
      * @description 每秒进行倒计时。
@@ -1097,7 +1098,7 @@ class MurderMysteryComponents {
             if (!victim) return;
             const victimData = system.getPlayer(victim);
             if (!victimData) return;
-            // 考虑各个角色被射中时：
+            // 考虑各个身份被射中时：
             switch (victimData.role) {
                 // 杀手被击杀
                 case MurderMysteryPlayerRole.Murderer:
@@ -1583,7 +1584,7 @@ class MurderMysteryComponents {
     }
 
     // #endregion
-    // #region - 游戏开始后（可选组件）
+    // #region - 开始后可选
 
     /** 玩家进入虚空组件。
      * @description 会自动判断系统的地图数据是否含有`playerIntoVoid`组件，若不含该组件则不会注册该组件。
@@ -1804,6 +1805,44 @@ class MurderMysteryComponents {
         );
     }
 
+    /** 玩家进入虚空组件。
+     * @description 会自动判断系统的地图数据是否含有`playerIntoLava`组件，若不含该组件则不会注册该组件。
+     * @description 当玩家掉到熔岩后，将玩家处死。
+     */
+    static playerIntoLava(system: MurderMysterySystem) {
+        const component = system.mapData.components.playerIntoLava;
+        if (!component) return;
+        minecraft.world.gameRules.fireDamage = true;
+        lib.gameSystem.subscribeEvent(
+            "playerIntoLava",
+            minecraft.world.beforeEvents.entityHurt,
+            event => {
+                // 阻止伤害
+                event.cancel = true;
+                // 获取玩家数据
+                const player = event.hurtEntity;
+                const playerData = system.getPlayer(player);
+                if (!playerData) return;
+                // 将玩家处死
+                minecraft.system.run(() => playerData.setDead(MurderMysteryDeathType.Lava));
+            },
+            { allowedDamageCauses: [minecraft.EntityDamageCause.lava] }
+        );
+    }
+
+    /** 恢复地图内的场景。
+     * @description 会自动判断系统的地图数据是否含有`recover`组件，若不含该组件则不会注册该组件。
+     * @description 会在游戏开始时尝试恢复场景。
+     */
+    static recover(system: MurderMysterySystem) {
+        const component = system.mapData.components.recover;
+        if (!component) return;
+        component.forEach(compData => {
+            const { from, to, typeId, state } = compData;
+            lib.BlockUtils.fill("overworld", from, to, typeId, {}, state);
+        });
+    }
+
     // #endregion
     // #region - 游戏结束
 
@@ -1850,6 +1889,9 @@ enum MurderMysteryDeathType {
     /** 掉进虚空。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
     Void = "void",
 
+    /** 掉进虚空。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    Lava = "lava",
+
     /** 摔到地上。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
     HitGround = "hitGround",
 
@@ -1863,12 +1905,19 @@ enum MurderMysteryDeathType {
     Other = "other",
 }
 
+/** 可能导致出图的死亡方式。 */
+const deathTypeOutOfMap: MurderMysteryDeathType[] = [
+    MurderMysteryDeathType.Void,
+    MurderMysteryDeathType.HitGround,
+    MurderMysteryDeathType.Lava,
+];
+
 /** 代表一个密室杀手玩家，包含玩家的密室杀手信息和相关方法。 */
 class MurderMysteryPlayer {
     /** 系统。 */
     readonly system: MurderMysterySystem;
 
-    /** 玩家角色。 */
+    /** 玩家身份。 */
     role: MurderMysteryPlayerRole;
 
     /** 是否已死亡。 */
@@ -1876,7 +1925,7 @@ class MurderMysteryPlayer {
 
     /** 是否为首位侦探。该选项只对侦探可用。
      *
-     * 首位侦探指游戏刚开始时即分配到侦探角色的玩家。
+     * 首位侦探指游戏刚开始时即分配到侦探身份的玩家。
      * 后来的平民捡起弓后也将成为侦探，但不会是首位侦探。
      */
     isFirstDetective = false;
@@ -1952,11 +2001,7 @@ class MurderMysteryPlayer {
         if (this.isDead) return false;
 
         // 若该玩家正处于无敌状态，并且死亡方式不是虚空等掉出地图的方式，则播放音效和粒子并跳过之
-        const killsThoughInvincible: MurderMysteryDeathType[] = [
-            MurderMysteryDeathType.Void,
-            MurderMysteryDeathType.HitGround,
-        ];
-        if (this.player.getEffect("resistance") && !killsThoughInvincible.includes(deathType)) {
+        if (this.player.getEffect("resistance") && !deathTypeOutOfMap.includes(deathType)) {
             lib.PlayerUtils.getNearby(this.player.location, 10).forEach(player =>
                 player.playSound("mob.irongolem.death", { pitch: 2 })
             );
@@ -2000,7 +2045,7 @@ class MurderMysteryPlayer {
         // 如果是侦探死亡，则掉落弓
         if (this.role === MurderMysteryPlayerRole.Detective) {
             // 如果是掉到虚空或摔到地上等出图的死亡方法，把弓的位置强行设定到其中一个出生点上
-            if (deathType === MurderMysteryDeathType.Void || deathType === MurderMysteryDeathType.HitGround) {
+            if (deathTypeOutOfMap.includes(deathType)) {
                 const closestSpawnPoint = lib.Vector3Utils.getClosest(
                     this.player.location,
                     this.system.mapData.description.spawnPoints
