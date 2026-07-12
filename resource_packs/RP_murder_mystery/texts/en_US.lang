@@ -70,7 +70,7 @@ chat.teaming.detective=§c§lTeaming with the Murderer is not allowed!
 chat.teaming.murderer=§c§lTeaming with the Detective/Innocent is not allowed!
 
 ### Murderer get sword
-chat.murderWillGetSword.murder=§eYou get your sword in §c%s§e seconds!
+chat.murderWillGetSword.murderer=§eYou get your sword in §c%s§e seconds!
 chat.murderWillGetSword.innocent=§eThe Murderer gets their sword in §c%s§e seconds!
 chat.murderWillGetSword.detective=§eThe Murderer gets their sword in §c%s§e seconds!
 chat.murderGetSword.murder=§eYou have received your sword!
@@ -89,6 +89,7 @@ deathMessage.player=§eA player killed you!
 deathMessage.manslaughter=§eYou killed an Innocent player!
 deathMessage.void=§eYou fell into the void!
 deathMessage.lava=§eYou swam in the lava!
+deathMessage.endPortal=§eWhat are you thinking?
 deathMessage.hitGround=§eYou hit the ground!
 deathMessage.trap=§eYou fell into a trap!
 deathMessage.potion=§eThe poison killed you.
@@ -139,7 +140,7 @@ chat.winner.innocent=§lWinner: §r§aPlayers
 chat.winner.detective=§lWinner: §r§aPlayers
 chat.winner.murderer=§lWinner: §r§cMurderer
 chat.detective=§7Detective: §a%s
-chat.murderer=§7Murderer: §a%s §7(§a%s§7Kills)
+chat.murderer=§7Murderer: §a%s §7(§a%s§7 Kills)
 chat.hero=§7Hero: §a%s
 
 ### Mystery Potion Purchase Failed
@@ -158,6 +159,20 @@ subtitle.spectatorOutOfBorder=§cYou ran too far!
 
 ### Game Will Over
 chat.gameWillOver=§eInnocents will win in §c60§e seconds!
+
+### Spectator Teleport UI
+ui.spectatorTeleport.title=Teleport To ...
+ui.spectatorTeleport.line1=Select which player to teleport to. §cNote: You are a spectator now. DO NOT claim the role of alive players in chat!
+ui.spectatorTeleport.playerName=%s (%s§r)
+chat.spectatorTeleport.tip=§cHead up to teleport to alive players!
+chat.spectatorTeleport.playerIsInvalid=§cYou can't teleport to an invalid player!
+chat.spectatorTeleport.teleported=§aHas been teleported to §6%s§a's location
+
+### Get Compass
+chat.innocentGetCompass=§eYou've got a compass! Use it to find the dropped bow!
+chat.murdererGetCompass.innocent=§cWatch out! §eThe Murderer can now find survivors easily!
+chat.murdererGetCompass.detective=§cWatch out! §eThe Murderer can now find survivors easily!
+chat.murdererGetCompass.murderer=§eYou've got a compass! Use it to find the remaining survivors!
 
 ## ===== Infoboard Message =====
 

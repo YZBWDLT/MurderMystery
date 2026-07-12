@@ -524,6 +524,11 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             playerIntoLava: {},
+            endPortal: {
+                from: { x: 1052, y: 124, z: -217 },
+                to: { x: 1054, y: 124, z: -219 },
+                height: 2,
+            },
         },
     },
     library: {

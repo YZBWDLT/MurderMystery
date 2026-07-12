@@ -954,7 +954,7 @@ export class EntityUtils {
     ) {
         const executeDimension = dimension ? DimensionUtils.getDefault(dimension) : entity.dimension;
         return executeDimension
-            .getEntities({ location: volume.getMin(), volume: volume.getSpan() })
+            .getEntities({ location: volume.getMin(), volume: Vector3Utils.add(volume.getSpan(), -1, -1, -1) })
             .some(nearbyEntity => nearbyEntity.id === entity.id);
     }
 

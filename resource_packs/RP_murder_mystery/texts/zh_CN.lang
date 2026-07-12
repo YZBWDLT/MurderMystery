@@ -89,6 +89,7 @@ deathMessage.player=§e一名玩家杀了你！
 deathMessage.manslaughter=§e你杀死了一位平民！
 deathMessage.void=§e你掉入了虚空！
 deathMessage.lava=§e你在熔岩里游泳了！
+deathMessage.endPortal=§e你在想什么？
 deathMessage.hitGround=§e你撞到了地上！
 deathMessage.trap=§e你踩到了一个陷阱！
 deathMessage.potion=§e毒药杀死了你。
@@ -158,6 +159,20 @@ subtitle.spectatorOutOfBorder=§c你跑的太远了！
 
 ### 游戏即将结束提醒
 chat.gameWillOver=§c60§e秒后，平民将会胜出！
+
+### 旁观传送 UI
+ui.spectatorTeleport.title=传送到……
+ui.spectatorTeleport.line1=选择传送到哪个玩家。§c注意：您现在是旁观者，请勿在聊天栏声明仍存活的玩家的身份！
+ui.spectatorTeleport.playerName=%s（%s§r）
+chat.spectatorTeleport.tip=§c抬头以传送到存活的玩家！
+chat.spectatorTeleport.playerIsInvalid=§c你不能传送到一名无效玩家的身上！
+chat.spectatorTeleport.teleported=§a已传送到§6%s§a的位置处
+
+### 获得指南针
+chat.innocentGetCompass=§e你的指南针现在可以指向侦探掉落的弓！
+chat.murdererGetCompass.innocent=§c小心！§e现在杀手可以易如反掌地定位玩家！
+chat.murdererGetCompass.detective=§c小心！§e现在杀手可以易如反掌地定位玩家！
+chat.murdererGetCompass.murderer=§e你的指南针现在可以指向离你最近的玩家！以此来定位剩余平民！
 
 ## ===== 信息板消息 =====
 
