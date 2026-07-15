@@ -155,7 +155,7 @@ subtitle.mysteryPotion.invisibility=§a14秒隐身效果
 subtitle.mysteryPotion.invincibility=§a20秒无敌效果
 
 ### 旁观者离开游戏区域
-subtitle.spectatorOutOfBorder=§c你跑的太远了！
+subtitle.spectatorOutOfBorder=§c你跑得太远了！
 
 ### 游戏即将结束提醒
 chat.gameWillOver=§c60§e秒后，平民将会胜出！
