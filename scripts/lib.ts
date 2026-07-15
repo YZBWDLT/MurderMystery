@@ -247,13 +247,19 @@ export class StructureUtils {
 // #endregion
 // #region 常加载区域
 export class TickingAreaUtils {
-    /** 添加特定 ID 的常加载区域。 */
+    /** 添加特定 ID 的常加载区域。
+     * @returns 若常加载区域已添加，则返回`undefined`。
+     */
     static add(id: string, from: minecraft.Vector3, to: minecraft.Vector3, dimension?: string | minecraft.Dimension) {
-        return minecraft.world.tickingAreaManager.createTickingArea(id, {
-            from,
-            to,
-            dimension: DimensionUtils.getDefault(dimension),
-        });
+        try {
+            return minecraft.world.tickingAreaManager.createTickingArea(id, {
+                from,
+                to,
+                dimension: DimensionUtils.getDefault(dimension),
+            });
+        } catch {
+            return;
+        }
     }
 
     /** 获取特定 ID 的常加载区域。 */
@@ -1801,18 +1807,20 @@ export class UIUtils {
             formData.components
                 ?.filter(component => component.type === "button")
                 .filter(buttonComponent => buttonComponent.visible !== false) ?? [];
-        form.show(showPlayer).then(response => {
-            const { selection, canceled, cancelationReason } = response;
-            const parentForm = formData.parentForm;
-            // 当玩家进行特定操作后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
-            const newFormData = (() => {
-                // 选择了特定按钮后
-                if (selection !== undefined) return buttons[selection].onClick();
-                // 取消表单后
-                else if (canceled && formData.onCancel) return formData.onCancel(cancelationReason, formData);
-            })();
-            UIUtils.handleNewFormData(formData, showPlayer, parentForm, newFormData);
-        });
+        form.show(showPlayer)
+            .then(response => {
+                const { selection, canceled, cancelationReason } = response;
+                const parentForm = formData.parentForm;
+                // 当玩家进行特定操作后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
+                const newFormData = (() => {
+                    // 选择了特定按钮后
+                    if (selection !== undefined) return buttons[selection].onClick();
+                    // 取消表单后
+                    else if (canceled && formData.onCancel) return formData.onCancel(cancelationReason, formData);
+                })();
+                UIUtils.handleNewFormData(formData, showPlayer, parentForm, newFormData);
+            })
+            .catch(() => {});
 
         return form;
     }
@@ -1829,13 +1837,15 @@ export class UIUtils {
         // 显示设置
         // 筛选出所有的 button 组件
         const buttons = [formData.button1, formData.button2];
-        form.show(showPlayer).then(response => {
-            const { selection } = response;
-            const parentForm = formData.parentForm;
-            // 当玩家选择了特定按钮后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
-            const newFormData = buttons[selection ?? 0].onClick();
-            UIUtils.handleNewFormData(formData, showPlayer, parentForm, newFormData);
-        });
+        form.show(showPlayer)
+            .then(response => {
+                const { selection } = response;
+                const parentForm = formData.parentForm;
+                // 当玩家选择了特定按钮后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
+                const newFormData = buttons[selection ?? 0].onClick();
+                UIUtils.handleNewFormData(formData, showPlayer, parentForm, newFormData);
+            })
+            .catch(() => {});
 
         return form;
     }
@@ -1891,65 +1901,67 @@ export class UIUtils {
 
         // 显示设置
         // 筛选出所有有效组件
-        form.show(showPlayer).then(response => {
-            const { formValues, canceled, cancelationReason } = response;
-            const parentForm = formData.parentForm;
-            // 玩家提交后
-            if (formValues !== undefined) {
-                // 处理提交事件
+        form.show(showPlayer)
+            .then(response => {
+                const { formValues, canceled, cancelationReason } = response;
+                const parentForm = formData.parentForm;
+                // 玩家提交后
+                if (formValues !== undefined) {
+                    // 处理提交事件
 
-                /** 所有能提供数值的有效组件 */
-                const valueComponents: (
-                    | FormDropdownComponent
-                    | FormSliderComponent
-                    | FormTextFieldComponent
-                    | FormToggleComponent
-                )[] = [];
-                /** 所有数值 */
-                const values: (string | number | boolean | undefined)[] = [];
-                formData.components
-                    ?.filter(component => component.visible !== false)
-                    .forEach((component, index) => {
-                        if (["dropdown", "toggle", "textField", "slider"].includes(component.type)) {
-                            valueComponents.push(
-                                component as
-                                    | FormDropdownComponent
-                                    | FormSliderComponent
-                                    | FormTextFieldComponent
-                                    | FormToggleComponent
-                            );
-                            values.push(formValues[index]);
+                    /** 所有能提供数值的有效组件 */
+                    const valueComponents: (
+                        | FormDropdownComponent
+                        | FormSliderComponent
+                        | FormTextFieldComponent
+                        | FormToggleComponent
+                    )[] = [];
+                    /** 所有数值 */
+                    const values: (string | number | boolean | undefined)[] = [];
+                    formData.components
+                        ?.filter(component => component.visible !== false)
+                        .forEach((component, index) => {
+                            if (["dropdown", "toggle", "textField", "slider"].includes(component.type)) {
+                                valueComponents.push(
+                                    component as
+                                        | FormDropdownComponent
+                                        | FormSliderComponent
+                                        | FormTextFieldComponent
+                                        | FormToggleComponent
+                                );
+                                values.push(formValues[index]);
+                            }
+                        });
+                    // 对每个选项执行事件
+                    valueComponents.forEach((component, index) => {
+                        switch (component.type) {
+                            case "dropdown":
+                                component.onSubmit(values[index] as number, component.items);
+                                break;
+                            case "slider":
+                                component.onSubmit(values[index] as number);
+                                break;
+                            case "textField":
+                                component.onSubmit(values[index] as string);
+                                break;
+                            case "toggle":
+                                component.onSubmit(values[index] as boolean);
+                                break;
+                            default:
+                                break;
                         }
                     });
-                // 对每个选项执行事件
-                valueComponents.forEach((component, index) => {
-                    switch (component.type) {
-                        case "dropdown":
-                            component.onSubmit(values[index] as number, component.items);
-                            break;
-                        case "slider":
-                            component.onSubmit(values[index] as number);
-                            break;
-                        case "textField":
-                            component.onSubmit(values[index] as string);
-                            break;
-                        case "toggle":
-                            component.onSubmit(values[index] as boolean);
-                            break;
-                        default:
-                            break;
-                    }
-                });
-            }
-            // 当玩家进行特定操作后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
-            const newFormData = (() => {
-                // 提交后
-                if (formValues !== undefined && formData.onSubmit) return formData.onSubmit(formValues, formData);
-                // 取消表单后
-                else if (canceled && formData.onCancel) return formData.onCancel(cancelationReason, formData);
-            })();
-            UIUtils.handleNewFormData(formData, showPlayer, parentForm, newFormData);
-        });
+                }
+                // 当玩家进行特定操作后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
+                const newFormData = (() => {
+                    // 提交后
+                    if (formValues !== undefined && formData.onSubmit) return formData.onSubmit(formValues, formData);
+                    // 取消表单后
+                    else if (canceled && formData.onCancel) return formData.onCancel(cancelationReason, formData);
+                })();
+                UIUtils.handleNewFormData(formData, showPlayer, parentForm, newFormData);
+            })
+            .catch(() => {});
 
         return form;
     }

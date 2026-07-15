@@ -27,7 +27,7 @@ enum GameStage {
     GameOverStage = "GameOverStage",
 }
 
-/** 密室杀手的所有职业。 */
+/** 密室杀手的所有身份。 */
 enum MurderMysteryPlayerRole {
     /** 平民。
      * 平民的任务为尽可能地活到游戏结束。若杀手被侦探杀死，则侦探和平民获胜。
@@ -117,16 +117,16 @@ type MurderMysteryBeforeGameInfo = {
 /** 游戏结束的原因。 */
 enum MurderMysteryGameOverReason {
     /** 所有玩家死了。 */
-    AllPlayersDied = "AllPlayersDied",
+    AllPlayersDied = "allPlayersDied",
 
     /** 杀手死了。 */
-    MurdererDied = "MurdererDied",
+    MurdererDied = "murdererDied",
 
     /** 杀手离开了游戏。 */
-    MurdererQuit = "MurdererQuit",
+    MurdererQuit = "murdererQuit",
 
     /** 超时。 */
-    TimeOut = "TimeOut",
+    TimeOut = "timeOut",
 }
 
 /** 密室杀手系统，通过系统调控组件的运行，并获取游戏运行的方方面面。 */
@@ -272,32 +272,8 @@ class MurderMysterySystem {
         lib.gameSystem.unsubscribeAllDelays();
         this.gameStage = GameStage.GamingStage;
 
-        // 选取并随机传送玩家
-        const players = lib.JSUtils.array.shuffle(this.getPlayersBeforeGame());
-        const locations = lib.JSUtils.array.shuffle(this.mapData.description.spawnPoints);
-        const maxPlayerCount = this.settings.waiting.maxPlayerCount;
-        const maxLocationCount = locations.length;
-        players.forEach((player, index) => {
-            // 分配身份，第 1 名玩家设置为杀手，第 2 名玩家设置为侦探，
-            // 第 3 ~ maxPlayerCount 名玩家设置为平民，其余玩家设置为旁观者
-            if (index === 0) {
-                this.addPlayer({ player, role: MurderMysteryPlayerRole.Murderer });
-            } else if (index === 1) this.addPlayer({ player, role: MurderMysteryPlayerRole.Detective });
-            else if (index >= 2 && index < maxPlayerCount)
-                this.addPlayer({ player, role: MurderMysteryPlayerRole.Innocent });
-            else this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
-
-            // 传送玩家并设置重生点
-            // 这里，因为玩家总数可能超出安排的重生点数量，可能会导致locations[index]返回undefined，因此需要进行限制
-            const location = locations[index % maxLocationCount];
-            player.teleport(location);
-            if (isPlayer(player)) {
-                player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getOverworld() });
-            }
-
-            // 隐藏玩家的名称
-            player.nameTag = "";
-        });
+        // 分配身份
+        this.assignRole();
 
         // 移除多余实体
         this.removeAllEntities();
@@ -348,99 +324,12 @@ class MurderMysterySystem {
             200
         );
 
+        // 提醒玩家游戏结束，并返回胜者信息
+        this.gameOverNotice(reason, hero);
+
         // 注册组件
         this.general();
         MurderMysteryComponents.preventPlayerPickupGold();
-
-        // 提示玩家胜负情况
-        const playerWinList: Record<MurderMysteryGameOverReason, boolean> = {
-            AllPlayersDied: false,
-            MurdererDied: true,
-            MurdererQuit: true,
-            TimeOut: true,
-        };
-        const playerWin = playerWinList[reason];
-        // 侦探的名字
-        const firstDetective = this.players.detective.find(detective => detective.isFirstDetective);
-        const firstDetectiveName: string = (() => {
-            if (!firstDetective) return "§c--";
-            return firstDetective.getName();
-        })();
-        // 杀手的名字和击杀数
-        const murderer = this.players.murderer[0];
-        const murdererName: string = (() => {
-            if (!murderer) return "§c--";
-            return murderer.getName();
-        })();
-        const murdererKills = `${murderer?.kills ?? "§c--"}`;
-        // 英雄的名字
-        const heroName: string = (() => {
-            if (!hero) return "§c--";
-            return hero.getName();
-        })();
-
-        /** 发送消息。 */
-        const sendMessage = (playerData: MurderMysteryPlayer, title: minecraft.RawMessage) => {
-            /** 游戏结束后返回的副标题。 */
-            const subtitle: minecraft.RawMessage = (() => {
-                // 如果是超时，返回超时信息
-                if (reason === MurderMysteryGameOverReason.TimeOut) {
-                    // 杀手和其他玩家显示的内容不同
-                    if (playerData.role === MurderMysteryPlayerRole.Murderer)
-                        return { translate: "subtitle.murdererLose.timeOut" };
-                    return { translate: "subtitle.playerWin.timeOut" };
-                }
-                // 如果正常获胜，返回一般的获胜信息
-                if (playerWin) return { translate: "subtitle.playerWin" };
-                // 否则，返回失败信息
-                return { translate: "subtitle.murdererWin" };
-            })();
-            /** 游戏结束后返回的消息。 */
-            const message: minecraft.RawMessage[] = [
-                { text: "§a§l---------------§r" },
-                { text: "" },
-                { translate: "chat.title" },
-                { text: "" },
-                { translate: `chat.winner.${playerWin ? "innocent" : "murderer"}` },
-                { text: "" },
-                { translate: "chat.detective", with: [firstDetectiveName] },
-                { translate: "chat.murderer", with: [murdererName, murdererKills] },
-            ];
-            if (hero) message.push({ translate: "chat.hero", with: [heroName] });
-            message.push({ text: "" }, { text: "§a§l---------------§r" });
-            // 发送消息
-            if (isPlayer(playerData.player))
-                lib.PlayerUtils.sendMessage(playerData.player, {
-                    title: title,
-                    subtitle: subtitle,
-                    titleOptions: instantTitleDisplay,
-                    message: lib.JSUtils.lineText(message),
-                });
-        };
-        this.players.allPlayers.forEach(playerData => {
-            if (!isPlayer(playerData.player)) return;
-            const player = playerData.player;
-
-            switch (playerData.role) {
-                case MurderMysteryPlayerRole.Innocent:
-                case MurderMysteryPlayerRole.Detective:
-                    sendMessage(playerData, { translate: `${playerWin ? "title.win" : "title.lose"}` });
-                    return;
-                case MurderMysteryPlayerRole.Murderer:
-                    sendMessage(playerData, { translate: `${playerWin ? "title.lose" : "title.win"}` });
-                    return;
-                case MurderMysteryPlayerRole.Spectator:
-                    sendMessage(playerData, { translate: "title.gameOver" });
-                    return;
-            }
-        });
-
-        // 如果是因为杀手退出导致游戏结束，则提示所有玩家
-        if (reason === MurderMysteryGameOverReason.MurdererQuit)
-            this.players.allPlayers.forEach(playerData => {
-                if (isPlayer(playerData.player))
-                    playerData.player.sendMessage({ translate: "chat.murdererQuit.gameOver" });
-            });
     }
 
     // #endregion
@@ -518,20 +407,6 @@ class MurderMysterySystem {
         }
     }
 
-    /** 游戏结束检测。 */
-    gameOverTest(reason: MurderMysteryGameOverReason, hero?: MurderMysteryPlayer) {
-        // 如果杀手数量不为 0（平民侦探获胜），并且存活玩家不全为杀手（杀手获胜），则游戏不会结束
-        if (
-            this.alivePlayers.murderer.length !== 0 &&
-            this.alivePlayers.murderer.length !== this.alivePlayers.allPlayers.length
-        )
-            return;
-        // 如果给定的英雄是平民，对系统返回有英雄的情况
-        if (hero?.role === MurderMysteryPlayerRole.Innocent) this.enterGameOverStage(reason, hero);
-        // 其他情况，对系统返回没有英雄的情况
-        this.enterGameOverStage(reason);
-    }
-
     /** 在开始游戏前获取可能参与游戏的有效玩家。 */
     getPlayersBeforeGame() {
         const players = minecraft.world.getPlayers();
@@ -539,7 +414,36 @@ class MurderMysterySystem {
         return [...players, ...fakePlayers];
     }
 
-    /** 更改玩家的职业。 */
+    /** 分配身份，并传送玩家。 */
+    assignRole() {
+        const players = lib.JSUtils.array.shuffle(this.getPlayersBeforeGame());
+        const locations = lib.JSUtils.array.shuffle(this.mapData.description.spawnPoints);
+        const maxPlayerCount = this.settings.waiting.maxPlayerCount;
+        const maxLocationCount = locations.length;
+        players.forEach((player, index) => {
+            // 分配身份，第 1 名玩家设置为杀手，第 2 名玩家设置为侦探，
+            // 第 3 ~ maxPlayerCount 名玩家设置为平民，其余玩家设置为旁观者
+            if (index === 0) {
+                this.addPlayer({ player, role: MurderMysteryPlayerRole.Murderer });
+            } else if (index === 1) this.addPlayer({ player, role: MurderMysteryPlayerRole.Detective });
+            else if (index >= 2 && index < maxPlayerCount)
+                this.addPlayer({ player, role: MurderMysteryPlayerRole.Innocent });
+            else this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
+
+            // 传送玩家并设置重生点
+            // 这里，因为玩家总数可能超出安排的重生点数量，可能会导致locations[index]返回undefined，因此需要进行限制
+            const location = locations[index % maxLocationCount];
+            player.teleport(location);
+            if (isPlayer(player)) {
+                player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getOverworld() });
+            }
+
+            // 隐藏玩家的名称
+            player.nameTag = "";
+        });
+    }
+
+    /** 更改玩家的身份。 */
     transformRole(playerData: MurderMysteryPlayer, toRole: MurderMysteryPlayerRole) {
         this.removePlayer(playerData);
         playerData.role = toRole;
@@ -639,6 +543,75 @@ class MurderMysterySystem {
     removeAllEntities() {
         const keepEntities = ["minecraft:player", "murder_mystery:fake_player", "minecraft:painting"];
         lib.EntityUtils.get("overworld", { excludeTypes: keepEntities }).forEach(entity => entity.remove());
+    }
+
+    /** 游戏结束检测。
+     * @param probableHero 代表一个可能的英雄的玩家信息，只要杀死了杀手就是可能的英雄
+     */
+    gameOverTest(reason: MurderMysteryGameOverReason, probableHero?: MurderMysteryPlayer) {
+        // 如果杀手数量不为 0（平民侦探获胜），并且存活玩家不全为杀手（杀手获胜），则游戏不会结束
+        if (
+            this.alivePlayers.murderer.length !== 0 &&
+            this.alivePlayers.murderer.length !== this.alivePlayers.allPlayers.length
+        )
+            return;
+        // 如果英雄不存在，对系统返回无英雄的情况
+        if (!probableHero) return this.enterGameOverStage(reason);
+        // 如果给定的英雄是杀手，对系统返回无英雄的情况
+        if (probableHero.role === MurderMysteryPlayerRole.Murderer) return this.enterGameOverStage(reason);
+        // 如果给定的英雄是首位侦探，则对系统返回无英雄的情况
+        if (probableHero.role === MurderMysteryPlayerRole.Detective && probableHero.isFirstDetective)
+            return this.enterGameOverStage(reason);
+        // 其他情况，对系统返回没有英雄的情况
+        return this.enterGameOverStage(reason, probableHero);
+    }
+
+    /** 游戏结束后，提醒玩家。 */
+    gameOverNotice(reason: MurderMysteryGameOverReason, hero?: MurderMysteryPlayer) {
+        const playerWin = reason === MurderMysteryGameOverReason.AllPlayersDied ? false : true;
+
+        const firstDetectiveName = this.players.detective.find(detective => detective.isFirstDetective)?.getName();
+        const murdererName: string | undefined = this.players.murderer[0]?.getName();
+        const murdererKills = this.players.murderer[0]?.kills ?? 0;
+        const heroName = hero?.getName();
+
+        const titleList: Record<MurderMysteryPlayerRole, minecraft.RawMessage> = {
+            innocent: { translate: `${playerWin ? "title.win" : "title.lose"}` },
+            detective: { translate: `${playerWin ? "title.win" : "title.lose"}` },
+            murderer: { translate: `${playerWin ? "title.lose" : "title.win"}` },
+            spectator: { translate: "title.gameOver" },
+        };
+        /** 游戏结束后返回的聊天栏消息。 */
+        const message: minecraft.RawMessage[] = [
+            { text: "§a§l---------------§r" },
+            { text: "" },
+            { translate: "chat.title" },
+            { text: "" },
+            { translate: `chat.winner.${playerWin ? "innocent" : "murderer"}` },
+            { text: "" },
+        ];
+        if (firstDetectiveName) message.push({ translate: "chat.detective", with: [firstDetectiveName] });
+        if (murdererName) message.push({ translate: "chat.murderer", with: [murdererName, `${murdererKills}`] });
+        if (heroName) message.push({ translate: "chat.hero", with: [heroName] });
+        message.push({ text: "" }, { text: "§a§l---------------§r" });
+
+        this.players.allPlayers.forEach(playerData => {
+            if (!isPlayer(playerData.player)) return;
+
+            const subtitle: minecraft.RawMessage = {
+                translate: `subtitle.${reason}.${playerData.role === MurderMysteryPlayerRole.Murderer ? "murderer" : "player"}`,
+            };
+
+            lib.PlayerUtils.sendMessage(playerData.player, {
+                title: titleList[playerData.role],
+                subtitle: subtitle,
+                titleOptions: instantTitleDisplay,
+                message: lib.JSUtils.lineText(message),
+            });
+            // 如果是因为杀手退出导致游戏结束，则提示所有玩家
+            if (reason === MurderMysteryGameOverReason.MurdererQuit)
+                playerData.player.sendMessage({ translate: "chat.murdererQuit.gameOver" });
+        });
     }
     // #endregion
 }
@@ -1665,6 +1638,7 @@ class MurderMysteryComponents {
         );
     }
 
+    /** 指南针组件。 */
     static compass(system: MurderMysterySystem) {
         lib.gameSystem.subscribeTimeline(
             "compass",
@@ -1943,7 +1917,7 @@ class MurderMysteryComponents {
                     .filter(data => lib.EntityUtils.isInVolume(data.player, testVolume))
                     .forEach(data => data.setDead(MurderMysteryDeathType.EndPortal));
             },
-            20
+            5
         );
     }
 
@@ -2035,6 +2009,27 @@ const deathTypeOutOfMap: MurderMysteryDeathType[] = [
 
 /** 代表一个密室杀手玩家，包含玩家的密室杀手信息和相关方法。 */
 class MurderMysteryPlayer {
+    /** @remarks 这里的构造函数应当仅在游戏开始时执行。若要转换身份，应使用 {@link MurderMysterySystem} 的`transformRole`方法。 */
+    constructor(system: MurderMysterySystem, playerData: PlayerData) {
+        this.system = system;
+        this.role = playerData.role;
+        this.player = playerData.player;
+
+        // 如果是旁观者，标记为已死亡
+        if (this.role === MurderMysteryPlayerRole.Spectator) {
+            this.isDead = true;
+            if (isPlayer(this.player)) this.player.setGameMode(minecraft.GameMode.Spectator);
+        }
+
+        // 如果是侦探，标记为首位侦探
+        if (this.role === MurderMysteryPlayerRole.Detective) {
+            this.isFirstDetective = true;
+        }
+
+        // 为玩家展示身份
+        this.showRole();
+    }
+
     /** 系统。 */
     readonly system: MurderMysterySystem;
 
@@ -2068,24 +2063,6 @@ class MurderMysteryPlayer {
 
     /** 神秘药水的解锁情况。 */
     readonly mysteryPotionUnlocked: [boolean, boolean, boolean, boolean, boolean] = [false, false, false, false, false];
-
-    /** @remarks 这里的构造函数应当仅在游戏开始时执行。若要转换职业，应使用 {@link MurderMysterySystem} 的`transformRole`方法。 */
-    constructor(system: MurderMysterySystem, playerData: PlayerData) {
-        this.system = system;
-        this.role = playerData.role;
-        this.player = playerData.player;
-
-        // 如果是旁观者，标记为已死亡
-        if (this.role === MurderMysteryPlayerRole.Spectator) this.isDead = true;
-
-        // 如果是侦探，标记为首位侦探
-        if (this.role === MurderMysteryPlayerRole.Detective) {
-            this.isFirstDetective = true;
-        }
-
-        // 为玩家展示身份
-        this.showRole();
-    }
 
     /** 对玩家展示身份。
      * @remarks 只对非旁观者的玩家生效。
@@ -2427,7 +2404,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
         if (!murderMysterySystem.isValid) {
             const nextMap = MurderMysterySystem.getMapData();
             const { from, to } = nextMap.description.range;
-            lib.TickingAreaUtils.add("nextMapPreLoad", from, to).then(() => {
+            lib.TickingAreaUtils.add("nextMapPreLoad", from, to)?.then(() => {
                 murderMysterySystem = new MurderMysterySystem(nextMap);
                 minecraft.system.runTimeout(() => lib.TickingAreaUtils.remove("nextMapPreLoad"), 20);
             });
