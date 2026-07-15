@@ -67,9 +67,6 @@ const goldId = "murder_mystery:gold_ingot";
 /** 密室杀手的弓掉落物 ID。 */
 const bowEntityId = "murder_mystery:item_bow";
 
-/** 尸体 ID。 */
-const deadPlayerId = "murder_mystery:dead_player";
-
 /** 判断实体是否为玩家。 */
 const isPlayer = lib.PlayerUtils.isPlayer;
 
@@ -2127,8 +2124,9 @@ class MurderMysteryPlayer {
         // 若该玩家已死亡，则跳过之
         if (this.isDead) return false;
 
-        // 若该玩家正处于无敌状态，并且死亡方式不是虚空等掉出地图的方式，则播放音效和粒子并跳过之
-        if (this.player.getEffect("resistance") && !deathTypeOutOfMap.includes(deathType)) {
+        // 若该玩家正处于无敌状态，并且死亡方式不是虚空等掉出地图的方式，则播放音效和粒子，阻止死亡，终止运行
+        const isOutOfMap = deathTypeOutOfMap.includes(deathType);
+        if (this.player.getEffect("resistance") && !isOutOfMap) {
             lib.PlayerUtils.getNearby(this.player.location, 10).forEach(player =>
                 player.playSound("mob.irongolem.death", { pitch: 2 })
             );
@@ -2141,12 +2139,16 @@ class MurderMysteryPlayer {
         this.chargingTime = 0;
         this.system.removePlayer(this, true);
 
-        // 生成尸体
-        const deadPlayer = lib.EntityUtils.add(deadPlayerId, this.player.location, this.player.dimension);
-        deadPlayer.setRotation(this.player.getRotation());
+        // 若不是出图死亡方式，则生成尸体
+        if (!isOutOfMap)
+            lib.EntityUtils.add("murder_mystery:dead_player", this.player.location, this.player.dimension, {
+                initialRotation: this.player.getRotation().y,
+            });
 
-        // 设置失明，设置为旁观模式并对该玩家显示死因
+        // 设置失明
         this.player.addEffect("minecraft:blindness", 60);
+
+        // 对玩家显示死因，并设置为旁观
         if (isPlayer(this.player)) {
             this.player.setGameMode(minecraft.GameMode.Spectator);
             lib.PlayerUtils.sendMessage(this.player, {
@@ -2173,7 +2175,7 @@ class MurderMysteryPlayer {
         // 如果是侦探死亡，则掉落弓
         if (this.role === MurderMysteryPlayerRole.Detective) {
             // 如果是掉到虚空或摔到地上等出图的死亡方法，把弓的位置强行设定到其中一个出生点上
-            if (deathTypeOutOfMap.includes(deathType)) {
+            if (isOutOfMap) {
                 const closestSpawnPoint = lib.Vector3Utils.getClosest(
                     this.player.location,
                     this.system.mapData.description.spawnPoints
