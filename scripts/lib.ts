@@ -824,7 +824,7 @@ export class Vector3Utils {
      * @remarks 不要对`locationArray`传入一个空数组，否则会报错。
      */
     static getClosest(location: minecraft.Vector3, locationArray: minecraft.Vector3[]) {
-        let closestLocation = locationArray[0];
+        let closestLocation = locationArray[0] as minecraft.Vector3;
         let closestDistance = this.distance(location, closestLocation, true);
         locationArray.forEach(thisLocation => {
             const thisDistance = this.distance(location, thisLocation);
@@ -1096,7 +1096,7 @@ export interface ItemMatchOptions {
     /** 物品数量。
      * @remarks 指定为数组形式时，应为一个二元数组，第一个元素为最小值，第二个元素为最大值。
      */
-    readonly amount?: number | number[];
+    readonly amount?: number | [number, number];
 
     /** 物品是否锁定。 */
     readonly itemLock?: minecraft.ItemLockMode;
@@ -1451,7 +1451,7 @@ export class ItemUtils {
             canPlaceOn: optionsCanPlaceOn,
             unbreakable: optionsUnbreakable,
         } = options;
-        const optionsAmountRange = (() => {
+        const optionsAmountRange: [number, number] | undefined = (() => {
             if (typeof options.amount === "number") return [options.amount, options.amount];
             return options.amount;
         })();
@@ -1814,7 +1814,7 @@ export class UIUtils {
                 // 当玩家进行特定操作后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
                 const newFormData = (() => {
                     // 选择了特定按钮后
-                    if (selection !== undefined) return buttons[selection].onClick();
+                    if (selection !== undefined) return buttons[selection]?.onClick();
                     // 取消表单后
                     else if (canceled && formData.onCancel) return formData.onCancel(cancelationReason, formData);
                 })();
@@ -1842,7 +1842,7 @@ export class UIUtils {
                 const { selection } = response;
                 const parentForm = formData.parentForm;
                 // 当玩家选择了特定按钮后，立刻执行对应事件，并获取返回值以确认是否要打开一个新的界面
-                const newFormData = buttons[selection ?? 0].onClick();
+                const newFormData = buttons[selection ?? 0]?.onClick();
                 UIUtils.handleNewFormData(formData, showPlayer, parentForm, newFormData);
             })
             .catch(() => {});
@@ -2035,15 +2035,7 @@ class ArrayUtils {
      * @remarks 这个方法不会修改原数组。
      */
     static shuffle<T>(array: T[]): T[] {
-        const modifiedArray = [...array];
-        for (let i = modifiedArray.length - 1; i > 0; i--) {
-            /** 生成一个随机索引 j */ const j = Math.floor(Math.random() * (i + 1));
-            /** 交换元素 modifiedArray[i] 和 modifiedArray[j] */ [modifiedArray[i], modifiedArray[j]] = [
-                modifiedArray[j],
-                modifiedArray[i],
-            ];
-        }
-        return modifiedArray;
+        return [...array].sort(() => Math.random() - 0.5);
     }
 
     /** 删除数组的特定元素。
@@ -2086,9 +2078,11 @@ class ArrayUtils {
         return count;
     }
 
-    /** 获取一个数组中的随机元素。 */
+    /** 获取一个数组中的随机元素。
+     * @remarks 这个方法在数组为空时会返回`undefined`。
+     */
     static randomElement<T>(array: T[]) {
-        return array[NumberUtils.randomInt(0, array.length - 1)];
+        return array[NumberUtils.randomInt(0, array.length - 1)] as T;
     }
 }
 
@@ -2110,7 +2104,7 @@ class TimeDisplayUtils {
         const seconds = absSeconds % 60;
 
         // 格式化秒部分：两位整数 + 两位小数
-        const [intPart, fracPart] = seconds.toFixed(2).split(".");
+        const [intPart, fracPart] = seconds.toFixed(2).split(".") as [string, string];
         const formattedSeconds = `${intPart.padStart(2, "0")}.${fracPart}`;
 
         return `${sign}${minutes}:${formattedSeconds}`;

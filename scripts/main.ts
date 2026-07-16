@@ -302,6 +302,7 @@ class MurderMysterySystem {
         MurderMysteryComponents.playerIntoEndPortal(this);
         MurderMysteryComponents.mysteryPotion(this);
         MurderMysteryComponents.recover(this);
+        MurderMysteryComponents.applyNightVision(this);
     }
 
     /** 令游戏进入结束阶段。
@@ -336,10 +337,10 @@ class MurderMysterySystem {
     // #region - 地图管理
 
     /** 获取地图数据。若不指定地图名称，则返回所有可用地图中的一张随机地图。 */
-    static getMapData(mapName?: string) {
+    static getMapData(mapName?: string): data.MurderMysteryMapData {
         // 选择其中一张地图
         const maps = Object.values(data.maps);
-        return mapName ? data.maps[mapName] : lib.JSUtils.array.randomElement(maps);
+        return mapName ? (data.maps[mapName] as data.MurderMysteryMapData) : lib.JSUtils.array.randomElement(maps);
     }
 
     // #endregion
@@ -431,8 +432,7 @@ class MurderMysterySystem {
             else this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
 
             // 传送玩家并设置重生点
-            // 这里，因为玩家总数可能超出安排的重生点数量，可能会导致locations[index]返回undefined，因此需要进行限制
-            const location = locations[index % maxLocationCount];
+            const location = locations[index % maxLocationCount] as minecraft.Vector3;
             player.teleport(location);
             if (isPlayer(player)) {
                 player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getOverworld() });
@@ -482,6 +482,7 @@ class MurderMysterySystem {
      * @description 会传送玩家到等待大厅，并将玩家的重生点设置在这里。
      * @description 会将玩家的游戏模式设为冒险模式。
      * @description 会恢复玩家的命名牌。
+     * @description 会移除玩家的状态效果。
      */
     initPlayer(player: minecraft.Entity) {
         player.getComponent("inventory")?.container.clearAll();
@@ -493,6 +494,7 @@ class MurderMysterySystem {
             player.setGameMode(minecraft.GameMode.Adventure);
             player.nameTag = player.name;
         }
+        player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
     }
 
     // #endregion
@@ -640,10 +642,13 @@ type MurderMysteryGameSettings = {
     pickupBowMethod: "rightClick" | "nearby";
 
     /** 旁观模式的传送列表中，是否显示身份。 */
-    showRoleInSpectatorTeleportUI: true;
+    showRoleInSpectatorTeleportUI: boolean;
 
     /** 神秘药水的价格。 */
     mysteryPotionPrice: number;
+
+    /** 是否施加夜视状态效果。 */
+    applyNightVision: boolean;
 };
 
 type MurderMysteryGoldSpawnSettings = {
@@ -691,6 +696,7 @@ class MurderMysterySettings {
         pickupBowMethod: "nearby",
         mysteryPotionPrice: 1,
         showRoleInSpectatorTeleportUI: true,
+        applyNightVision: false,
     };
 
     /** 金锭生成设置，控制在游戏过程中金锭生成的表现。 */
@@ -977,7 +983,8 @@ class MurderMysteryComponents {
             // 2. 确定生成时机后，判断对哪个玩家生成
             system.globalGoldSpawnTimes++;
             const index = system.globalGoldSpawnTimes % alivePlayersCount;
-            const playerData = system.alivePlayers.allPlayers[index] ?? system.alivePlayers.allPlayers[0];
+            const playerData =
+                system.alivePlayers.allPlayers[index] ?? (system.alivePlayers.allPlayers[0] as MurderMysteryPlayer);
             // 3. 查找距离该玩家平面距离（xz）最近的可生成金点，并在选中的金点位置生成金锭
             goldPoints
                 .filter((goldPoint, index) => {
@@ -1010,7 +1017,7 @@ class MurderMysteryComponents {
             event => {
                 const { entity: player, items: goldIngot } = event;
                 if (!isPlayer(player)) return;
-                player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0].amount}`] });
+                player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0]?.amount}`] });
                 const inventoryUtils = lib.ItemUtils.inventory;
                 // 锁定玩家的金锭到快捷栏的最后一位
                 inventoryUtils
@@ -1949,6 +1956,15 @@ class MurderMysteryComponents {
             const { from, to, typeId, state } = compData;
             lib.BlockUtils.fill("overworld", from, to, typeId, {}, state);
         });
+    }
+
+    /** 对所有玩家施加夜视效果。
+     * @description 会自动判断系统的设置是否启用了`applyNightVision`，若未启用则不会注册该组件。
+     * @description 会在游戏开始时尝试对所有玩家施加夜视效果。
+     */
+    static applyNightVision(system: MurderMysterySystem) {
+        if (!system.settings.game.applyNightVision) return;
+        lib.PlayerUtils.getAll().forEach(player => player.runCommand("effect @s night_vision infinite 0 true"));
     }
 
     // #endregion

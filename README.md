@@ -30,13 +30,17 @@
 - #19 修复了两处可能存在的脚本报错
 - #21 修复了首任侦探死亡后，继任侦探击杀杀手不显示英雄的问题
 - #22 修复了杀手在飞刀蓄力期间切换快捷栏后，蓄力不停止的问题
+- #25 新增了一个施加夜视效果的设置，开始游戏后对所有玩家添加夜视
 
 ### 技术性
 
+- 为`tsconfig.json`增加了`"noUncheckedIndexedAccess": true`，修复了一些可能由调用数组索引导致返回`undefined`的报错
 - 更新了`MurderMysteryGameOverReason`枚举，现在其对应的内部的字符串首字母小写，以对应语言文件
 - `MurderMysterySystem`
   - 从`enterGamingStage`方法提取出了`assignRole`方法
   - 从`enterGamOverStage`方法提取出了`gameOverNotice`方法
+- `MurderMysterySettings`
+  - 在`game`设置下新增子设置项`applyNightVision: boolean`，修复了`showRoleInSpectatorTeleportUI`的类型
 - `lib.ts`
   - 更新了`TickingAreaUtils.add`方法，现在会在已存在常加载区域时返回`undefined`
   - 尝试修复了`UIUtils`可能导致的玩家无响应报错问题
