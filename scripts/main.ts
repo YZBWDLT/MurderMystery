@@ -210,6 +210,9 @@ class MurderMysterySystem {
     /** 全局金锭的生成次数。该值将会决定每次生成会在哪个玩家周围生成金锭。 */
     globalGoldSpawnTimes: number = 0;
 
+    /** 是否为单挑模式。 */
+    isSolo = false;
+
     // #endregion
     // #region - 游戏阶段转换
 
@@ -272,8 +275,9 @@ class MurderMysterySystem {
         lib.gameSystem.unsubscribeAllDelays();
         this.gameStage = GameStage.GamingStage;
 
-        // 分配身份
+        // 分配身份，如果存活玩家只有两人，设置为单挑模式
         this.assignRole();
+        if (this.alivePlayers.allPlayers.length === 2) this.isSolo = true;
 
         // 移除多余实体
         this.removeAllEntities();
@@ -295,6 +299,7 @@ class MurderMysterySystem {
         MurderMysteryComponents.murdererKnife(this);
         MurderMysteryComponents.spectatorTeleport(this);
         MurderMysteryComponents.compass(this);
+        MurderMysteryComponents.murdererGetSpeed(this);
 
         // 注册可选组件
         MurderMysteryComponents.playerIntoVoid(this);
@@ -1675,6 +1680,30 @@ class MurderMysteryComponents {
                     .forEach(playerData => playerData.removeCompass());
             },
             20
+        );
+    }
+
+    /** 杀手速度组件。
+     * @description 仅在单挑模式下生效。
+     * @description 当最后仅剩 1 人时，为杀手提供速度效果，直到游戏结束。
+     */
+    static murdererGetSpeed(system: MurderMysterySystem) {
+        if (!system.isSolo) return;
+        lib.gameSystem.subscribeTimeline(
+            "murdererGetSpeed",
+            () => {
+                // 如果没有杀手，直接终止
+                const murdererData = system.alivePlayers.murderer[0];
+                if (!murdererData) return;
+                // 如果存活玩家不止 1 人，直接终止
+                const alivePlayerCount = [...system.alivePlayers.innocent, ...system.alivePlayers.detective].length;
+                if (alivePlayerCount !== 1) return;
+                // 为杀手添加速度效果，并终止该时间线的检查
+                const gameTime = system.settings.game.timePerGame;
+                murdererData.player.addEffect("speed", 20 * gameTime);
+                return false;
+            },
+            21
         );
     }
 
