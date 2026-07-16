@@ -1380,21 +1380,27 @@ class MurderMysteryComponents {
                     murderer.playSound("note.hat", { pitch });
                     pitch += 0.1;
                 }
-                // 注册事件，如果杀手再度交互则阻止扔刀
+                // 如果杀手再度交互则阻止扔刀
                 lib.gameSystem.subscribeEvent(
-                    "murdererKnifeStopThrowing",
+                    "murdererKnifeStopThrowingByUsingAgain",
                     minecraft.world.afterEvents.itemUse,
                     event => {
                         // 如果交互的不是刀，或者交互的不是这名玩家，则终止
                         if (event.itemStack.typeId !== "minecraft:iron_sword") return;
                         if (event.source.id !== murderer.id) return;
-                        // 取消蓄力，直接终止该事件监听和时间线监听，并提醒玩家已取消蓄力
-                        if (murdererData.throwingTime < system.settings.murdererSword.knifeThrowTime) {
-                            (murderer.sendMessage({ translate: "chat.murdererThrowingKnife.stopped" }),
-                                (murdererData.throwingTime = 0));
-                            lib.gameSystem.unsubscribeTimeline("murdererKnifeThrowTest");
-                            return false;
-                        }
+                        // 取消蓄力
+                        stopThrowingKnifeTest(murderer, murdererData);
+                    }
+                );
+                // 如果杀手切换手持则阻止扔刀
+                lib.gameSystem.subscribeEvent(
+                    "murdererKnifeStopThrowingByChangingHand",
+                    minecraft.world.afterEvents.playerHotbarSelectedSlotChange,
+                    event => {
+                        // 如果交互的不是这名玩家，则终止
+                        if (event.player.id !== murderer.id) return;
+                        // 取消蓄力
+                        stopThrowingKnifeTest(murderer, murdererData);
                     }
                 );
                 // 若时间已到，则扔刀，监听相关事件，并终止该事件监听和时间线监听
@@ -1404,11 +1410,22 @@ class MurderMysteryComponents {
                     knifeHitBlockTest(murderer);
                     knifeHitNothing(knife);
                     knifeHitArrow(knife);
-
-                    lib.gameSystem.unsubscribeEvent("murdererKnifeStopThrowing");
-                    return false;
+                    stopThrowingKnifeTest(murderer, murdererData, false);
                 }
             });
+        }
+
+        /** 停止继续扔刀，并取消所有的投刀前检查。 */
+        function stopThrowingKnifeTest(
+            murderer: minecraft.Player,
+            murdererData: MurderMysteryPlayer,
+            shouldSendMessage: boolean = true
+        ) {
+            if (shouldSendMessage) murderer.sendMessage({ translate: "chat.murdererThrowingKnife.stopped" });
+            murdererData.throwingTime = 0;
+            lib.gameSystem.unsubscribeTimeline("murdererKnifeThrowTest");
+            lib.gameSystem.unsubscribeEvent("murdererKnifeStopThrowingByUsingAgain");
+            lib.gameSystem.unsubscribeEvent("murdererKnifeStopThrowingByChangingHand");
         }
 
         /** 检查投出去的刀是否来自于给定的杀手。 */
