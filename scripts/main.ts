@@ -1757,14 +1757,16 @@ class MurderMysteryComponents {
             amplifier?: number;
             /** 使用的药水时长。单位：游戏刻。 | 默认值：`200` */
             duration?: number;
+            /** 此药水的权重。权重越大则越可能抽中。 */
+            weight: number;
         };
         /** 本局使用的药水效果（已打乱）。 */
         const potionData: PotionData[] = lib.JSUtils.array.shuffle([
-            { name: "失明", id: "blindness" },
-            { name: "缓慢", id: "slowness" },
-            { name: "迅捷", id: "speed", amplifier: 1, duration: 400 },
-            { name: "隐身", id: "invisibility", duration: 280 },
-            { name: "无敌", id: "invincibility", amplifier: 4, duration: 400 },
+            { name: "失明", id: "blindness", weight: 4 },
+            { name: "缓慢", id: "slowness", weight: 5 },
+            { name: "迅捷", id: "speed", amplifier: 1, duration: 400, weight: 4 },
+            { name: "隐身", id: "invisibility", duration: 280, weight: 5 },
+            { name: "无敌", id: "invincibility", amplifier: 4, duration: 400, weight: 2 },
         ]);
         function getPotionData(id: string) {
             switch (id) {
@@ -1852,9 +1854,24 @@ class MurderMysteryComponents {
                     return;
                 }
 
-                // 金锭足够后，兑换一种随机的神秘药水，展示动画
+                // 金锭足够后：
+                // 1. 移除金锭
                 lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, mysteryPotionPrice);
-                const randomPotionIndex = lib.JSUtils.number.randomInt(1, 5);
+                // 2. 决定本次抽中何种药水
+                const totalWeight = lib.JSUtils.number.sum(potionData.map(data => data.weight));
+                let randomWeight = lib.JSUtils.number.randomInt(0, totalWeight - 1);
+                let chosenIndex = 0;
+                for (let i = 0; i < potionData.length; i++) {
+                    const data = potionData[i];
+                    if (!data) break;
+                    randomWeight -= data.weight;
+                    if (randomWeight <= 0) {
+                        chosenIndex = i;
+                        break;
+                    }
+                }
+                // 3. 根据随机到的索引兑换一种随机的神秘药水，展示动画
+                const randomPotionIndex = chosenIndex + 1;
                 const randomPotionId = `murder_mystery:mystery_potion_${randomPotionIndex}`;
                 const mysteryPotionEntity = lib.EntityUtils.add(
                     "murder_mystery:mystery_potion",
@@ -1862,8 +1879,7 @@ class MurderMysteryComponents {
                     player.dimension,
                     { initialRotation: player.getRotation().y + 180, spawnEvent: randomPotionId }
                 );
-
-                // 在1.5秒后给予玩家神秘药水，并将神秘药水动画实体移除
+                // 4. 在1.5秒后给予玩家神秘药水，并将神秘药水动画实体移除
                 /** 将替换到的快捷栏位置。 */
                 const replaceSlot = (() => {
                     const container = player.getComponent("inventory")?.container;
