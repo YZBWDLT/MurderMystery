@@ -31,6 +31,7 @@ item.murder_mystery:mystery_potion_2=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_3=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_4=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_5=§a??? Mystery Potion ???
+item.murder_mystery:locator=Locator
 
 ## ===== Noun Translations =====
 
@@ -172,11 +173,11 @@ chat.spectatorTeleport.tip=§cHead up to teleport to alive players!
 chat.spectatorTeleport.playerIsInvalid=§cYou can't teleport to an invalid player!
 chat.spectatorTeleport.teleported=§aHas been teleported to §6%s§a's location
 
-### Get Compass
-chat.innocentGetCompass=§eYou've got a compass! Use it to find the dropped bow!
-chat.murdererGetCompass.innocent=§cWatch out! §eThe Murderer can now find survivors easily!
-chat.murdererGetCompass.detective=§cWatch out! §eThe Murderer can now find survivors easily!
-chat.murdererGetCompass.murderer=§eYou've got a compass! Use it to find the remaining survivors!
+### Get Locator
+chat.innocentGetLocator=§eYou've got a locator! Hold it to find the dropped bow!
+chat.murdererGetLocator.innocent=§cWatch out! §eThe Murderer can now find survivors easily!
+chat.murdererGetLocator.detective=§cWatch out! §eThe Murderer can now find survivors easily!
+chat.murdererGetLocator.murderer=§eYou've got a locator! Hold it to find the remaining survivors!
 
 ## ===== Infoboard Message =====
 

@@ -20,6 +20,16 @@
 
 ## 1.0 - Exp 3 更新日志
 
+### 定位栏
+
+- 升级了指南针为定位栏！
+- 现在杀手在剩余 30 秒时会获得一个定位器
+  - 这个定位器会追踪剩余的所有玩家
+  - 距离越远，显示的小点就会越小
+  - 如果追踪的是其他杀手，会显示为红色
+- 现在平民在侦探死亡后会获得一个定位器
+  - 这个定位器会追踪侦探掉落的弓
+
 ### 特性更改&漏洞修复
 
 - 提高了末地传送门的检查频率
@@ -36,13 +46,24 @@
 
 ### 技术性
 
+- 为使用定位栏，提高了游戏的版本需求到 26.30
+- 现在`playerWaypoints`游戏规则将强制被设定为`off`
 - 为`tsconfig.json`增加了`"noUncheckedIndexedAccess": true`，修复了一些可能由调用数组索引导致返回`undefined`的报错
+- 新增了`murder_mystery:locator`自定义物品
 - 更新了`MurderMysteryGameOverReason`枚举，现在其对应的内部的字符串首字母小写，以对应语言文件
 - `MurderMysterySystem`
   - 从`enterGamingStage`方法提取出了`assignRole`方法
   - 从`enterGamOverStage`方法提取出了`gameOverNotice`方法
+  - 新增了`murdererGetSpeed`方法
+- `MurderMysteryComponents`
+  - 升级了`compass`组件为`locator`组件，以满足上文要求
 - `MurderMysterySettings`
   - 在`game`设置下新增子设置项`applyNightVision: boolean`，修复了`showRoleInSpectatorTeleportUI`的类型
+- `MurderMysteryPlayer`
+  - 移除了`compassUnlocked`属性，现在不再使用指南针
+  - 移除了`getCompass`方法和`removeCompass`方法，现在不再使用指南针
+  - 新增了`getLocator`方法和`removeLocator`方法，以使玩家获取定位器
+  - 新增了`showLocatorBar`方法和`hideLocatorBar`方法，使不同玩家显示不同的定位栏
 - `lib.ts`
   - 更新了`TickingAreaUtils.add`方法，现在会在已存在常加载区域时返回`undefined`
   - 尝试修复了`UIUtils`可能导致的玩家无响应报错问题

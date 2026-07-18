@@ -4,8 +4,8 @@
         "name": "量筒的密室杀手 行为包",
         "description": "仿照Hypixel在基岩版上实现的密室杀手！",
         "uuid": "6047457d-1640-4f5b-acbd-edbf0acae1fc",
-        "version": [1, 0, 2],
-        "min_engine_version": [1, 26, 10]
+        "version": [1, 0, 3],
+        "min_engine_version": [1, 26, 30]
     },
     "modules": [
         {
@@ -26,7 +26,7 @@
     "dependencies": [
         {
             "module_name": "@minecraft/server",
-            "version": "2.6.0"
+            "version": "2.8.0"
         },
         {
             "module_name": "@minecraft/server-ui",
