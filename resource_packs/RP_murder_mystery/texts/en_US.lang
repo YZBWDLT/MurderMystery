@@ -37,6 +37,7 @@ item.murder_mystery:locator=Locator
 
 ### Map name
 map.archives=Archives
+map.darkFall=Dark Fall
 map.library=Library
 
 ### Mode name

@@ -18,53 +18,17 @@
 
 如果还有什么想要了解的，请联系我们的 QQ 群，进群申请填写为「GitHub 密室杀手」。
 
-## 1.0 - Exp 3 更新日志
-
-### 定位栏
-
-- 升级了指南针为定位栏！
-- 现在杀手在剩余 30 秒时会获得一个定位器
-  - 这个定位器会追踪剩余的所有玩家
-  - 距离越远，显示的小点就会越小
-  - 如果追踪的是其他杀手，会显示为红色
-- 现在平民在侦探死亡后会获得一个定位器
-  - 这个定位器会追踪侦探掉落的弓
+## 1.0 - Snapshot 3 更新日志
 
 ### 特性更改&漏洞修复
 
-- 提高了末地传送门的检查频率
-- 改进了游戏结束的副标题表述，现在显示的内容会同时随着游戏结束原因和玩家角色发生变化
-- #1 在剩余最后1名玩家时，杀手将拥有速度 I 效果
-  - 特别地，如果本局游戏只有 2 名玩家，则不会施加这个效果
-- #15 现在多出的玩家成为旁观者后会正确地变为旁观模式
-- #17 现在进入末地传送门等出图死亡方式不再能生成尸体
-- #18 修复了一处错别字
-- #19 修复了两处可能存在的脚本报错
-- #21 修复了首任侦探死亡后，继任侦探击杀杀手不显示英雄的问题
-- #22 修复了杀手在飞刀蓄力期间切换快捷栏后，蓄力不停止的问题
-- #25 新增了一个施加夜视效果的设置，开始游戏后对所有玩家添加夜视
-- #27 为神秘药水新增了权重，现在更容易获取缓慢、隐身药水，而更难获取无敌药水
+- 修复了仅剩最后 1 人时杀手没有速度的问题
+- 现在杀手的速度效果不再显示粒子
+- 现在玩家的定位栏不再会留到下一局
+- 为了显示清楚，现在弓的定位栏不再显示为一个弓的图标，而是显示为一个天蓝色的圆点
+- #31 修复了玩家会饥饿的问题，现在使用和平模式
 
 ### 技术性
 
-- 为使用定位栏，提高了游戏的版本需求到 26.30
-- 现在`playerWaypoints`游戏规则将强制被设定为`off`
-- 为`tsconfig.json`增加了`"noUncheckedIndexedAccess": true`，修复了一些可能由调用数组索引导致返回`undefined`的报错
-- 新增了`murder_mystery:locator`自定义物品
-- 更新了`MurderMysteryGameOverReason`枚举，现在其对应的内部的字符串首字母小写，以对应语言文件
-- `MurderMysterySystem`
-  - 从`enterGamingStage`方法提取出了`assignRole`方法
-  - 从`enterGamOverStage`方法提取出了`gameOverNotice`方法
-  - 新增了`murdererGetSpeed`方法
-- `MurderMysteryComponents`
-  - 升级了`compass`组件为`locator`组件，以满足上文要求
-- `MurderMysterySettings`
-  - 在`game`设置下新增子设置项`applyNightVision: boolean`，修复了`showRoleInSpectatorTeleportUI`的类型
-- `MurderMysteryPlayer`
-  - 移除了`compassUnlocked`属性，现在不再使用指南针
-  - 移除了`getCompass`方法和`removeCompass`方法，现在不再使用指南针
-  - 新增了`getLocator`方法和`removeLocator`方法，以使玩家获取定位器
-  - 新增了`showLocatorBar`方法和`hideLocatorBar`方法，使不同玩家显示不同的定位栏
-- `lib.ts`
-  - 更新了`TickingAreaUtils.add`方法，现在会在已存在常加载区域时返回`undefined`
-  - 尝试修复了`UIUtils`可能导致的玩家无响应报错问题
+- `data.ts`
+  - 新增并实装了`time`组件，用于调控一张地图使用的时间

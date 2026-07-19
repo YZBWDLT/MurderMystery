@@ -148,7 +148,15 @@ class MurderMysterySystem {
 
         // 初始化游戏规则
         minecraft.world.gameRules.showTags = false;
+        minecraft.world.gameRules.doDayLightCycle = false;
+        minecraft.world.gameRules.doWeatherCycle = false;
         lib.DimensionUtils.getOverworld().runCommand("gamerule playerWaypoints off");
+
+        // 设置为和平模式
+        minecraft.world.setDifficulty(minecraft.Difficulty.Peaceful);
+
+        // 设置时间
+        minecraft.world.setTimeOfDay(this.mapData.components.time ?? 6000);
 
         this.enterWaitingStage();
     }
@@ -333,6 +341,9 @@ class MurderMysterySystem {
 
         // 提醒玩家游戏结束，并返回胜者信息
         this.gameOverNotice(reason, hero);
+
+        // 移除所有玩家的所有定位栏
+        lib.PlayerUtils.getAll().forEach(player => player.locatorBar.removeAllWaypoints());
 
         // 注册组件
         this.general();
@@ -1689,7 +1700,7 @@ class MurderMysteryComponents {
      * @description 当最后仅剩 1 人时，为杀手提供速度效果，直到游戏结束。
      */
     static murdererGetSpeed(system: MurderMysterySystem) {
-        if (!system.isSolo) return;
+        if (system.isSolo) return;
         lib.gameSystem.subscribeTimeline(
             "murdererGetSpeed",
             () => {
@@ -1701,7 +1712,7 @@ class MurderMysteryComponents {
                 if (alivePlayerCount !== 1) return;
                 // 为杀手添加速度效果，并终止该时间线的检查
                 const gameTime = system.settings.game.timePerGame;
-                murdererData.player.addEffect("speed", 20 * gameTime);
+                murdererData.player.addEffect("speed", 20 * gameTime, { showParticles: false });
                 return false;
             },
             21
@@ -2496,9 +2507,13 @@ class MurderMysteryPlayer {
                 { dimension, ...location },
                 {
                     textureBoundsList: [
-                        { texture: { path: "textures/items/bow_standby", iconHeight: 1, iconWidth: 1 }, lowerBound: 0 },
+                        { texture: minecraft.WaypointTexture.Square, lowerBound: 0, upperBound: 25 },
+                        { texture: minecraft.WaypointTexture.Circle, lowerBound: 25, upperBound: 50 },
+                        { texture: minecraft.WaypointTexture.SmallSquare, lowerBound: 50, upperBound: 100 },
+                        { texture: minecraft.WaypointTexture.SmallStar, lowerBound: 100 },
                     ],
-                }
+                },
+                { red: 0.333, green: 1, blue: 1 }
             );
             player.locatorBar.addWaypoint(waypoint);
         }
