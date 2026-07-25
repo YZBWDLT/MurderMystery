@@ -158,6 +158,11 @@ class MurderMysterySystem {
         // 设置时间
         minecraft.world.setTimeOfDay(this.mapData.components.time ?? 6000);
 
+        // 如果该地图已经注册了相关组件，则为系统添加对应组件的管理器
+        const { interaction, mysteryPotion, setBlock } = this.mapData.components;
+        if (interaction && mysteryPotion) this.mysteryPotionManager = new MurderMysteryMysteryPotionManager(this);
+        if (interaction && setBlock) this.setBlockManager = new MurderMysterySetBlockManager(this);
+
         this.enterWaitingStage();
     }
 
@@ -222,6 +227,16 @@ class MurderMysterySystem {
     /** 是否为单挑模式。 */
     isSolo = false;
 
+    /** 神秘药水管理器。
+     * @remarks 仅当该地图已经注册了`interaction`组件和`mysteryPotion`组件时有效。
+     */
+    readonly mysteryPotionManager?: MurderMysteryMysteryPotionManager;
+
+    /** 神秘药水管理器。
+     * @remarks 仅当该地图已经注册了`interaction`组件和`setBlock`组件时有效。
+     */
+    readonly setBlockManager?: MurderMysterySetBlockManager;
+
     // #endregion
     // #region - 游戏阶段转换
 
@@ -230,7 +245,7 @@ class MurderMysterySystem {
         // 注册通用组件
         MurderMysteryComponents.infoboard(this);
         MurderMysteryComponents.preventDamage(this);
-        MurderMysteryComponents.preventInteractingWithBlock(this);
+        MurderMysteryComponents.interaction(this);
     }
 
     /** 令游戏进入清除阶段，在清除阶段清空原有的地图。 */
@@ -562,6 +577,8 @@ class MurderMysterySystem {
     removeAllEntities() {
         const keepEntities = ["minecraft:player", "murder_mystery:fake_player", "minecraft:painting"];
         lib.EntityUtils.get("overworld", { excludeTypes: keepEntities }).forEach(entity => entity.remove());
+
+        minecraft.world.primitiveShapesManager.removeAll();
     }
 
     /** 游戏结束检测。
@@ -633,6 +650,343 @@ class MurderMysterySystem {
         });
     }
     // #endregion
+}
+
+/** 神秘药水信息。 */
+type MysteryPotionData = {
+    /** 药水名称。 */
+    name: "失明" | "缓慢" | "迅捷" | "隐身" | "无敌";
+
+    /** 使用的药水效果。 */
+    id: "blindness" | "slowness" | "speed" | "invisibility" | "resistance";
+
+    /** 使用的药水放大等级。 | 默认值：`0` */
+    amplifier?: number;
+
+    /** 使用的药水时长。单位：游戏刻。 | 默认值：`200` */
+    duration?: number;
+
+    /** 此药水的权重。权重越大则越可能抽中。 */
+    weight: number;
+};
+
+/** 神秘药水交互信息。 */
+type MysteryPotionInteractionData = {
+    /** 交互位置。 */
+    interactionLocation: minecraft.Vector3;
+
+    /** 动画位置，同时也决定文本的显示位置。若不指定，则默认为交互位置。 */
+    animationLocation: minecraft.Vector3;
+};
+
+/** 神秘药水管理器。
+ *
+ * - 游戏一共有 5 种神秘药水。当玩家喝下神秘药水后，触发一个随机效果。
+ * - 在本局游戏内，每种药水的效果是固定的，但在不同游戏内，相同药水的药效是不固定的。
+ * - 神秘药水的 ID 为`murder_mystery:mystery_potion_(index)`，其中不同的`index`指代的即为不同的药效。
+ */
+class MurderMysteryMysteryPotionManager {
+    constructor(system: MurderMysterySystem) {
+        this.system = system;
+        // 如果没有所需的组件则直接终止
+        const interactionComponent = system.mapData.components.interaction?.find(comp => comp.type === "mysteryPotion");
+        const mysteryPotionComponent = system.mapData.components.mysteryPotion;
+        if (!interactionComponent) return;
+        if (!mysteryPotionComponent) return;
+        // 解析系统的组件：解析位置
+        this.location =
+            interactionComponent.at?.map((location, index) => {
+                const interactionLocation = location;
+                let animationLocation: minecraft.Vector3 = location;
+                if (mysteryPotionComponent.animationLocation)
+                    animationLocation = mysteryPotionComponent.animationLocation[index] ?? location;
+                return { interactionLocation, animationLocation };
+            }) ?? [];
+        // 解析系统的组件：解析消耗金锭数
+        this.consume = interactionComponent.consume ?? 0;
+    }
+
+    /** 游戏系统。 */
+    private readonly system: MurderMysterySystem;
+
+    /** 本局的神秘药水的排布。对于每一局而言，不同神秘药水对应的药效是不同的。 */
+    readonly mysteryPotionData: MysteryPotionData[] = lib.JSUtils.array.shuffle([
+        { name: "失明", id: "blindness", weight: 4 },
+        { name: "缓慢", id: "slowness", weight: 5 },
+        { name: "迅捷", id: "speed", amplifier: 1, duration: 400, weight: 4 },
+        { name: "隐身", id: "invisibility", duration: 280, weight: 5 },
+        { name: "无敌", id: "resistance", amplifier: 4, duration: 400, weight: 2 },
+    ]);
+
+    /** 所有可能的交互位置。 */
+    readonly location: MysteryPotionInteractionData[] = [];
+
+    /** 金锭消耗数。 */
+    readonly consume: number = 0;
+
+    /** 默认神秘药水的物品备注。 */
+    static readonly defaultLore = ["§r§7这是一瓶药水。天知道它会给你什么效果。"];
+
+    /** 从药水的 ID 获取索引。 */
+    static getPotionIndex(potionId: string) {
+        // 匹配完整格式，并捕获数字部分
+        const match = potionId.match(/^murder_mystery:mystery_potion_(\d+)$/);
+        if (!match) return undefined;
+        // 将捕获的字符串转为数字
+        return Number(match[1]);
+    }
+
+    /** 在动画位置处生成展示文本。 */
+    setText() {
+        this.location.forEach(locationData => {
+            const textLocation = lib.Vector3Utils.add(locationData.animationLocation, 0.5, 1, 0.5);
+            const textDisplay = new minecraft.TextPrimitive(textLocation, {
+                translate: "textDisplay.mysteryPotion",
+                with: [`${this.consume}`],
+            });
+            minecraft.world.primitiveShapesManager.addText(textDisplay);
+        });
+    }
+
+    /** 令玩家试图获取神秘药水。
+     * @returns 返回是否成功获得了药水。
+     */
+    getMysteryPotion(playerData: MurderMysteryPlayer, location: minecraft.Vector3): boolean {
+        // ===== 条件检查 =====
+
+        // 如果不是规定位置的交互位置，终止运行
+        const locationData = this.location.find(data => lib.Vector3Utils.isEqual(location, data.interactionLocation));
+        if (!locationData) return false;
+
+        // 如果玩家不是 Player，终止运行
+        const player = playerData.player;
+        if (!isPlayer(player)) return false;
+
+        // 如果玩家的金锭不足，提示玩家后终止运行
+        const playerGoldCount = lib.ItemUtils.inventory.getAmount(player, { includeTypeId: [goldId] });
+        if (playerGoldCount < this.consume) {
+            lib.PlayerUtils.sendMessage(player, {
+                message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${this.consume}`] },
+                sound: "random.anvil_land",
+            });
+            return false;
+        }
+
+        // 如果已有人在使用（附近有药水动画时），提示玩家后终止运行
+        const nearbyAnimationEntities = lib.EntityUtils.getNearby(
+            "murder_mystery:mystery_potion",
+            locationData.animationLocation,
+            2
+        );
+        if (nearbyAnimationEntities.length !== 0) {
+            lib.PlayerUtils.sendMessage(player, {
+                message: { translate: "chat.mysteryPotion.occupied" },
+                sound: "random.anvil_land",
+            });
+            return false;
+        }
+
+        // 如果玩家拥有超过 3 瓶药水，提示玩家后终止运行
+        const playerPotionCount = lib.ItemUtils.inventory.getAmount(player, {
+            includeTypeId: [
+                "murder_mystery:mystery_potion_0",
+                "murder_mystery:mystery_potion_1",
+                "murder_mystery:mystery_potion_2",
+                "murder_mystery:mystery_potion_3",
+                "murder_mystery:mystery_potion_4",
+            ],
+        });
+        if (playerPotionCount >= 3) {
+            lib.PlayerUtils.sendMessage(player, {
+                message: { translate: "chat.mysteryPotion.inventoryFull" },
+                sound: "random.anvil_land",
+            });
+            return false;
+        }
+
+        // ===== ↓ 可以成功购买神秘药水 =====
+
+        // 移除玩家的金锭
+        lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, this.consume);
+
+        // 决定本次抽中何种药水（potionIndex），并获取药水的相关信息
+        const totalWeight = lib.JSUtils.number.sum(this.mysteryPotionData.map(data => data.weight));
+        let randomWeight = lib.JSUtils.number.randomInt(0, totalWeight - 1);
+        let potionIndex = 0;
+        this.mysteryPotionData.some((data, index) => {
+            randomWeight -= data.weight;
+            if (randomWeight <= 0) {
+                potionIndex = index;
+                return true;
+            }
+        });
+        const potionId = `murder_mystery:mystery_potion_${potionIndex}`;
+        const potionData = this.mysteryPotionData[potionIndex];
+        const potionName = potionData?.name ?? "失明";
+        const potionUnlocked = playerData.mysteryPotionUnlocked[potionIndex];
+
+        // 展示药水对应的动画
+        const mysteryPotionAnimationEntity = lib.EntityUtils.add(
+            "murder_mystery:mystery_potion",
+            lib.Vector3Utils.add(locationData.animationLocation, 0.5, 0, 0.5),
+            player.dimension,
+            { initialRotation: player.getRotation().y + 180, spawnEvent: potionId }
+        );
+
+        /** 给予玩家药水的槽位。这里只有 3 个槽位可用：6 号位 -> 8 号位 -> 1 号位。如果这些槽位有空缺，则依次顺延。 */
+        let replaceSlot = 0;
+        const playerContainer = player.getComponent("inventory")?.container;
+        if (!playerContainer?.getItem(5)) replaceSlot = 5;
+        else if (!playerContainer?.getItem(7)) replaceSlot = 7;
+        else replaceSlot = 0;
+
+        // 在 1.5 秒后，销毁动画实体并给予玩家药水
+        minecraft.system.runTimeout(() => {
+            lib.ItemUtils.inventory.set(player, replaceSlot, potionId, {
+                itemLock: minecraft.ItemLockMode.slot,
+                name: potionUnlocked ? `§r§a${potionName}药水` : void 0,
+                lore: potionUnlocked
+                    ? [`§r§7这瓶药水将会使你获得${potionName}效果！`]
+                    : MurderMysteryMysteryPotionManager.defaultLore,
+            });
+            mysteryPotionAnimationEntity.remove();
+        }, 30);
+        return true;
+    }
+
+    /** 玩家尝试喝下神秘药水，并获取对应的状态效果。
+     * @returns 返回是否成功喝下了药水。
+     */
+    drinkMysteryPotion(playerData: MurderMysteryPlayer, potionId: string): boolean {
+        // ===== 条件检查 =====
+
+        // 获取药效信息，如果玩家喝下的不是有效药水，则终止运行
+        const potionIndex = MurderMysteryMysteryPotionManager.getPotionIndex(potionId);
+        if (potionIndex === undefined) return false;
+        const potionData = this.mysteryPotionData[potionIndex];
+        if (!potionData) return false;
+
+        // 如果玩家不是 Player，终止运行
+        const player = playerData.player;
+        if (!isPlayer(player)) return false;
+
+        // 如果玩家已有 5 种药效中的一种，则不给予药效，重新给予药水并提示玩家
+        const checkEffects: string[] = this.mysteryPotionData.map(data => `minecraft:${data.id}`);
+        const playerHasEffects = player.getEffects().filter(effect => checkEffects.includes(effect.typeId)).length > 0;
+        if (playerHasEffects) {
+            lib.ItemUtils.equipment.set(player, potionId, minecraft.EquipmentSlot.Mainhand, {
+                itemLock: minecraft.ItemLockMode.slot,
+            });
+            player.sendMessage({ translate: "chat.mysteryPotion.onlyOneEffect" });
+            return false;
+        }
+
+        // ===== ↓ 可以成功喝下药水 =====
+
+        // 显示副标题
+        lib.PlayerUtils.sendMessage(player, {
+            title: "§1",
+            subtitle: { translate: `subtitle.mysteryPotion.${potionData.id}` },
+            titleOptions: instantTitleDisplay,
+        });
+
+        // 标记为玩家已解锁该药水
+        playerData.mysteryPotionUnlocked[potionIndex] = true;
+
+        // 给予药效
+        player.addEffect(potionData.id, potionData.duration ?? 200, { amplifier: potionData.amplifier });
+
+        // 替换原有的药水（对 1 号位、6 号位、8 号位分别进行检查，其他槽位不动）
+        [0, 5, 7].forEach(slot => {
+            const playerContainer = player.getComponent("inventory")?.container;
+            if (!playerContainer) return;
+            const containerSlot = playerContainer.getSlot(slot);
+            const currentItem = containerSlot.getItem();
+            if (!currentItem) return;
+            if (currentItem.typeId !== potionId) return;
+            containerSlot.nameTag = `§r§a${potionData.name}药水`;
+            containerSlot.setLore([`§r§7这瓶药水将会使你获得${potionData.name}效果！`]);
+        });
+
+        return true;
+    }
+}
+
+type SetBlockInteractionData = {
+    /** 交互位置。 */
+    interactionLocation: minecraft.Vector3;
+
+    /** 放置方块位置。 */
+    setBlockLocation: minecraft.Vector3;
+
+    /** 放置的方块。 */
+    blockId: string;
+
+    /** 如何通知玩家。 */
+    notifyPlayer?: lib.MessageOptions;
+};
+
+/** 放置方块管理器。 */
+class MurderMysterySetBlockManager {
+    constructor(system: MurderMysterySystem) {
+        this.system = system;
+        // 如果没有所需的组件则直接终止
+        const interactionComponent = system.mapData.components.interaction?.find(comp => comp.type === "setBlock");
+        const setBlockComponent = system.mapData.components.setBlock;
+        if (!interactionComponent) return;
+        if (!setBlockComponent) return;
+        // 解析系统的组件：解析位置、方块等信息
+        this.setBlockData =
+            interactionComponent.at?.map((location, index) => {
+                const setBlockData = setBlockComponent[index];
+                return {
+                    interactionLocation: location,
+                    setBlockLocation: setBlockData?.location ?? { x: 0, y: 0, z: 0 },
+                    blockId: setBlockData?.block ?? "minecraft:air",
+                    notifyPlayer: setBlockData?.notifyPlayer,
+                };
+            }) ?? [];
+        // 解析系统的组件：解析消耗金锭数
+        this.consume = interactionComponent.consume ?? 0;
+    }
+
+    /** 放置方块的信息。 */
+    readonly setBlockData: SetBlockInteractionData[] = [];
+
+    /** 金锭消耗数。 */
+    readonly consume: number = 0;
+
+    /** 游戏系统。 */
+    private readonly system: MurderMysterySystem;
+
+    /** 当玩家交互时，令玩家试图放置方块。
+     * @returns 返回是否成功放置了方块。
+     */
+    setBlock(player: minecraft.Player, location: minecraft.Vector3): boolean {
+        // ===== 条件检查 =====
+        const setBlockData = this.setBlockData.find(data =>
+            lib.Vector3Utils.isEqual(data.interactionLocation, location)
+        );
+        if (!setBlockData) return false;
+
+        // 如果玩家的金锭不足，直接终止运行
+        const playerGoldCount = lib.ItemUtils.inventory.getAmount(player, { includeTypeId: [goldId] });
+        if (playerGoldCount < this.consume) return false;
+
+        // 如果规定位置已为目标方块，则直接终止运行
+        const currentBlock = lib.BlockUtils.get(setBlockData.setBlockLocation);
+        if (currentBlock?.typeId === setBlockData.blockId) return false;
+
+        // ===== ↓ 可以成功放置方块 =====
+        // 移除玩家的金锭
+        lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, this.consume);
+
+        // 尝试放置方块
+        const { setBlockLocation, blockId, notifyPlayer } = setBlockData;
+        lib.BlockUtils.set(player.dimension, setBlockLocation, blockId);
+        if (notifyPlayer) lib.PlayerUtils.sendMessage(player, notifyPlayer);
+        return true;
+    }
 }
 
 // #endregion
@@ -1350,32 +1704,62 @@ class MurderMysteryComponents {
         );
     }
 
-    /** 防止玩家和方块交互。
-     * @description 阻止玩家和地图组件`allowInteractingWithBlock`中指定之外的方块交互。
+    /** 玩家和方块交互组件。
+     * @description 阻止玩家和地图组件`interaction`中指定之外的方块交互。
+     * @description 触发具有交互属性的其他组件，例如门、神秘药水等。
      * @description 不会阻止创造模式玩家和方块交互。
      */
-    static preventInteractingWithBlock(system: MurderMysterySystem) {
-        lib.gameSystem.subscribeEvent(
-            "preventInteractingWithBlock",
-            minecraft.world.beforeEvents.playerInteractWithBlock,
-            event => {
-                const { isFirstEvent, block, player } = event;
-                // 如果不是首次交互，直接终止
-                if (!isFirstEvent) {
-                    event.cancel = true;
-                    return;
-                }
-                // 如果是创造模式玩家，直接终止
-                if (player.getGameMode() === minecraft.GameMode.Creative) return;
-                // 解析允许交互的组件，如果交互的方块是 allowedBlocks 中的方块列表，或交互的坐标是 allowedLocation 中的坐标列表，则终止之
-                const { blocks: allowedBlocks = [], location: allowedLocation = [] } =
-                    system.mapData.components.allowInteractingWithBlock ?? {};
-                if (allowedBlocks.includes(block.typeId)) return;
-                if (allowedLocation.some(location => lib.Vector3Utils.isEqual(location, block.location))) return;
-                // 阻止玩家交互
+    static interaction(system: MurderMysterySystem) {
+        lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
+            const { isFirstEvent, block, player } = event;
+            const location = block.location;
+            // 如果不是首次交互，取消事件并直接终止
+            if (!isFirstEvent) {
                 event.cancel = true;
+                return;
             }
-        );
+            // 如果不是有效玩家，直接终止
+            const playerData = system.getPlayer(player);
+            if (!playerData) return;
+
+            // ===== 触发具有交互性质的组件 =====
+
+            const { mysteryPotionManager, setBlockManager } = system;
+
+            // 神秘药水组件：玩家试图获取药水
+            if (mysteryPotionManager)
+                minecraft.system.run(() => mysteryPotionManager.getMysteryPotion(playerData, location));
+
+            // 放置方块组件：玩家试图放置方块
+            if (setBlockManager) minecraft.system.run(() => setBlockManager.setBlock(player, location));
+
+            // ===== 判断是否应该取消事件 =====
+            let shouldCancelEvent = true;
+
+            // 如果是创造模式玩家，直接终止
+            if (player.getGameMode() === minecraft.GameMode.Creative) shouldCancelEvent = false;
+
+            // 解析允许交互的组件，如果交互的方块是 allowedBlocks 中的方块列表，或交互的坐标是 allowedLocation 中的坐标列表，则终止之
+            const interactionComp = system.mapData.components.interaction;
+            if (interactionComp) {
+                // 如果包含规定方块，并且未规定 stillCancelEvent 为 true，则允许交互
+                const allowedBlocks = interactionComp.flatMap(comp => {
+                    if (comp.blocks && comp.stillCancelEvent !== true) return comp.blocks;
+                    return [];
+                });
+                if (allowedBlocks.includes(block.typeId)) shouldCancelEvent = false;
+
+                // 如果包含规定位置，并且未规定 stillCancelEvent 为 true，则允许交互
+                const allowedLocations = interactionComp.flatMap(comp => {
+                    if (comp.at && comp.stillCancelEvent !== true) return comp.at;
+                    return [];
+                });
+                if (lib.Vector3Utils.hasPosition(allowedLocations, block.location)) shouldCancelEvent = false;
+            }
+
+            // 阻止玩家交互
+            if (shouldCancelEvent) event.cancel = true;
+        });
     }
 
     /** 杀手飞刀。
@@ -1686,12 +2070,15 @@ class MurderMysteryComponents {
      */
     static locator(system: MurderMysterySystem) {
         lib.gameSystem.subscribeEvent("locator", minecraft.world.afterEvents.playerHotbarSelectedSlotChange, event => {
-            const { itemStack: locator, player } = event;
+            const { itemStack, player } = event;
             const playerData = system.getPlayer(player);
             if (!playerData) return;
             // 当玩家手持定位器时，显示定位栏
-            if (locator?.typeId === "murder_mystery:locator") playerData.showLocatorBar();
-            else playerData.hideLocatorBar();
+            if (itemStack?.typeId === "murder_mystery:locator") {
+                playerData.showLocatorBar();
+            } else {
+                playerData.hideLocatorBar();
+            }
         });
     }
 
@@ -1738,221 +2125,27 @@ class MurderMysteryComponents {
     }
 
     /** 神秘药水组件。
-     * @description 会自动判断系统的地图数据是否含有`mysteryPotion`组件，若不含该组件则不会注册该组件。
+     * @description 会自动判断系统的地图数据是否含有`mysteryPotion`组件和`interaction`组件，若不含这些组件则不会注册该组件。
      * @description 会在游戏开始时尝试在规定的位置生成展示文本。
-     * @description 会在游戏开始时决定 5 种药水对应何种药效。
-     * @description 当玩家与炼药锅交互时，会检查是否允许酿造神秘药水。
      * @description 当玩家喝下神秘药水时，会导致玩家拥有不同的药效。
      */
     static mysteryPotion(system: MurderMysterySystem) {
-        const component = system.mapData.components.mysteryPotion;
-        if (!component) return;
+        const { mysteryPotion: mysteryPotionComponent, interaction: interactionComponent } = system.mapData.components;
+        if (!mysteryPotionComponent || !interactionComponent) return;
+        const mysteryPotionManager = system.mysteryPotionManager;
+        if (!mysteryPotionManager) return;
 
-        // ===== 生成展示文本 =====
-        const cauldronLocation = component.location ?? [];
-        const mysteryPotionPrice = system.settings.game.mysteryPotionPrice;
-        cauldronLocation.forEach(location => {
-            const spawnLocation = lib.Vector3Utils.add(location, 0.5, 1, 0.5);
-            const textDisplay = lib.EntityUtils.add("murder_mystery:text_display", spawnLocation);
-            textDisplay.nameTag = `神秘药水 - ${mysteryPotionPrice}§6块金锭`;
-        });
+        // 生成展示文本
+        mysteryPotionManager.setText();
 
-        // ===== 初始化本局神秘药水的信息列表 =====
-        /** 药水信息。 */
-        type PotionData = {
-            /** 药水名称。 */
-            name: "失明" | "缓慢" | "迅捷" | "隐身" | "无敌";
-            /** 使用的药水效果。若不指定则为无敌效果。 */
-            id: "blindness" | "slowness" | "speed" | "invisibility" | "invincibility";
-            /** 使用的药水放大等级。 | 默认值：`0` */
-            amplifier?: number;
-            /** 使用的药水时长。单位：游戏刻。 | 默认值：`200` */
-            duration?: number;
-            /** 此药水的权重。权重越大则越可能抽中。 */
-            weight: number;
-        };
-        /** 本局使用的药水效果（已打乱）。 */
-        const potionData: PotionData[] = lib.JSUtils.array.shuffle([
-            { name: "失明", id: "blindness", weight: 4 },
-            { name: "缓慢", id: "slowness", weight: 5 },
-            { name: "迅捷", id: "speed", amplifier: 1, duration: 400, weight: 4 },
-            { name: "隐身", id: "invisibility", duration: 280, weight: 5 },
-            { name: "无敌", id: "invincibility", amplifier: 4, duration: 400, weight: 2 },
-        ]);
-        function getPotionData(id: string) {
-            switch (id) {
-                case "murder_mystery:mystery_potion_1":
-                    return potionData[0];
-                case "murder_mystery:mystery_potion_2":
-                    return potionData[1];
-                case "murder_mystery:mystery_potion_3":
-                    return potionData[2];
-                case "murder_mystery:mystery_potion_4":
-                    return potionData[3];
-                case "murder_mystery:mystery_potion_5":
-                    return potionData[4];
-                default:
-                    return;
-            }
-        }
-        function getPotionIndex(id: string) {
-            switch (id) {
-                case "murder_mystery:mystery_potion_1":
-                    return 0;
-                case "murder_mystery:mystery_potion_2":
-                    return 1;
-                case "murder_mystery:mystery_potion_3":
-                    return 2;
-                case "murder_mystery:mystery_potion_4":
-                    return 3;
-                case "murder_mystery:mystery_potion_5":
-                    return 4;
-                default:
-                    return 0;
-            }
-        }
-        const defaultLore: string[] = ["§r§7这是一瓶药水。天知道它会给你什么效果。"];
-
-        // ===== 给予玩家神秘药水 =====
-        lib.gameSystem.subscribeEvent(
-            "playerGetMysteryPotionTest",
-            minecraft.world.afterEvents.playerInteractWithBlock,
-            event => {
-                const { isFirstEvent, player, block } = event;
-                if (!isFirstEvent) return;
-
-                // 如果不是密室杀手玩家，终止运行
-                const playerData = system.getPlayer(player);
-                if (!playerData) return;
-
-                // 如果不是规定的炼药锅，终止运行
-                const location = block.location;
-                if (!lib.Vector3Utils.hasPosition(cauldronLocation, location)) return;
-
-                // 如果玩家的金锭不足，提示玩家后终止运行
-                if (lib.ItemUtils.inventory.getAmount(player, { includeTypeId: [goldId] }) < mysteryPotionPrice) {
-                    lib.PlayerUtils.sendMessage(player, {
-                        message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${mysteryPotionPrice}`] },
-                        sound: "random.anvil_land",
-                    });
-                    return;
-                }
-
-                // 如果已有人在使用，提示玩家后终止运行
-                if (lib.EntityUtils.getNearby("murder_mystery:mystery_potion", location, 2).length > 0) {
-                    lib.PlayerUtils.sendMessage(player, {
-                        message: { translate: "chat.mysteryPotion.occupied" },
-                        sound: "random.anvil_land",
-                    });
-                    return;
-                }
-
-                // 如果玩家拥有超过 3 瓶药水，提示玩家后终止运行
-                const potionCount = lib.ItemUtils.inventory.getAmount(player, {
-                    includeTypeId: [
-                        "murder_mystery:mystery_potion_1",
-                        "murder_mystery:mystery_potion_2",
-                        "murder_mystery:mystery_potion_3",
-                        "murder_mystery:mystery_potion_4",
-                        "murder_mystery:mystery_potion_5",
-                    ],
-                });
-                if (potionCount >= 3) {
-                    lib.PlayerUtils.sendMessage(player, {
-                        message: { translate: "chat.mysteryPotion.inventoryFull" },
-                        sound: "random.anvil_land",
-                    });
-                    return;
-                }
-
-                // 金锭足够后：
-                // 1. 移除金锭
-                lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, mysteryPotionPrice);
-                // 2. 决定本次抽中何种药水
-                const totalWeight = lib.JSUtils.number.sum(potionData.map(data => data.weight));
-                let randomWeight = lib.JSUtils.number.randomInt(0, totalWeight - 1);
-                let chosenIndex = 0;
-                for (let i = 0; i < potionData.length; i++) {
-                    const data = potionData[i];
-                    if (!data) break;
-                    randomWeight -= data.weight;
-                    if (randomWeight <= 0) {
-                        chosenIndex = i;
-                        break;
-                    }
-                }
-                // 3. 根据随机到的索引兑换一种随机的神秘药水，展示动画
-                const randomPotionIndex = chosenIndex + 1;
-                const randomPotionId = `murder_mystery:mystery_potion_${randomPotionIndex}`;
-                const mysteryPotionEntity = lib.EntityUtils.add(
-                    "murder_mystery:mystery_potion",
-                    lib.Vector3Utils.add(location, 0.5, 0, 0.5),
-                    player.dimension,
-                    { initialRotation: player.getRotation().y + 180, spawnEvent: randomPotionId }
-                );
-                // 4. 在1.5秒后给予玩家神秘药水，并将神秘药水动画实体移除
-                /** 将替换到的快捷栏位置。 */
-                const replaceSlot = (() => {
-                    const container = player.getComponent("inventory")?.container;
-                    if (!container) return 0;
-                    // 如果 5 号位没有物品，则放到 5 号位
-                    if (!container.getItem(5)) return 5;
-                    // 如果 7 号位没有物品，则放到 7 号位
-                    if (!container.getItem(7)) return 7;
-                    return 0;
-                })();
-                const randomPotionName = getPotionData(randomPotionId)?.name ?? "失明";
-                const thisPotionUnlocked = playerData.mysteryPotionUnlocked[randomPotionIndex - 1];
-                minecraft.system.runTimeout(() => {
-                    lib.ItemUtils.inventory.set(player, replaceSlot, randomPotionId, {
-                        itemLock: minecraft.ItemLockMode.slot,
-                        name: thisPotionUnlocked ? `§r§a${randomPotionName}药水` : void 0,
-                        lore: thisPotionUnlocked ? [`§r§7这瓶药水将会使你获得${randomPotionName}效果！`] : defaultLore,
-                    });
-                    mysteryPotionEntity.remove();
-                }, 30);
-            }
-        );
-
-        // ===== 喝下神秘药水 =====
+        // 喝下神秘药水
         lib.gameSystem.subscribeEvent(
             "playerUseMysteryPotionTest",
             minecraft.world.afterEvents.itemCompleteUse,
             event => {
-                const { itemStack: mysteryPotion, source: player } = event;
-                const potionId = mysteryPotion.typeId;
-
-                // 如果玩家已有药效，则不给予药效，重新给予药水并提示玩家
-                if (player.getEffects().length > 0) {
-                    lib.ItemUtils.equipment.set(player, potionId, minecraft.EquipmentSlot.Mainhand, {
-                        itemLock: minecraft.ItemLockMode.slot,
-                    });
-                    player.sendMessage({ translate: "chat.mysteryPotion.onlyOneEffect" });
-                    return;
-                }
-
-                // 获取药效信息和玩家信息
-                const potionData = getPotionData(potionId);
-                if (!potionData) return;
-                const playerData = system.getPlayer(player);
+                const playerData = system.getPlayer(event.source);
                 if (!playerData) return;
-
-                // 显示副标题
-                lib.PlayerUtils.sendMessage(player, {
-                    title: "§1",
-                    subtitle: { translate: `subtitle.mysteryPotion.${potionData.id}` },
-                    titleOptions: instantTitleDisplay,
-                });
-
-                // 标记为玩家已解锁该药水
-                playerData.mysteryPotionUnlocked[getPotionIndex(potionId)] = true;
-
-                // 给予药效
-                player.addEffect(
-                    potionData.id === "invincibility" ? "resistance" : potionData.id,
-                    potionData.duration ?? 200,
-                    { amplifier: potionData.amplifier }
-                );
+                mysteryPotionManager.drinkMysteryPotion(playerData, event.itemStack.typeId);
             }
         );
     }
@@ -2487,8 +2680,8 @@ class MurderMysteryPlayer {
                         textureBoundsList: [
                             { texture: minecraft.WaypointTexture.Square, lowerBound: 0, upperBound: 25 },
                             { texture: minecraft.WaypointTexture.Circle, lowerBound: 25, upperBound: 50 },
-                            { texture: minecraft.WaypointTexture.SmallSquare, lowerBound: 50, upperBound: 100 },
-                            { texture: minecraft.WaypointTexture.SmallStar, lowerBound: 100 },
+                            { texture: minecraft.WaypointTexture.SmallSquare, lowerBound: 50, upperBound: 75 },
+                            { texture: minecraft.WaypointTexture.SmallStar, lowerBound: 75 },
                         ],
                     },
                     { showDead: false, showInvisible: true, showSneaking: true },
@@ -2507,10 +2700,25 @@ class MurderMysteryPlayer {
                 { dimension, ...location },
                 {
                     textureBoundsList: [
-                        { texture: minecraft.WaypointTexture.Square, lowerBound: 0, upperBound: 25 },
-                        { texture: minecraft.WaypointTexture.Circle, lowerBound: 25, upperBound: 50 },
-                        { texture: minecraft.WaypointTexture.SmallSquare, lowerBound: 50, upperBound: 100 },
-                        { texture: minecraft.WaypointTexture.SmallStar, lowerBound: 100 },
+                        {
+                            texture: { path: "textures/locator_bar/bow", iconHeight: 1, iconWidth: 1 },
+                            lowerBound: 0,
+                            upperBound: 25,
+                        },
+                        {
+                            texture: { path: "textures/locator_bar/bow", iconHeight: 0.75, iconWidth: 0.75 },
+                            lowerBound: 25,
+                            upperBound: 50,
+                        },
+                        {
+                            texture: { path: "textures/locator_bar/bow", iconHeight: 0.5, iconWidth: 0.5 },
+                            lowerBound: 50,
+                            upperBound: 75,
+                        },
+                        {
+                            texture: { path: "textures/locator_bar/bow", iconHeight: 0.25, iconWidth: 0.25 },
+                            lowerBound: 75,
+                        },
                     ],
                 },
                 { red: 0.333, green: 1, blue: 1 }

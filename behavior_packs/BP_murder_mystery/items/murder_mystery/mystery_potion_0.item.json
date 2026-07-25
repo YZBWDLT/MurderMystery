@@ -2,11 +2,11 @@
     "format_version": "1.21.120",
     "minecraft:item": {
         "description": {
-            "identifier": "murder_mystery:mystery_potion_5",
+            "identifier": "murder_mystery:mystery_potion_0",
             "menu_category": { "category": "items" }
         },
         "components": {
-            "minecraft:icon": "mystery_potion_5",
+            "minecraft:icon": "mystery_potion_0",
             "minecraft:food": { "can_always_eat": true, "nutrition": 0, "saturation_modifier": 0 },
             "minecraft:use_modifiers": { "use_duration": 1.6, "movement_modifier": 0.35 },
             "minecraft:use_animation": "drink",

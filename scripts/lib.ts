@@ -1068,7 +1068,7 @@ export interface ItemOptions {
     readonly itemLock?: minecraft.ItemLockMode;
 
     /** 物品备注。 */
-    readonly lore?: string[];
+    readonly lore?: (string | minecraft.RawMessage)[];
 
     /** 物品名称。 */
     readonly name?: string;

@@ -8,11 +8,11 @@
             "arrays": {
                 "textures": {
                     "array.type": [
+                        "texture.type_0",
                         "texture.type_1",
                         "texture.type_2",
                         "texture.type_3",
-                        "texture.type_4",
-                        "texture.type_5"
+                        "texture.type_4"
                     ]
                 }
             }

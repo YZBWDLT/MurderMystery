@@ -1,10 +1,10 @@
 {
     "resource_pack_name": "murder_mystery",
     "texture_data": {
+        "mystery_potion_0": { "textures": "textures/items/mystery_potion_0" },
         "mystery_potion_1": { "textures": "textures/items/mystery_potion_1" },
         "mystery_potion_2": { "textures": "textures/items/mystery_potion_2" },
         "mystery_potion_3": { "textures": "textures/items/mystery_potion_3" },
-        "mystery_potion_4": { "textures": "textures/items/mystery_potion_4" },
-        "mystery_potion_5": { "textures": "textures/items/mystery_potion_5" }
+        "mystery_potion_4": { "textures": "textures/items/mystery_potion_4" }
     }
 }

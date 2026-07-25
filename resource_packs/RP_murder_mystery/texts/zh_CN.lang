@@ -26,18 +26,22 @@ entity.murder_mystery:mystery_potion.name=神秘药水
 item.spawn_egg.entity.murder_mystery:mystery_potion.name=神秘药水 刷怪蛋
 
 ## ===== 物品 =====
+item.murder_mystery:mystery_potion_0=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_1=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_2=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_3=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_4=§a？？？神秘药水？？？
-item.murder_mystery:mystery_potion_5=§a？？？神秘药水？？？
 item.murder_mystery:locator=定位器
 
 ## ===== 名词翻译 =====
 
 ### 地图名
 map.archives=档案馆
+map.archivesTopFloor=档案馆顶层
+map.cruiseShip=游轮
 map.darkFall=暗景秋色
+map.easterWorld=复活节游乐园
+map.hypixelWorld=Hypixel游乐园
 map.library=图书馆
 
 ### 模式名
@@ -149,7 +153,7 @@ chat.detective=§7侦探：§a%s
 chat.murderer=§7杀手：§a%s§7（§a%s§7击杀）
 chat.hero=§7英雄：§a%s
 
-### 神秘药水的失败消息
+### 神秘药水
 chat.mysteryPotion.goldNotEnough=§c你需要§6%s个金锭§c才能使用它！
 chat.mysteryPotion.occupied=§c已经有人在使用了！
 chat.mysteryPotion.inventoryFull=§c你的背包满了！
@@ -158,7 +162,8 @@ subtitle.mysteryPotion.blindness=§c10秒失明效果
 subtitle.mysteryPotion.slowness=§c10秒缓慢效果
 subtitle.mysteryPotion.speed=§a20秒速度效果
 subtitle.mysteryPotion.invisibility=§a14秒隐身效果
-subtitle.mysteryPotion.invincibility=§a20秒无敌效果
+subtitle.mysteryPotion.resistance=§a20秒无敌效果
+textDisplay.mysteryPotion=神秘药水 - %s§6块金锭
 
 ### 旁观者离开游戏区域
 subtitle.spectatorOutOfBorder=§c你跑得太远了！
