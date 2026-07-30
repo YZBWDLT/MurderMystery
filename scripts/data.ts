@@ -7,55 +7,54 @@ import * as lib from "./lib";
 // #region 地图数据类型声明
 
 /** 地图数据。 */
-export type MurderMysteryMapData = {
+export interface MurderMysteryMapData {
     /** 地图描述，包括地图的基础信息。 */
     readonly description: MurderMysteryMapDataDescription;
-    /** 地图组件，代表地图使用的功能。 */
-    readonly components: MurderMysteryMapDataComponent;
-};
 
-type MurderMysteryMapDataDescription = {
+    /** 地图组件，代表地图使用的功能。 */
+    readonly components?: MurderMysteryMapDataComponent;
+
+    /** 地图可能出现的交互。默认情况下，阻止玩家与一切方块的交互。而在交互列表中的方块或位置则除外。并且，与这些方块交互还可以规定触发特殊事件。 */
+    readonly interactions?: MurderMysteryInteractions[];
+
+    /** 地图事件，代表地图可能发生的所有事件。 */
+    readonly events?: Record<string, MurderMysteryEvents>;
+}
+
+interface MurderMysteryMapDataDescription {
     /** 地图 ID，用于地图名称的显示等。 */
     readonly id: string;
+
     /** 地图模式。 */
     readonly mode: "classic";
+
     /** 地图等待大厅信息。 */
     readonly waitHall: MurderMysteryWaitHallDescription;
+
     /** 地图范围。地图范围将会决定读取什么范围内的金锭点和重生点，并限制旁观模式玩家的活动范围。 */
     readonly range: {
         from: minecraft.Vector3;
         to: minecraft.Vector3;
     };
+
     /** 地图内可能的全部金锭点位。在实际生成时，这些金锭点位并不会全部用于生成，而是只选择玩家附近的点位生成。并且这些点位不是全部都可以生成的，而是有数量上限和概率的。这样可以确保金锭在玩家附近生成，且生成频率和位置均可控。 */
     readonly goldPoints: minecraft.Vector3[];
+
     /** 玩家出生点位。这同时也会影响超出的旁观者、或侦探出图后掉落的弓可能出现的位置等情况。每张地图都拥有 24 个出生点。 */
     readonly spawnPoints: minecraft.Vector3[];
-};
+}
 
-type MurderMysteryWaitHallDescription = {
+interface MurderMysteryWaitHallDescription {
     /** 等待大厅的位置，在开始前玩家将出生在这里。 */
     readonly location: minecraft.Vector3;
+
     /** 等待大厅的朝向位置，在开始前玩家出生时将面向这里。 */
     readonly facingLocation?: minecraft.Vector3;
-};
+}
 
-type MurderMysteryMapDataComponent = {
+interface MurderMysteryMapDataComponent {
     /** 玩家进入虚空组件，如果玩家落入虚空，则直接杀死之。 */
     readonly playerIntoVoid?: MurderMysteryPlayerIntoVoidComponent;
-
-    /** 交互组件。默认情况下，阻止玩家与一切方块的交互。而在交互组件列表中的方块则除外。并且，与这些方块交互还可能会触发特殊功能。 */
-    readonly interaction?: MurderMysteryInteractionComponent[];
-
-    /** 神秘药水组件，当玩家和特定位置的方块交互后，为玩家添加药水。
-     * @remarks 必须规定`interaction`组件，并在其中一个`interaction`中使用类型`mysteryPotion`。
-     */
-    readonly mysteryPotion?: MurderMysteryMysteryPotionComponent;
-
-    /** 放置方块组件，当玩家和特定位置的方块交互后，放置方块。
-     * @remarks 必须规定`interaction`组件，并在其中一个`interaction`中使用类型`setBlock`。
-     * @remarks 应指定为一个数组，并且数组中的每个元素都应和`interaction` - `setBlock` - `at`交互位置一一对应。
-     */
-    readonly setBlock?: MurderMysterySetBlockComponent[];
 
     /** 玩家进入熔岩组件，如果玩家落入熔岩，则直接杀死之。 */
     readonly playerIntoLava?: MurderMysteryPlayerIntoLavaComponent;
@@ -63,29 +62,21 @@ type MurderMysteryMapDataComponent = {
     /** 末地传送门组件，如果玩家落入末地传送门，则直接杀死之。 */
     readonly endPortal?: MurderMysteryEndPortalComponent;
 
-    /** 门组件，控制当满足特定条件时开启何处的门。 */
-    readonly door?: MurderMysteryDoorComponent;
-
     /** 场景恢复组件，在游戏开始之前可以按需求恢复场景。 */
-    readonly recover?: MurderMysteryRecoverComponent[];
+    readonly recover?: lib.BlockFillData[];
 
     /** 时间组件，设定该地图使用的游戏内时间。 | 默认值：`6000` */
     readonly time?: number;
-};
+}
 
-type MurderMysteryPlayerIntoVoidComponent = {
+interface MurderMysteryPlayerIntoVoidComponent {
     /** 判定虚空高度，当玩家的高度低于此高度时即认定为落入虚空。 | 默认值：0 */
     readonly voidHeight?: number;
-};
+}
 
-type MurderMysteryMysteryPotionComponent = {
-    /** 动画的坐标。该坐标与`interaction`组件的`at`的坐标一一对应。若不指定，则动画在`at`坐标的位置播放。 */
-    animationLocation?: minecraft.Vector3[];
-};
+interface MurderMysteryPlayerIntoLavaComponent {}
 
-type MurderMysteryPlayerIntoLavaComponent = {};
-
-type MurderMysteryEndPortalComponent = {
+interface MurderMysteryEndPortalComponent {
     /** 末地传送门的范围。坐标取末地传送门的一个角落。 */
     from: minecraft.Vector3;
 
@@ -94,86 +85,65 @@ type MurderMysteryEndPortalComponent = {
 
     /** 末地传送门的判定范围。当玩家在末地传送门上方几格高时视作已进入传送门。 */
     height: number;
-};
+}
 
-type MurderMysteryRecoverComponent = {
-    /** 需要恢复的方块的范围。 */
-    from: minecraft.Vector3;
-
-    /** 需要恢复的方块的范围。 */
-    to: minecraft.Vector3;
-
-    /** 需要恢复的方块的 ID。 */
-    typeId: string;
-
-    /** 需要恢复的方块的方块状态。 */
-    state?: {
-        name: string;
-        value: number | boolean | string;
-    }[];
-};
-
-type MurderMysteryInteractionComponent = {
-    /** 交互的类型。
-     *
-     * - `none`：不会触发任何功能的交互。
-     * - `mysteryPotion`：交互会触发神秘药水效果，并给予交互者一瓶神秘药水。应指定`at`数组以规定交互位置，且至多只能指定一组神秘药水交互。
-     * - `setBlock`：交互会在特定位置放置方块。应指定`at`数组以规定交互位置，且至多只能指定一组放置方块交互。
-     */
-    type: "none" | "mysteryPotion" | "setBlock";
-
+interface MurderMysteryInteractions {
     /** 允许交互的方块。 */
     blocks?: string[];
 
-    /** 允许交互的方块坐标。 */
+    /** 允许交互的方块坐标。注意：如果不同的交互属性有同一个坐标，只会计算第一个交互属性。 */
     at?: minecraft.Vector3[];
 
     /** 这次交互需要消耗多少金锭。 | 默认值：`0` */
     consume?: number;
 
+    /** 金锭不足时是否通知玩家。 | 默认值：`true` */
+    notifyPlayerWhenGoldNotEnough?: boolean;
+
     /** 是否仍然取消事件。通常用于只触发事件，但不进行交互的场景，例如在地图档案馆中和漏斗的交互。| 默认值：`false` */
     stillCancelEvent?: boolean;
-};
 
-type MurderMysterySetBlockComponent = {
-    /** 放置方块的位置。 */
-    location: minecraft.Vector3;
+    /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。事件的各种功能和需求见 {@link MurderMysteryEvents}。 */
+    trigger?: string;
+}
 
-    /** 放置的方块。 */
-    block: string;
+export interface MurderMysteryEvents {
+    /** 神秘药水组件，当玩家和特定位置的方块交互后，为玩家添加药水。 */
+    readonly mysteryPotion?: MurderMysteryMysteryPotionEvent;
+
+    /** 门组件，控制当满足特定条件时开启何处的门。 */
+    readonly openDoor?: MurderMysteryOpenDoorEvent;
+
+    /** 放置方块组件，当玩家和特定位置的方块交互后，放置方块。 */
+    readonly setBlock?: MurderMysterySetBlockEvent;
+}
+
+interface MurderMysteryMysteryPotionEvent {
+    /** 动画和悬浮文本的坐标。 */
+    animationLocation: minecraft.Vector3;
+}
+
+export interface MurderMysterySetBlockEvent extends lib.BlockData {
+    /** 如何通知玩家。 */
+    notifyPlayer?: lib.MessageOptions;
+
+    /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。事件的各种功能和需求见 {@link MurderMysteryEvents}。 */
+    trigger?: string;
+}
+
+export interface MurderMysteryOpenDoorEvent {
+    /** 开门条件，只有条件达成才能开门。 */
+    condition?: {
+        /** 特定位置是否有特定的方块。仅当数组所有方块的条件都成立后才执行。 */
+        isBlock?: lib.BlockData[];
+    };
+
+    /** 满足条件后开启的门。可以是多个门。 */
+    door: { from: minecraft.Vector3; to: minecraft.Vector3 }[];
 
     /** 如何通知玩家。 */
     notifyPlayer?: lib.MessageOptions;
-};
-
-type MurderMysteryDoorComponent = {
-    /** 满足条件后开启的门。 */
-    door: {
-        from: minecraft.Vector3;
-        to: minecraft.Vector3;
-    }[];
-
-    /** 如何通知玩家。 */
-    notifyPlayer: lib.MessageOptions;
-
-    /** 开启通道门的条件。 */
-    openDoorCondition: {
-        /** 特定位置应为特定方块。 */
-        locationIsBlock?: {
-            location: minecraft.Vector3;
-            blockId: string;
-        }[];
-    };
-
-    /** 开门后关门。若不指定则保持开启，并在开门后取消事件的监听。 */
-    closeDoorAfterOpened?: {
-        /** 在开门多久后关门。单位：秒。 */
-        time: number;
-
-        /** 使用何种材质的方块关门。 */
-        blockId: string;
-    };
-};
+}
 
 // #endregion
 // #region 地图数据
@@ -189,7 +159,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 facingLocation: { x: 1137, y: 114, z: -233 },
             },
             range: {
-                from: { x: 1170, y: 100, z: -239 },
+                from: { x: 1170, y: 100, z: -239 }, // 1170 100 -239
                 to: { x: 1025, y: 159, z: -133 },
             },
             goldPoints: [
@@ -561,54 +531,117 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 to: { x: 1054, y: 124, z: -219 },
                 height: 2,
             },
-            interaction: [
-                {
-                    type: "setBlock",
-                    at: [
-                        { x: 1038, y: 125, z: -184 },
-                        { x: 1038, y: 125, z: -188 },
-                        { x: 1041, y: 135, z: -184 },
-                        { x: 1041, y: 135, z: -188 },
-                    ],
-                    consume: 1,
-                    stillCancelEvent: true,
-                },
-            ],
-            setBlock: [
-                {
-                    block: "minecraft:fire",
-                    location: { x: 1038, y: 126, z: -184 },
-                    notifyPlayer: { sound: "item.firecharge.use" },
-                },
-                {
-                    block: "minecraft:fire",
-                    location: { x: 1038, y: 126, z: -188 },
-                    notifyPlayer: { sound: "item.firecharge.use" },
-                },
-                {
-                    block: "minecraft:fire",
-                    location: { x: 1041, y: 136, z: -184 },
-                    notifyPlayer: { sound: "item.firecharge.use" },
-                },
-                {
-                    block: "minecraft:fire",
-                    location: { x: 1041, y: 136, z: -188 },
-                    notifyPlayer: { sound: "item.firecharge.use" },
-                },
-            ],
             recover: [
                 // 恢复火
                 {
                     from: { x: 1038, y: 126, z: -184 },
                     to: { x: 1038, y: 126, z: -188 },
-                    typeId: "minecraft:air",
+                    id: "minecraft:air",
                 },
                 {
                     from: { x: 1041, y: 136, z: -184 },
                     to: { x: 1041, y: 136, z: -188 },
-                    typeId: "minecraft:air",
+                    id: "minecraft:air",
+                },
+                // 恢复暗门
+                {
+                    from: { x: 1035, y: 126, z: -185 },
+                    to: { x: 1035, y: 128, z: -187 },
+                    id: "minecraft:cyan_terracotta",
+                },
+                {
+                    from: { x: 1039, y: 135, z: -187 },
+                    to: { x: 1039, y: 138, z: -185 },
+                    id: "minecraft:cyan_terracotta",
                 },
             ],
+        },
+        interactions: [
+            {
+                at: [{ x: 1038, y: 125, z: -184 }],
+                consume: 1,
+                notifyPlayerWhenGoldNotEnough: false,
+                stillCancelEvent: true,
+                trigger: "archives:setBlock1",
+            },
+            {
+                at: [{ x: 1038, y: 125, z: -188 }],
+                consume: 1,
+                notifyPlayerWhenGoldNotEnough: false,
+                stillCancelEvent: true,
+                trigger: "archives:setBlock2",
+            },
+            {
+                at: [{ x: 1041, y: 135, z: -184 }],
+                consume: 1,
+                notifyPlayerWhenGoldNotEnough: false,
+                stillCancelEvent: true,
+                trigger: "archives:setBlock3",
+            },
+            {
+                at: [{ x: 1041, y: 135, z: -188 }],
+                consume: 1,
+                notifyPlayerWhenGoldNotEnough: false,
+                stillCancelEvent: true,
+                trigger: "archives:setBlock4",
+            },
+        ],
+        events: {
+            "archives:setBlock1": {
+                setBlock: {
+                    id: "minecraft:fire",
+                    location: { x: 1038, y: 126, z: -184 },
+                    notifyPlayer: { sound: "item.firecharge.use" },
+                    trigger: "archives:openDoor",
+                },
+            },
+            "archives:setBlock2": {
+                setBlock: {
+                    id: "minecraft:fire",
+                    location: { x: 1038, y: 126, z: -188 },
+                    notifyPlayer: { sound: "item.firecharge.use" },
+                    trigger: "archives:openDoor",
+                },
+            },
+            "archives:setBlock3": {
+                setBlock: {
+                    id: "minecraft:fire",
+                    location: { x: 1041, y: 136, z: -184 },
+                    notifyPlayer: { sound: "item.firecharge.use" },
+                    trigger: "archives:openDoor",
+                },
+            },
+            "archives:setBlock4": {
+                setBlock: {
+                    id: "minecraft:fire",
+                    location: { x: 1041, y: 136, z: -188 },
+                    notifyPlayer: { sound: "item.firecharge.use" },
+                    trigger: "archives:openDoor",
+                },
+            },
+            "archives:openDoor": {
+                openDoor: {
+                    condition: {
+                        isBlock: [
+                            { location: { x: 1038, y: 126, z: -184 }, id: "minecraft:fire" },
+                            { location: { x: 1038, y: 126, z: -188 }, id: "minecraft:fire" },
+                            { location: { x: 1041, y: 136, z: -184 }, id: "minecraft:fire" },
+                            { location: { x: 1041, y: 136, z: -188 }, id: "minecraft:fire" },
+                        ],
+                    },
+                    door: [
+                        { from: { x: 1035, y: 126, z: -185 }, to: { x: 1035, y: 128, z: -187 } },
+                        { from: { x: 1039, y: 135, z: -187 }, to: { x: 1039, y: 138, z: -185 } },
+                    ],
+                    notifyPlayer: {
+                        title: "§1",
+                        subtitle: { translate: "subtitle.archives.passageOpened" },
+                        titleOptions: { fadeInDuration: 0, fadeOutDuration: 20, stayDuration: 60 },
+                        sound: "tile.piston.out",
+                        soundOptions: { pitch: 1.5 },
+                    },
+                },
+            },
         },
     },
     archivesTopFloor: {
@@ -620,7 +653,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 facingLocation: { x: 889, y: 89, z: 61 },
             },
             range: {
-                from: { x: 784, y: 87, z: 113 }, // 784 87 113
+                from: { x: 784, y: 40, z: 113 }, // 784 40 113
                 to: { x: 911, y: 140, z: 9 }, // 911 140 9
             },
             spawnPoints: [
@@ -982,7 +1015,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 866.5, y: 100.5, z: 105.5 },
             ],
         },
-        components: {},
+        components: {
+            playerIntoVoid: { voidHeight: 60 },
+        },
     },
     cruiseShip: {
         description: {
@@ -1743,27 +1778,49 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             time: 18000,
-            interaction: [
-                {
-                    type: "mysteryPotion",
-                    at: [
-                        { x: 71, y: 36, z: 1947 },
-                        { x: 99, y: 42, z: 1941 },
-                        { x: 120, y: 38, z: 1914 },
-                        { x: 131, y: 37, z: 1922 },
-                        { x: 120, y: 37, z: 1892 },
-                    ],
-                    consume: 1,
-                },
-            ],
-            mysteryPotion: {
-                animationLocation: [
-                    { x: 71, y: 37, z: 1946 },
-                    { x: 98, y: 43, z: 1941 },
-                    { x: 120, y: 39, z: 1913 },
-                    { x: 130, y: 38, z: 1922 },
-                    { x: 121, y: 38, z: 1892 },
-                ],
+        },
+        interactions: [
+            {
+                at: [{ x: 71, y: 36, z: 1947 }],
+                consume: 1,
+                trigger: "darkfall:getMysteryPotion1",
+            },
+            {
+                at: [{ x: 99, y: 42, z: 1941 }],
+                consume: 1,
+                trigger: "darkfall:getMysteryPotion2",
+            },
+            {
+                at: [{ x: 120, y: 38, z: 1914 }],
+                consume: 1,
+                trigger: "darkfall:getMysteryPotion3",
+            },
+            {
+                at: [{ x: 131, y: 37, z: 1922 }],
+                consume: 1,
+                trigger: "darkfall:getMysteryPotion4",
+            },
+            {
+                at: [{ x: 120, y: 37, z: 1892 }],
+                consume: 1,
+                trigger: "darkfall:getMysteryPotion5",
+            },
+        ],
+        events: {
+            "darkfall:getMysteryPotion1": {
+                mysteryPotion: { animationLocation: { x: 71, y: 37, z: 1946 } },
+            },
+            "darkfall:getMysteryPotion2": {
+                mysteryPotion: { animationLocation: { x: 98, y: 43, z: 1941 } },
+            },
+            "darkfall:getMysteryPotion3": {
+                mysteryPotion: { animationLocation: { x: 120, y: 39, z: 1913 } },
+            },
+            "darkfall:getMysteryPotion4": {
+                mysteryPotion: { animationLocation: { x: 130, y: 38, z: 1922 } },
+            },
+            "darkfall:getMysteryPotion5": {
+                mysteryPotion: { animationLocation: { x: 121, y: 38, z: 1892 } },
             },
         },
     },
@@ -2098,7 +2155,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: -46.5, y: 18.5, z: 3094.5 },
             ],
         },
-        components: {},
+        components: {
+            playerIntoLava: {},
+        },
     },
     hypixelWorld: {
         description: {
@@ -2433,6 +2492,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             time: 18000,
+            playerIntoLava: {},
         },
     },
     library: {
@@ -2732,28 +2792,13 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             playerIntoVoid: { voidHeight: 40 },
-            interaction: [
-                { type: "none", blocks: ["minecraft:spruce_fence_gate"] },
-                {
-                    type: "mysteryPotion",
-                    at: [
-                        { x: -884, y: 102, z: 1923 },
-                        { x: -907, y: 102, z: 1909 },
-                        { x: -927, y: 102, z: 1935 },
-                        { x: -853, y: 102, z: 1953 },
-                        { x: -884, y: 111, z: 1966 },
-                    ],
-                    consume: 1,
-                },
-            ],
-            mysteryPotion: {},
             recover: [
                 // 第 1 个神秘药水
                 {
                     from: { x: -883, y: 111, z: 1966 },
                     to: { x: -883, y: 111, z: 1966 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "south" },
                         { name: "open_bit", value: false },
                     ],
@@ -2761,8 +2806,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -885, y: 111, z: 1966 },
                     to: { x: -885, y: 111, z: 1966 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "south" },
                         { name: "open_bit", value: false },
                     ],
@@ -2771,8 +2816,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -853, y: 102, z: 1952 },
                     to: { x: -853, y: 102, z: 1952 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
@@ -2780,8 +2825,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -853, y: 102, z: 1954 },
                     to: { x: -853, y: 102, z: 1954 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
@@ -2790,8 +2835,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -884, y: 102, z: 1922 },
                     to: { x: -884, y: 102, z: 1922 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
@@ -2799,8 +2844,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -884, y: 102, z: 1924 },
                     to: { x: -884, y: 102, z: 1924 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
@@ -2809,8 +2854,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -907, y: 102, z: 1910 },
                     to: { x: -907, y: 102, z: 1910 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
@@ -2818,8 +2863,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -907, y: 102, z: 1908 },
                     to: { x: -907, y: 102, z: 1908 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
@@ -2828,8 +2873,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -927, y: 102, z: 1936 },
                     to: { x: -927, y: 102, z: 1936 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
@@ -2837,13 +2882,60 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 {
                     from: { x: -927, y: 102, z: 1934 },
                     to: { x: -927, y: 102, z: 1934 },
-                    typeId: "minecraft:spruce_fence_gate",
-                    state: [
+                    id: "minecraft:spruce_fence_gate",
+                    states: [
                         { name: "minecraft:cardinal_direction", value: "east" },
                         { name: "open_bit", value: false },
                     ],
                 },
             ],
+        },
+        interactions: [
+            {
+                blocks: ["minecraft:spruce_fence_gate"],
+            },
+            {
+                at: [{ x: -884, y: 102, z: 1923 }],
+                consume: 1,
+                trigger: "library:getMysteryPotion1",
+            },
+            {
+                at: [{ x: -907, y: 102, z: 1909 }],
+                consume: 1,
+                trigger: "library:getMysteryPotion2",
+            },
+            {
+                at: [{ x: -927, y: 102, z: 1935 }],
+                consume: 1,
+                trigger: "library:getMysteryPotion3",
+            },
+            {
+                at: [{ x: -853, y: 102, z: 1953 }],
+                consume: 1,
+                trigger: "library:getMysteryPotion4",
+            },
+            {
+                at: [{ x: -884, y: 111, z: 1966 }],
+                consume: 1,
+                trigger: "library:getMysteryPotion5",
+            },
+        ],
+        events: {
+            "library:getMysteryPotion1": {
+                mysteryPotion: { animationLocation: { x: -884, y: 102, z: 1923 } },
+            },
+            "library:getMysteryPotion2": {
+                mysteryPotion: { animationLocation: { x: -907, y: 102, z: 1909 } },
+            },
+            "library:getMysteryPotion3": {
+                mysteryPotion: { animationLocation: { x: -927, y: 102, z: 1935 } },
+            },
+            "library:getMysteryPotion4": {
+                mysteryPotion: { animationLocation: { x: -853, y: 102, z: 1953 } },
+            },
+            "library:getMysteryPotion5": {
+                mysteryPotion: { animationLocation: { x: -884, y: 111, z: 1966 } },
+            },
         },
     },
 };

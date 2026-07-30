@@ -617,6 +617,33 @@ export class DimensionUtils {
 // #endregion
 // #region 方块
 
+/** 表示一个方块的信息。 */
+export interface BlockData {
+    /** 方块 ID。 */
+    id: string;
+
+    /** 方块位置。 */
+    location: minecraft.Vector3;
+
+    /** 方块状态。 */
+    states?: { name: string; value?: boolean | number | string }[];
+}
+
+/** 表示填充一个方块区域的信息。 */
+export interface BlockFillData {
+    /** 方块 ID。 */
+    id: string;
+
+    /** 方块位置。 */
+    from: minecraft.Vector3;
+
+    /** 方块位置。 */
+    to: minecraft.Vector3;
+
+    /** 方块状态。 */
+    states?: { name: string; value?: boolean | number | string }[];
+}
+
 /** 方块操作工具。 */
 export class BlockUtils {
     /** 获取某个位置的方块。
@@ -628,16 +655,14 @@ export class BlockUtils {
 
     /** 在两个坐标间填充方块。 */
     static fill(
-        dimension: string | minecraft.Dimension,
-        from: minecraft.Vector3,
-        to: minecraft.Vector3,
-        blockId: string,
+        blockData: BlockFillData,
         options?: minecraft.BlockFillOptions,
-        states?: { name: string; value?: number | boolean | string }[]
+        dimension?: string | minecraft.Dimension
     ) {
         const volumes: minecraft.ListBlockVolume[] = [];
+        const { from, to, id, states } = blockData;
         DimensionUtils.divideVolume(new minecraft.BlockVolume(from, to)).forEach(volume =>
-            volumes.push(DimensionUtils.getDefault(dimension).fillBlocks(volume, blockId, options))
+            volumes.push(DimensionUtils.getDefault(dimension).fillBlocks(volume, id, options))
         );
         if (states) {
             volumes
@@ -657,15 +682,19 @@ export class BlockUtils {
 
     /** 在两个坐标间以镂空的形式填充方块。 */
     static fillHollow(
-        dimension: string | minecraft.Dimension,
-        from: minecraft.Vector3,
-        to: minecraft.Vector3,
-        blockId: string
+        blockData: BlockFillData,
+        options?: minecraft.BlockFillOptions,
+        dimension?: string | minecraft.Dimension
     ) {
+        const { from, to, id, states } = blockData;
         const volumeInfo = DimensionUtils.hollowVolume(new minecraft.BlockVolume(from, to));
-        this.fill(dimension, volumeInfo.hollowedVolume.from, volumeInfo.hollowedVolume.to, "minecraft:air");
+        // 内部镂空
+        const { from: hollowedFrom, to: hollowedTo } = volumeInfo.hollowedVolume;
+        this.fill({ from: hollowedFrom, to: hollowedTo, id: "minecraft:air" }, {}, dimension);
+        // 外部填充方块
         volumeInfo.borderVolume.forEach(volume => {
-            this.fill(dimension, volume.from, volume.to, blockId);
+            const { from: borderFrom, to: borderTo } = volume;
+            this.fill({ from: borderFrom, to: borderTo, id, states }, options, dimension);
         });
     }
 
@@ -999,8 +1028,8 @@ export class PlayerUtils {
     }
 
     /** 对全体玩家广播消息。 */
-    static broadcast(message: string | minecraft.RawMessage | (string | minecraft.RawMessage)[]) {
-        this.getAll().forEach(player => player.sendMessage(message));
+    static broadcast(options: MessageOptions) {
+        this.getAll().forEach(player => this.sendMessage(player, options));
     }
 
     /** 发送消息。 */
@@ -1291,11 +1320,22 @@ class InventoryUtils {
         this.getValidSlots(entity)?.forEach(itemData => (itemData.containerSlot.lockMode = mode));
     }
 
-    /** 获取物品数目 */
+    /** 获取物品数目。
+     * @remarks 该方法不支持在受限执行下调用。
+     */
     static getAmount(entity: minecraft.Entity, options: ItemMatchOptions) {
         return JSUtils.number.sum(
             this.getValidItems(entity)
                 .filter(itemData => ItemUtils.match(itemData.item, options))
+                .map(itemData => itemData.item.amount)
+        );
+    }
+
+    /** 获取特定 ID 的物品数目。 */
+    static getTypeAmount(entity: minecraft.Entity, id: string) {
+        return JSUtils.number.sum(
+            this.getValidItems(entity)
+                .filter(itemData => itemData.item.typeId === id)
                 .map(itemData => itemData.item.amount)
         );
     }
@@ -1438,6 +1478,7 @@ export class ItemUtils {
 
     /** 判断给定的物品是否完全匹配给定的信息。
      * @param options 目前暂时不支持附魔的检查。
+     * @remarks 该方法不支持在受限执行下调用。
      */
     static match(itemStack: minecraft.ItemStack, options: ItemMatchOptions) {
         // 获取选项信息和物品相关信息

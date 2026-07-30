@@ -18,56 +18,46 @@
 
 如果还有什么想要了解的，请联系我们的 QQ 群，进群申请填写为「GitHub 密室杀手」。
 
-## 1.0 - Exp 4 更新日志
-
-### 地图
-
-- 新增了 4 张地图：档案馆顶部、Hypixel 游乐园、复活节游乐园、游轮
-- 其中，Hypixel 是一张夜晚地图
-- 为地图暗景秋色实装了神秘药水
-- 现在地图档案馆可以用金锭来点大门的火
-  - **开发者注**：*大门目前暂时还没有办法打开，等到快照 4 时处理此问题*
-
-### 神秘药水
-
-- 现在在喝下神秘药水后，物品栏内的其他同种未解锁药水将获得新的信息
-  - 例如，在有两瓶同种“？？？神秘药水？？？”的情况下，喝下其中一瓶发现是迅捷后，另一瓶会自动更名为“迅捷药水”，并更改其物品备注
-- 现在神秘药水的标签“神秘药水 - 1块金锭”支持玩家使用的语言了
+## 1.0 - Snapshot 4 更新日志
 
 ### 特性更改&漏洞修复
 
-- 再次更改了平民的弓的图标，现在使用一个类似于弓的图标
-- 现在定位栏图标的阶段随距离发生变化的值为 0-25、25-50、50-75、75- 格远，而不再是 0-25、25-50、50-100、100- 格远了
-- 修复了一处英文翻译错误的问题
+- 现在地图档案馆可以通过暗道开门了
+- 现在地图档案馆顶层可以掉进虚空里了
+- 现在地图 Hypixel 游乐园和复活节游乐园可以掉进熔岩里了
+- 修复了英文环境下，声明身份时的标题均为红色的问题
 
 ### 技术性
 
-- 更新了行为包和资源包的版本为`1.0.4`
-- 现在神秘药水在底层代码上（包括物品 ID、动画实体的实体属性等）使用的编号不再是从 1-5，而是从 0-4，以降低适配脚本系统的难度
-- 在底层代码上修改了神秘药水无敌效果的 ID `invincibility`为`resistance`
-- 数据文件 `data.ts`
-  - 升级了`allowInteractingWithBlock`组件为`interaction`组件：
-    - 现在该组件接收一个数组，可包含多种不同的交互类型
-    - 交互类型可以用`type`参数定义，目前包括：`none`（无特殊功能）、`mysteryPotion`（触发神秘药水效果）、`setBlock`（在特定位置放置方块）
-    - 除了`none`之外，其他特殊功能只能指定至多一次
-    - 现在交互组件内置`consume`参数，定义本次交互需要消耗多少金锭
-    - 为交互组件新增了`stillCancelEvent`参数，定义本次交互只用于触发事件，而事实上并不与方块进行真正的交互
-  - 新增了`setBlock`组件
-    - 用于在玩家交互后，在特定位置放置方块
-    - 该组件必须搭配`interaction`组件使用，并指定一个`setBlock`类型的交互
-  - 更新了`mysteryPotion`组件
-    - 移除了`location`属性，现在需要在`interaction`组件内指定一个`mysteryPotion`类型的交互，并在`at`内规定方块位置
-    - 新增了`animationLocation`属性，以规定动画的坐标
-- 库文件 `lib.ts`
-  - 更新了`ItemOptions.lore`的类型声明，使其能够适配高版本的 ScriptAPI
+- 将多数脚本文件中的`type`声明更改为`interface`接口声明
 - 主文件 `main.ts`
-  - 更新了神秘药水的相关函数：
-    - 为`MurderMysterySystem`新增了神秘药水管理器`mysteryPotionManager: MurderMysteryMysteryPotionManager`，现在本局中神秘药水的相关属性可在该管理器中读取
-    - 如果地图数据中没有定义`interaction`组件和`mysteryPotion`，则神秘药水管理器无法读取
-    - 拆分了`MurderMysteryComponents`的`mysteryPotion`组件，现在该组件将开始调用神秘药水管理器中的功能
-    - 现在神秘药水的悬浮文本使用 ScriptAPI 的 2.8.0 版本的`TextPrimitive`，而不再是一个透明的实体，因此现在支持使用`RawMessage`直接读取对应的语言文件
-  - 新增了放置方块的相关函数
-    - 为`MurderMysterySystem`新增了放置方块管理器`setBlockManager: MurderMysterySetBlockManager`，现在本局中放置方块的相关属性可在该管理器中读取
-    - 如果地图数据中没有定义`interaction`组件和`setBlock`，则放置方块管理器无法读取
-  - 升级了`preventInteractingWithBlock`为`interaction`组件
-    - 现在会同时处理其他和交互有关的事件，例如神秘药水
+  - 将放置方块管理器和神秘药水管理器合并为事件管理器`MurderMysteryEventManager`
+    - 和以前的两个管理器不同，事件管理器随时都可以调用，不会返回`undefined`
+    - 向事件管理器添加了`events`属性，用于调用本局游戏内的全部事件
+    - 向事件管理器添加了`triggerEvent`方法，用于触发游戏事件
+    - 向事件管理器添加了`openDoor`方法，用于开启门
+  - 更新了`interaction`组件，现在会自动检查玩家金锭是否足够，相关事件是否成功执行，并调用事件管理器的方法
+- 库文件 `lib.ts`
+  - 新增了`BlockData`接口，代表一个方块的信息，包括其位置、ID 和方块状态信息
+  - 新增了`BlockFillData`接口，代表方块的填充信息，包括其填充位置、ID 和方块状态信息
+  - 现在`BlockUtils.fill`方法接收`blockData: BlockFillData`参数，而不再接收分立的`dimension`、`from`、`to`、`blockId`、`states?`参数
+  - 现在`BlockUtils.hollow`方法接收`blockData: BlockFillData`参数，而不再接收分立的`dimension`、`from`、`to`、`blockId`参数
+  - 现在`PlayerUtils.broadcast`方法接收`options: MessageOptions`参数，而不再接收分立的`message`参数
+  - 声明了`InventoryUtils.getAmount`和`ItemUtils.match`方法不允许在受限模式下执行
+  - 新增了`InventoryUtils.getTypeAmount`方法，只用于检查特定 ID 的物品数量
+- 数据文件 `data.ts`
+  - 新增了`MurderMysteryInteractions`接口，用于判断玩家的交互逻辑
+    - 可在地图数据下直接调用`interactions`属性，和`description`、`components`同级
+    - 由原来的`interactions`组件变更而来，移除了`MurderMysteryInteractionComponent`类型和`interactions`组件
+    - 新增了`notifyPlayerWhenGoldNotEnough`属性，代表是否在玩家金锭不足时提示玩家
+    - 新增了`trigger`属性，代表触发何种事件
+  - 新增了`MurderMysteryEvents`接口，用于代表各种游戏内的事件
+    - 目前支持的事件包括：玩家获取神秘药水`mysteryPotion`、放置方块`setBlock`、开启门`openDoor`
+    - 更新了`MurderMysteryMysteryPotionComponent`类型为`MurderMysteryMysteryPotionEvent`接口，使其中的`animationLocation`参数由接收一个坐标数组改为接收一个坐标（不再是数组）
+    - 更新了`MurderMysterySetBlockComponent`类型为`MurderMysterySetBlockEvent`接口，继承自`lib.ts`的`BlockData`，并允许在该事件执行后继续执行一个事件
+    - 移除了`MurderMysteryDoorComponent`类型
+    - 新增了`MurderMysteryOpenDoorEvent`接口，用于在触发该事件时开门
+      - 新增了`condition?`属性，仅当符合该条件时才能开门，目前该属性内部仅接收一个`isBlock?: lib.BlockData[]`，仅当特定位置为特定方块时才会开门
+      - 新增了`door`属性，代表门的位置
+      - 新增了`notifyPlayer`属性，代表对全体玩家播放的消息
+  - 因此，更新了许多地图的组件形式

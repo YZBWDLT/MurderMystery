@@ -185,6 +185,9 @@ chat.murdererGetLocator.innocent=§c小心！§e现在杀手可以易如反掌�
 chat.murdererGetLocator.detective=§c小心！§e现在杀手可以易如反掌地定位玩家！
 chat.murdererGetLocator.murderer=§e你的定位器现在可以指向其他玩家！手持使用，以此来定位剩余平民！
 
+### 档案馆秘密通道
+subtitle.archives.passageOpened=§a一个秘密通道开启了！
+
 ## ===== 信息板消息 =====
 
 infoboard.title=§l§e    密室杀手    

@@ -65,9 +65,9 @@ role.deadWithColor=§7Dead
 chat.beforeGameStart.countdown=§eThe game starts in §r%s§e seconds!
 
 ### Game started
-title.gameStart.innocent=§cROLE: INNOCENT
+title.gameStart.innocent=§aROLE: INNOCENT
 subtitle.gameStart.innocent=§eStay alive as long as posible!
-title.gameStart.detective=§cROLE: DETECTIVE
+title.gameStart.detective=§bROLE: DETECTIVE
 subtitle.gameStart.detective=§eFind and kill the murderer!
 title.gameStart.murderer=§cROLE: MURDERER
 subtitle.gameStart.murderer=§eKill all players!
@@ -184,6 +184,9 @@ chat.innocentGetLocator=§eYou've got a locator! Hold it to find the dropped bow
 chat.murdererGetLocator.innocent=§cWatch out! §eThe Murderer can now find survivors easily!
 chat.murdererGetLocator.detective=§cWatch out! §eThe Murderer can now find survivors easily!
 chat.murdererGetLocator.murderer=§eYou've got a locator! Hold it to find the remaining survivors!
+
+### Passage in Map Archives
+subtitle.archives.passageOpened=§aA secret passage has been opened!
 
 ## ===== Infoboard Message =====
 
