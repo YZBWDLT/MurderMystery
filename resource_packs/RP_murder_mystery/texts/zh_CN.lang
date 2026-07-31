@@ -96,9 +96,12 @@ deathMessage.manslaughter=§e你杀死了一位平民！
 deathMessage.void=§e你掉入了虚空！
 deathMessage.lava=§e你在熔岩里游泳了！
 deathMessage.endPortal=§e你在想什么？
+deathMessage.hole=§e你掉进了坑里！
 deathMessage.hitGround=§e你撞到了地上！
 deathMessage.trap=§e你踩到了一个陷阱！
 deathMessage.potion=§e毒药杀死了你。
+deathMessage.drowned=§e你溺死了！
+deathMessage.lightningBolt=§e一道闪电从天而降击中了你！
 deathMessage.other=§e你死了！
 chat.knifeKilledPlayer=§e在%s米外击杀了目标！
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”

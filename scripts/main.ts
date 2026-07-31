@@ -4,7 +4,7 @@
 // #region 模块导入
 import * as minecraft from "@minecraft/server";
 import * as lib from "./lib";
-import * as data from "./data";
+import * as gameData from "./data";
 
 // #endregion
 // #region 类型与变量声明
@@ -131,7 +131,7 @@ enum MurderMysteryGameOverReason {
 
 /** 密室杀手系统，通过系统调控组件的运行，并获取游戏运行的方方面面。 */
 class MurderMysterySystem {
-    constructor(mapData?: data.MurderMysteryMapData) {
+    constructor(mapData?: gameData.MurderMysteryMapData) {
         this.mapData = mapData ?? MurderMysterySystem.getMapData();
         this.settings = new MurderMysterySettings();
         this.gameStage = GameStage.WaitingStage;
@@ -177,7 +177,7 @@ class MurderMysterySystem {
     readonly gameId: number;
 
     /** 地图数据。 */
-    readonly mapData: data.MurderMysteryMapData;
+    readonly mapData: gameData.MurderMysteryMapData;
 
     /** 玩家信息。玩家信息中会包含已经死亡的玩家的信息和旁观者玩家的信息。 */
     readonly players: MurderMysteryPlayers = {
@@ -236,7 +236,7 @@ class MurderMysterySystem {
     general() {
         // 注册通用组件
         MurderMysteryComponents.infoboard(this);
-        MurderMysteryComponents.preventDamage(this);
+        MurderMysteryComponents.onPlayerHurt(this);
         MurderMysteryComponents.interaction(this);
     }
 
@@ -318,12 +318,10 @@ class MurderMysterySystem {
         MurderMysteryComponents.locator(this);
 
         // 注册可选组件
-        MurderMysteryComponents.playerIntoVoid(this);
-        MurderMysteryComponents.playerIntoLava(this);
-        MurderMysteryComponents.playerIntoEndPortal(this);
         MurderMysteryComponents.mysteryPotion(this);
         MurderMysteryComponents.recover(this);
         MurderMysteryComponents.applyNightVision(this);
+        MurderMysteryComponents.playerInArea(this);
     }
 
     /** 令游戏进入结束阶段。
@@ -361,10 +359,12 @@ class MurderMysterySystem {
     // #region - 地图管理
 
     /** 获取地图数据。若不指定地图名称，则返回所有可用地图中的一张随机地图。 */
-    static getMapData(mapName?: string): data.MurderMysteryMapData {
+    static getMapData(mapName?: string): gameData.MurderMysteryMapData {
         // 选择其中一张地图
-        const maps = Object.values(data.maps);
-        return mapName ? (data.maps[mapName] as data.MurderMysteryMapData) : lib.JSUtils.array.randomElement(maps);
+        const maps = Object.values(gameData.maps);
+        return mapName
+            ? (gameData.maps[mapName] as gameData.MurderMysteryMapData)
+            : lib.JSUtils.array.randomElement(maps);
     }
 
     // #endregion
@@ -670,19 +670,13 @@ class MurderMysteryEventManager {
     constructor(system: MurderMysterySystem) {
         this.system = system;
         this.events = system.mapData.events ?? {};
-
-        // 解析所有带有神秘药水功能的事件
-        Object.entries(this.events).forEach(([key, value]) => {
-            if (!value.mysteryPotion) return;
-            this.mysteryPotionEvents[key] = value;
-        });
     }
 
     /** 游戏系统。 */
     private readonly system: MurderMysterySystem;
 
     /** 地图使用的事件 */
-    readonly events: Record<string, data.MurderMysteryEvents>;
+    readonly events: Record<string, gameData.MurderMysteryEvents>;
 
     /** 触发事件。
      * @returns 返回是否成功地触发了事件。这会影响是否移除金锭等情况。
@@ -693,12 +687,13 @@ class MurderMysteryEventManager {
         if (!triggedEvent) return false;
 
         // 变量准备
-        const { mysteryPotion, setBlock, openDoor } = triggedEvent;
+        const { getMysteryPotion, setBlock, openDoor, setPlayerDead } = triggedEvent;
         let executeResult = true;
 
         // ===== 触发神秘药水事件（必须要有触发玩家） =====
-        if (mysteryPotion && playerData) {
-            const result = this.getMysteryPotion(playerData, mysteryPotion.animationLocation);
+        if (getMysteryPotion && playerData) {
+            const animationLocation = getMysteryPotion.animationLocation;
+            const result = this.getMysteryPotion(playerData, animationLocation);
             if (!result) executeResult = false;
         }
 
@@ -714,13 +709,19 @@ class MurderMysteryEventManager {
             if (!result) executeResult = false;
         }
 
+        // ===== 触发处死玩家事件 =====
+        if (setPlayerDead) {
+            if (!playerData) executeResult = false;
+            else {
+                const result = this.setPlayerDead(setPlayerDead, playerData);
+                if (!result) executeResult = false;
+            }
+        }
+
         return executeResult;
     }
 
     // #region - 神秘药水
-
-    /** 所有和神秘药水有关的事件。 */
-    readonly mysteryPotionEvents: Record<string, data.MurderMysteryEvents> = {};
 
     /** 本局的神秘药水的排布。
      * - 游戏一共有 5 种神秘药水。当玩家喝下神秘药水后，触发一个随机效果。
@@ -748,35 +749,15 @@ class MurderMysteryEventManager {
     }
 
     /** 在动画位置处生成展示文本。 */
-    setMysteryPotionText() {
-        const allInteractions = this.system.mapData.interactions;
-        if (!allInteractions) return;
-        const allEvents = this.system.mapData.events;
-        if (!allEvents) return;
-        // 检查所有可能调用神秘药水事件的交互，并安置悬浮文本
-        allInteractions
-            .map(interaction => {
-                const { consume = 0, trigger, at } = interaction;
-                // 如果未指定 at，返回 false
-                if (!at) return;
-                // 如果不触发事件，返回 false
-                if (!trigger) return;
-                // 如果触发的事件不含 mysteryPotion，返回 false
-                if (!allEvents[trigger]?.mysteryPotion) return;
-
-                // 否则，返回相关信息
-                return { location: allEvents[trigger].mysteryPotion.animationLocation, consume };
-            })
-            .forEach(data => {
-                if (!data) return;
-                const { location, consume } = data;
-                const textLocation = lib.Vector3Utils.add(location, 0.5, 1, 0.5);
-                const textDisplay = new minecraft.TextPrimitive(textLocation, {
-                    translate: "textDisplay.mysteryPotion",
-                    with: [`${consume}`],
-                });
-                minecraft.world.primitiveShapesManager.addText(textDisplay);
+    setMysteryPotionText(locations: minecraft.Vector3[], consume: number) {
+        locations.forEach(location => {
+            const textLocation = lib.Vector3Utils.add(location, 0.5, 1, 0.5);
+            const textDisplay = new minecraft.TextPrimitive(textLocation, {
+                translate: "textDisplay.mysteryPotion",
+                with: [`${consume}`],
             });
+            minecraft.world.primitiveShapesManager.addText(textDisplay);
+        });
     }
 
     /** 令玩家试图获取神秘药水。
@@ -928,7 +909,10 @@ class MurderMysteryEventManager {
     // #endregion
     // #region - 放置方块
 
-    setBlock(setBlockEvent: data.MurderMysterySetBlockEvent, playerData?: MurderMysteryPlayer): boolean {
+    /** 在特定位置试图放置方块。
+     * @returns 返回是否成功放置了方块。
+     */
+    setBlock(setBlockEvent: gameData.MurderMysterySetBlockEvent, playerData?: MurderMysteryPlayer): boolean {
         const { id, location, states, notifyPlayer, trigger } = setBlockEvent;
         // 如果该方块已放置过，则终止运行
         if (lib.BlockUtils.get(location)?.typeId === id) return false;
@@ -944,7 +928,10 @@ class MurderMysteryEventManager {
     // #endregion
     // #region - 开启门
 
-    openDoor(openDoorEvent: data.MurderMysteryOpenDoorEvent): boolean {
+    /** 开启游戏中的门，将特定区域的方块设置为空气。
+     * @returns 返回是否成功开启了门。
+     */
+    openDoor(openDoorEvent: gameData.MurderMysteryOpenDoorEvent): boolean {
         const { condition, door, notifyPlayer } = openDoorEvent;
         // 如果不满足条件，则终止运行
         if (condition) {
@@ -964,6 +951,20 @@ class MurderMysteryEventManager {
             if (notifyPlayer) lib.PlayerUtils.broadcast(notifyPlayer);
         });
         return true;
+    }
+
+    // #endregion
+    // #region - 处死玩家
+
+    /** 设置玩家为死亡状态。
+     * @returns 返回是否成功处死了玩家。
+     */
+    setPlayerDead(
+        setPlayerDeadEvent: gameData.MurderMysterySetPlayerDeadEvent,
+        playerData: MurderMysteryPlayer
+    ): boolean {
+        const result = playerData.setDead(setPlayerDeadEvent.deathType);
+        return result;
     }
 
     // #endregion
@@ -1101,24 +1102,30 @@ class MurderMysteryComponents {
         });
     }
 
-    /** 阻止玩家和假玩家受到伤害。
+    /** 玩家受到伤害组件。
      * @description 阻止玩家受到一切来源的伤害。
-     * @description 若地图注册了 playerIntoLava 组件，则该组件不会阻止熔岩伤害，由 playerIntoLava 组件处理逻辑。仅游戏期间执行。
+     * @description 若地图注册了 playerHurt 组件，则该组件会尝试在玩家受到该类型伤害时触发事件。
      */
-    static preventDamage(system: MurderMysterySystem) {
-        lib.gameSystem.subscribeEvent("preventDamage", minecraft.world.beforeEvents.entityHurt, event => {
-            if (
-                system.mapData.components?.playerIntoLava &&
-                event.damageSource.cause === minecraft.EntityDamageCause.lava &&
-                system.gameStage === GameStage.GamingStage
-            )
-                return;
-            if (
-                event.hurtEntity.typeId !== "minecraft:player" &&
-                event.hurtEntity.typeId !== "murder_mystery:fake_player"
-            )
-                return;
+    static onPlayerHurt(system: MurderMysterySystem) {
+        lib.gameSystem.subscribeEvent("onPlayerHurt", minecraft.world.beforeEvents.entityHurt, event => {
+            // ===== 条件判断 =====
+            // 如果不是玩家和假玩家受伤，则直接终止运行
+            const player = event.hurtEntity;
+            const playerData = system.getPlayer(player);
+            if (!playerData) return;
+
+            // ===== 变量准备 & 取消游戏引擎事件 =====
+            const thisCause = event.damageSource.cause;
+            const eventManager = system.eventManager;
             event.cancel = true;
+
+            // ===== 触发系统事件 =====
+            const playerHurtComponent = system.mapData.components?.playerHurt;
+            if (!playerHurtComponent) return;
+            playerHurtComponent.forEach(({ cause, trigger }) => {
+                if (cause !== thisCause) return;
+                eventManager.triggerEvent(trigger, playerData);
+            });
         });
     }
 
@@ -1423,7 +1430,7 @@ class MurderMysteryComponents {
             const attackerMainhandItem = lib.ItemUtils.equipment.getItem(attacker, minecraft.EquipmentSlot.Mainhand);
             if (attackerMainhandItem?.typeId !== "minecraft:iron_sword") return;
             // 记录击杀
-            victimData.setDead(MurderMysteryDeathType.MurdererStab, attackerData);
+            victimData.setDead(gameData.MurderMysteryDeathType.MurdererStab, attackerData);
         });
         // 弓箭射杀检测
         lib.gameSystem.subscribeEvent("playerKillTestArrow", minecraft.world.afterEvents.projectileHitEntity, event => {
@@ -1440,21 +1447,21 @@ class MurderMysteryComponents {
             switch (victimData.role) {
                 // 杀手被击杀
                 case MurderMysteryPlayerRole.Murderer:
-                    victimData.setDead(MurderMysteryDeathType.Player, attackerData);
+                    victimData.setDead(gameData.MurderMysteryDeathType.Player, attackerData);
                     break;
                 // 平民或侦探被击杀
                 case MurderMysteryPlayerRole.Innocent:
                 case MurderMysteryPlayerRole.Detective:
                     // 被杀手杀死，则记录为杀手射杀
                     if (attackerData.role === MurderMysteryPlayerRole.Murderer)
-                        victimData.setDead(MurderMysteryDeathType.MurdererShot, attackerData);
+                        victimData.setDead(gameData.MurderMysteryDeathType.MurdererShot, attackerData);
                     // 被自己杀死，则记录为自杀
                     else if (attacker.id === victim.id)
-                        victimData.setDead(MurderMysteryDeathType.ShotSelf, attackerData);
+                        victimData.setDead(gameData.MurderMysteryDeathType.ShotSelf, attackerData);
                     // 被其他人杀死，则记录为其他玩家射杀，并将射杀之人处死
                     else {
-                        victimData.setDead(MurderMysteryDeathType.Player, attackerData);
-                        attackerData.setDead(MurderMysteryDeathType.Manslaughter);
+                        victimData.setDead(gameData.MurderMysteryDeathType.Player, attackerData);
+                        attackerData.setDead(gameData.MurderMysteryDeathType.Manslaughter);
                     }
                     break;
                 case MurderMysteryPlayerRole.Spectator:
@@ -1685,8 +1692,8 @@ class MurderMysteryComponents {
     }
 
     /** 玩家和方块交互组件。
-     * @description 阻止玩家和地图交互属性`interactions`中指定之外的方块交互。
-     * @description 触发具有交互属性的其他事件，例如门、神秘药水等。
+     * @description 阻止玩家和地图交互组件`interactions`中指定之外的方块交互。
+     * @description 触发具有交互组件的其他事件，例如门、获得神秘药水等。
      * @description 不会阻止创造模式玩家和方块交互。
      */
     static interaction(system: MurderMysterySystem) {
@@ -1709,7 +1716,7 @@ class MurderMysteryComponents {
 
             // ===== 解析地图交互属性 =====
 
-            const matchedInteraction = system.mapData.interactions?.find(data => {
+            const matchedInteraction = system.mapData.components?.interaction?.find(data => {
                 // 如果有给定坐标或给定方块则返回
                 if (data.at && lib.Vector3Utils.hasPosition(data.at, location)) return true;
                 if (data.blocks && data.blocks.includes(blockId)) return true;
@@ -1730,7 +1737,7 @@ class MurderMysteryComponents {
                 trigger = "",
             } = matchedInteraction;
 
-            // 如果玩家没有足够的金锭，则取消事件并终止运行，否则移除玩家的金锭
+            // 如果玩家没有足够的金锭，则取消事件并终止运行
             const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
             if (playerGoldCount < consume) {
                 if (notifyPlayerWhenGoldNotEnough) {
@@ -1873,7 +1880,7 @@ class MurderMysteryComponents {
                     switch (playerData.role) {
                         case MurderMysteryPlayerRole.Innocent:
                         case MurderMysteryPlayerRole.Detective:
-                            playerData.setDead(MurderMysteryDeathType.MurdererKnife, murdererData);
+                            playerData.setDead(gameData.MurderMysteryDeathType.MurdererKnife, murdererData);
                             const distance = lib.Vector3Utils.distance(murderer.location, player.location);
                             murderer.sendMessage({ translate: "chat.knifeKilledPlayer", with: [distance.toFixed(2)] });
                             break;
@@ -2102,34 +2109,22 @@ class MurderMysteryComponents {
     // #endregion
     // #region - 开始后可选
 
-    /** 玩家进入虚空组件。
-     * @description 会自动判断系统的地图数据是否含有`playerIntoVoid`组件，若不含该组件则不会注册该组件。
-     * @description 当玩家掉到特定高度后，将玩家处死。
-     */
-    static playerIntoVoid(system: MurderMysterySystem) {
-        const component = system.mapData.components?.playerIntoVoid;
-        if (!component) return;
-        lib.gameSystem.subscribeTimeline("playerIntoVoid", () => {
-            const { voidHeight = 0 } = component;
-            system.alivePlayers.allPlayers
-                .filter(data => data.player.location.y <= voidHeight)
-                .forEach(data => data.setDead(MurderMysteryDeathType.Void));
-        });
-    }
-
     /** 神秘药水组件。
-     * @description 会自动判断系统的地图数据是否含有`mysteryPotion`组件和`interaction`组件，若不含这些组件则不会注册该组件。
+     * @description 会自动判断系统的地图数据是否含有`enabledMysteryPotion`组件，若不含该组件则不会注册该组件。
      * @description 会在游戏开始时尝试在规定的位置生成展示文本。
      * @description 当玩家喝下神秘药水时，会导致玩家拥有不同的药效。
      */
     static mysteryPotion(system: MurderMysterySystem) {
-        // 检查是否有神秘药水事件
+        // 检查是否有神秘药水组件
+        const mysteryPotionComponent = system.mapData.components?.enableMysteryPotion;
+        if (!mysteryPotionComponent) return;
+
+        // 变量准备
         const eventManager = system.eventManager;
-        const haveMysteryPotionEvent = Object.values(eventManager.mysteryPotionEvents).length > 0;
-        if (!haveMysteryPotionEvent) return;
+        const { locations, consume } = mysteryPotionComponent;
 
         // 生成展示文本
-        eventManager.setMysteryPotionText();
+        eventManager.setMysteryPotionText(locations, consume);
 
         // 喝下神秘药水
         lib.gameSystem.subscribeEvent(
@@ -2143,46 +2138,40 @@ class MurderMysteryComponents {
         );
     }
 
-    /** 玩家进入熔岩组件。
-     * @description 会自动判断系统的地图数据是否含有`playerIntoLava`组件，若不含该组件则不会注册该组件。
-     * @description 当玩家掉到熔岩后，将玩家处死。
+    /** 玩家进入特定区域组件。
+     * @description 会自动判断系统的地图数据是否含有`playerInArea`组件，若不含该组件则不会注册该组件。
+     * @description 当玩家在特定区域时，触发事件。
      */
-    static playerIntoLava(system: MurderMysterySystem) {
-        const component = system.mapData.components?.playerIntoLava;
+    static playerInArea(system: MurderMysterySystem) {
+        // ===== 条件检查 & 变量准备 =====
+        const component = system.mapData.components?.playerInArea;
         if (!component) return;
-        minecraft.world.gameRules.fireDamage = true;
-        lib.gameSystem.subscribeEvent(
-            "playerIntoLava",
-            minecraft.world.beforeEvents.entityHurt,
-            event => {
-                // 阻止伤害
-                event.cancel = true;
-                // 获取玩家数据
-                const player = event.hurtEntity;
-                const playerData = system.getPlayer(player);
-                if (!playerData) return;
-                // 将玩家处死
-                minecraft.system.run(() => playerData.setDead(MurderMysteryDeathType.Lava));
-            },
-            { allowedDamageCauses: [minecraft.EntityDamageCause.lava] }
-        );
-    }
 
-    /** 玩家进入末地传送门组件。
-     * @description 会自动判断系统的地图数据是否含有`endPortal`组件，若不含该组件则不会注册该组件。
-     * @description 当玩家掉到末地传送门后，将玩家处死。
-     */
-    static playerIntoEndPortal(system: MurderMysterySystem) {
-        const component = system.mapData.components?.endPortal;
-        if (!component) return;
-        const { from, to, height } = component;
-        const testVolume = new minecraft.BlockVolume(from, lib.Vector3Utils.add(to, 0, height, 0));
+        const { area, trigger } = component;
+        const eventManager = system.eventManager;
+
+        // ===== 主程序 =====
         lib.gameSystem.subscribeTimeline(
-            "playerIntoEndPortal",
+            "playerInArea",
             () => {
                 system.alivePlayers.allPlayers
-                    .filter(data => lib.EntityUtils.isInVolume(data.player, testVolume))
-                    .forEach(data => data.setDead(MurderMysteryDeathType.EndPortal));
+                    .filter(playerData => {
+                        const { x, y, z } = playerData.player.location;
+                        // 判断玩家实体的位置，如果规定了条件且不满足条件的则返回 false
+                        // 先判断坐标值是否大于最大值，若是则不在该区域内
+                        if (area.xMax && x > area.xMax) return false;
+                        if (area.yMax && y > area.yMax) return false;
+                        if (area.zMax && z > area.zMax) return false;
+                        // 再判断坐标值是否小于最小值，若是则不在该区域内
+                        if (area.xMin && x < area.xMin) return false;
+                        if (area.yMin && y < area.yMin) return false;
+                        if (area.zMin && z < area.zMin) return false;
+                        // 否则，实体在该区域内
+                        return true;
+                    })
+                    .forEach(playerData => {
+                        eventManager.triggerEvent(trigger, playerData);
+                    });
             },
             5
         );
@@ -2229,56 +2218,6 @@ class MurderMysteryComponents {
 
 // #endregion
 // #region 玩家
-
-/** 死亡类型。这个死亡类型会影响显示的死亡消息。 */
-enum MurderMysteryDeathType {
-    /** 被杀手杀害。 */
-    MurdererStab = "murdererStab",
-
-    /** 被杀手射杀。 */
-    MurdererShot = "murdererShot",
-
-    /** 被杀手的飞刀杀害。 */
-    MurdererKnife = "murdererKnife",
-
-    /** 射杀了自己。 */
-    ShotSelf = "shotSelf",
-
-    /** 被其他玩家杀死。 */
-    Player = "player",
-
-    /** 误杀了其他玩家。 */
-    Manslaughter = "manslaughter",
-
-    /** 掉进虚空。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
-    Void = "void",
-
-    /** 掉进熔岩。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
-    Lava = "lava",
-
-    /** 掉进末地传送门。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
-    EndPortal = "endPortal",
-
-    /** 摔到地上。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
-    HitGround = "hitGround",
-
-    /** 踩到陷阱。 */
-    Trap = "trap",
-
-    /** 被毒药杀死。 */
-    Potion = "potion",
-
-    /** 其他死因。 */
-    Other = "other",
-}
-
-/** 可能导致出图的死亡方式。 */
-const deathTypeOutOfMap: MurderMysteryDeathType[] = [
-    MurderMysteryDeathType.Void,
-    MurderMysteryDeathType.HitGround,
-    MurderMysteryDeathType.Lava,
-    MurderMysteryDeathType.EndPortal,
-];
 
 /** 代表一个密室杀手玩家，包含玩家的密室杀手信息和相关方法。 */
 class MurderMysteryPlayer {
@@ -2367,12 +2306,15 @@ class MurderMysteryPlayer {
     /** 设置玩家为已死亡，并对玩家播放死因。如果是侦探死亡，则全体公告。如果触发特定条件，会导致游戏结束。
      * @returns 返回是否成功将该玩家设定为死亡。
      */
-    setDead(deathType: MurderMysteryDeathType = MurderMysteryDeathType.MurdererStab, killer?: MurderMysteryPlayer) {
+    setDead(
+        deathType: gameData.MurderMysteryDeathType = gameData.MurderMysteryDeathType.Other,
+        killer?: MurderMysteryPlayer
+    ) {
         // 若该玩家已死亡，则跳过之
         if (this.isDead) return false;
 
         // 若该玩家正处于无敌状态，并且死亡方式不是虚空等掉出地图的方式，则播放音效和粒子，阻止死亡，终止运行
-        const isOutOfMap = deathTypeOutOfMap.includes(deathType);
+        const isOutOfMap = gameData.deathTypeOutOfMap.includes(deathType);
         if (this.player.getEffect("resistance") && !isOutOfMap) {
             lib.PlayerUtils.getNearby(this.player.location, 10).forEach(player =>
                 player.playSound("mob.irongolem.death", { pitch: 2 })

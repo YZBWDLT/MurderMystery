@@ -4,6 +4,69 @@
 import * as minecraft from "@minecraft/server";
 import * as lib from "./lib";
 
+// #region 死亡类型声明
+
+/** 死亡类型。这个死亡类型会影响显示的死亡消息。 */
+export enum MurderMysteryDeathType {
+    /** 被杀手杀害。 */
+    MurdererStab = "murdererStab",
+
+    /** 被杀手射杀。 */
+    MurdererShot = "murdererShot",
+
+    /** 被杀手的飞刀杀害。 */
+    MurdererKnife = "murdererKnife",
+
+    /** 射杀了自己。 */
+    ShotSelf = "shotSelf",
+
+    /** 被其他玩家杀死。 */
+    Player = "player",
+
+    /** 误杀了其他玩家。 */
+    Manslaughter = "manslaughter",
+
+    /** 掉进虚空。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    Void = "void",
+
+    /** 掉进熔岩。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    Lava = "lava",
+
+    /** 掉进末地传送门。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    EndPortal = "endPortal",
+
+    /** 摔到地上。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    HitGround = "hitGround",
+
+    /** 掉进坑里。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    Hole = "hole",
+
+    /** 踩到陷阱。 */
+    Trap = "trap",
+
+    /** 溺死。 */
+    Drowned = "drowned",
+
+    /** 被毒药杀死。 */
+    Potion = "potion",
+
+    /** 被闪电杀死。 */
+    LightningBolt = "lightningBolt",
+
+    /** 其他死因。 */
+    Other = "other",
+}
+
+/** 可能导致出图的死亡方式。 */
+export const deathTypeOutOfMap: MurderMysteryDeathType[] = [
+    MurderMysteryDeathType.Void,
+    MurderMysteryDeathType.HitGround,
+    MurderMysteryDeathType.Lava,
+    MurderMysteryDeathType.EndPortal,
+    MurderMysteryDeathType.Hole,
+];
+
+// #endregion
 // #region 地图数据类型声明
 
 /** 地图数据。 */
@@ -14,14 +77,11 @@ export interface MurderMysteryMapData {
     /** 地图组件，代表地图使用的功能。 */
     readonly components?: MurderMysteryMapDataComponent;
 
-    /** 地图可能出现的交互。默认情况下，阻止玩家与一切方块的交互。而在交互列表中的方块或位置则除外。并且，与这些方块交互还可以规定触发特殊事件。 */
-    readonly interactions?: MurderMysteryInteractions[];
-
     /** 地图事件，代表地图可能发生的所有事件。 */
     readonly events?: Record<string, MurderMysteryEvents>;
 }
 
-interface MurderMysteryMapDataDescription {
+export interface MurderMysteryMapDataDescription {
     /** 地图 ID，用于地图名称的显示等。 */
     readonly id: string;
 
@@ -44,7 +104,7 @@ interface MurderMysteryMapDataDescription {
     readonly spawnPoints: minecraft.Vector3[];
 }
 
-interface MurderMysteryWaitHallDescription {
+export interface MurderMysteryWaitHallDescription {
     /** 等待大厅的位置，在开始前玩家将出生在这里。 */
     readonly location: minecraft.Vector3;
 
@@ -52,42 +112,39 @@ interface MurderMysteryWaitHallDescription {
     readonly facingLocation?: minecraft.Vector3;
 }
 
-interface MurderMysteryMapDataComponent {
-    /** 玩家进入虚空组件，如果玩家落入虚空，则直接杀死之。 */
-    readonly playerIntoVoid?: MurderMysteryPlayerIntoVoidComponent;
-
-    /** 玩家进入熔岩组件，如果玩家落入熔岩，则直接杀死之。 */
-    readonly playerIntoLava?: MurderMysteryPlayerIntoLavaComponent;
-
-    /** 末地传送门组件，如果玩家落入末地传送门，则直接杀死之。 */
-    readonly endPortal?: MurderMysteryEndPortalComponent;
-
+export interface MurderMysteryMapDataComponent {
     /** 场景恢复组件，在游戏开始之前可以按需求恢复场景。 */
     readonly recover?: lib.BlockFillData[];
 
     /** 时间组件，设定该地图使用的游戏内时间。 | 默认值：`6000` */
     readonly time?: number;
+
+    /** 是否启用神秘药水。使用该组件决定喝下神秘药水后会使用神秘药水的随机药效，以及神秘药水的文本位置。
+     * - 通常和`interaction`组件联合使用，并且需要使用带有`getMysteryPotion`的事件以使玩家能够获得神秘药水。
+     */
+    readonly enableMysteryPotion?: {
+        /** 神秘药水的文本位置。 */
+        locations: minecraft.Vector3[];
+
+        /** 本局神秘药水的价格。
+         * @remarks 该值仅限显示用，实际扣除的金锭数由`interaction`组件决定。
+         */
+        consume: number;
+    };
+
+    /** 交互组件，定义地图可能出现的交互。默认情况下，阻止玩家与一切方块的交互。而在交互列表中的方块或位置则除外。
+     * 并且，与这些方块交互还可以规定触发特殊事件。
+     */
+    readonly interaction?: MurderMysteryInteractionComponent[];
+
+    /** 检查玩家进入特定区域组件。当玩家进入特定区域的时候，触发特定事件。 */
+    readonly playerInArea?: MurderMysteryPlayerInAreaComponent;
+
+    /** 检查玩家受伤组件。当玩家受伤的时候，触发特定事件。 */
+    readonly playerHurt?: MurderMysteryPlayerHurtComponent[];
 }
 
-interface MurderMysteryPlayerIntoVoidComponent {
-    /** 判定虚空高度，当玩家的高度低于此高度时即认定为落入虚空。 | 默认值：0 */
-    readonly voidHeight?: number;
-}
-
-interface MurderMysteryPlayerIntoLavaComponent {}
-
-interface MurderMysteryEndPortalComponent {
-    /** 末地传送门的范围。坐标取末地传送门的一个角落。 */
-    from: minecraft.Vector3;
-
-    /** 末地传送门的范围。坐标取末地传送门的另一个角落。 */
-    to: minecraft.Vector3;
-
-    /** 末地传送门的判定范围。当玩家在末地传送门上方几格高时视作已进入传送门。 */
-    height: number;
-}
-
-interface MurderMysteryInteractions {
+export interface MurderMysteryInteractionComponent {
     /** 允许交互的方块。 */
     blocks?: string[];
 
@@ -107,18 +164,57 @@ interface MurderMysteryInteractions {
     trigger?: string;
 }
 
-export interface MurderMysteryEvents {
-    /** 神秘药水组件，当玩家和特定位置的方块交互后，为玩家添加药水。 */
-    readonly mysteryPotion?: MurderMysteryMysteryPotionEvent;
+export interface MurderMysteryPlayerInAreaComponent {
+    /** 待检测的区域的条件。仅当所有条件都完全符合时才会触发事件。
+     * @remarks 应当指定至少一个条件，否则该组件将会始终导致事件执行。
+     */
+    area: {
+        /** 当玩家的 X 坐标大于等于此值时，触发事件。若不指定则不检查之。 */
+        xMin?: number;
 
-    /** 门组件，控制当满足特定条件时开启何处的门。 */
-    readonly openDoor?: MurderMysteryOpenDoorEvent;
+        /** 当玩家的 X 坐标小于等于此值时，触发事件。若不指定则不检查之。 */
+        xMax?: number;
 
-    /** 放置方块组件，当玩家和特定位置的方块交互后，放置方块。 */
-    readonly setBlock?: MurderMysterySetBlockEvent;
+        /** 当玩家的 Y 坐标大于等于此值时，触发事件。若不指定则不检查之。 */
+        yMin?: number;
+
+        /** 当玩家的 Y 坐标小于等于此值时，触发事件。若不指定则不检查之。 */
+        yMax?: number;
+
+        /** 当玩家的 Z 坐标大于等于此值时，触发事件。若不指定则不检查之。 */
+        zMin?: number;
+
+        /** 当玩家的 Z 坐标小于等于此值时，触发事件。若不指定则不检查之。 */
+        zMax?: number;
+    };
+
+    /** 当玩家进入该区域时，触发的事件。 */
+    trigger: string;
 }
 
-interface MurderMysteryMysteryPotionEvent {
+export interface MurderMysteryPlayerHurtComponent {
+    /** 玩家因何种原因而受伤。 */
+    cause: minecraft.EntityDamageCause;
+
+    /** 当玩家受伤后，触发何种事件。 */
+    trigger: string;
+}
+
+export interface MurderMysteryEvents {
+    /** 获取神秘药水事件响应，当玩家和特定位置的方块交互后，为玩家添加药水。 */
+    readonly getMysteryPotion?: MurderMysteryGetMysteryPotionEvent;
+
+    /** 开门事件响应，控制当满足特定条件时开启何处的门。 */
+    readonly openDoor?: MurderMysteryOpenDoorEvent;
+
+    /** 放置方块事件响应，当玩家和特定位置的方块交互后，放置方块。 */
+    readonly setBlock?: MurderMysterySetBlockEvent;
+
+    /** 处死玩家事件响应，以特定理由杀死玩家。 */
+    readonly setPlayerDead?: MurderMysterySetPlayerDeadEvent;
+}
+
+export interface MurderMysteryGetMysteryPotionEvent {
     /** 动画和悬浮文本的坐标。 */
     animationLocation: minecraft.Vector3;
 }
@@ -143,6 +239,11 @@ export interface MurderMysteryOpenDoorEvent {
 
     /** 如何通知玩家。 */
     notifyPlayer?: lib.MessageOptions;
+}
+
+export interface MurderMysterySetPlayerDeadEvent {
+    /** 玩家的死亡类型。 */
+    readonly deathType?: MurderMysteryDeathType;
 }
 
 // #endregion
@@ -525,12 +626,40 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            playerIntoLava: {},
-            endPortal: {
-                from: { x: 1052, y: 124, z: -217 },
-                to: { x: 1054, y: 124, z: -219 },
-                height: 2,
+            playerInArea: {
+                area: { xMin: 1052, yMin: 124, zMin: -219, xMax: 1054, yMax: 126, zMax: -217 },
+                trigger: "archives:playerIntoEndPortal",
             },
+            interaction: [
+                {
+                    at: [{ x: 1038, y: 125, z: -184 }],
+                    consume: 1,
+                    notifyPlayerWhenGoldNotEnough: false,
+                    stillCancelEvent: true,
+                    trigger: "archives:setBlock1",
+                },
+                {
+                    at: [{ x: 1038, y: 125, z: -188 }],
+                    consume: 1,
+                    notifyPlayerWhenGoldNotEnough: false,
+                    stillCancelEvent: true,
+                    trigger: "archives:setBlock2",
+                },
+                {
+                    at: [{ x: 1041, y: 135, z: -184 }],
+                    consume: 1,
+                    notifyPlayerWhenGoldNotEnough: false,
+                    stillCancelEvent: true,
+                    trigger: "archives:setBlock3",
+                },
+                {
+                    at: [{ x: 1041, y: 135, z: -188 }],
+                    consume: 1,
+                    notifyPlayerWhenGoldNotEnough: false,
+                    stillCancelEvent: true,
+                    trigger: "archives:setBlock4",
+                },
+            ],
             recover: [
                 // 恢复火
                 {
@@ -555,37 +684,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     id: "minecraft:cyan_terracotta",
                 },
             ],
+            playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "archives:playerIntoLava" }],
         },
-        interactions: [
-            {
-                at: [{ x: 1038, y: 125, z: -184 }],
-                consume: 1,
-                notifyPlayerWhenGoldNotEnough: false,
-                stillCancelEvent: true,
-                trigger: "archives:setBlock1",
-            },
-            {
-                at: [{ x: 1038, y: 125, z: -188 }],
-                consume: 1,
-                notifyPlayerWhenGoldNotEnough: false,
-                stillCancelEvent: true,
-                trigger: "archives:setBlock2",
-            },
-            {
-                at: [{ x: 1041, y: 135, z: -184 }],
-                consume: 1,
-                notifyPlayerWhenGoldNotEnough: false,
-                stillCancelEvent: true,
-                trigger: "archives:setBlock3",
-            },
-            {
-                at: [{ x: 1041, y: 135, z: -188 }],
-                consume: 1,
-                notifyPlayerWhenGoldNotEnough: false,
-                stillCancelEvent: true,
-                trigger: "archives:setBlock4",
-            },
-        ],
         events: {
             "archives:setBlock1": {
                 setBlock: {
@@ -641,6 +741,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         soundOptions: { pitch: 1.5 },
                     },
                 },
+            },
+            "archives:playerIntoEndPortal": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.EndPortal },
+            },
+            "archives:playerIntoLava": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
             },
         },
     },
@@ -1016,7 +1122,15 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            playerIntoVoid: { voidHeight: 60 },
+            playerInArea: {
+                area: { yMax: 60 },
+                trigger: "archivesTopFloor:playerIntoHole",
+            },
+        },
+        events: {
+            "archivesTopFloor:playerIntoHole": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Hole },
+            },
         },
     },
     cruiseShip: {
@@ -1410,7 +1524,20 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1205.5, y: 95.5, z: 900.5 },
             ],
         },
-        components: {},
+        components: {
+            playerHurt: [
+                { cause: minecraft.EntityDamageCause.drowning, trigger: "cruiseShip:playerDrowned" },
+                { cause: minecraft.EntityDamageCause.lightning, trigger: "cruiseShip:playerHitByLightningBolt" },
+            ],
+        },
+        events: {
+            "cruiseShip:playerDrowned": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Drowned },
+            },
+            "cruiseShip:playerHitByLightningBolt": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.LightningBolt },
+            },
+        },
     },
     darkfall: {
         description: {
@@ -1778,49 +1905,59 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             time: 18000,
+            interaction: [
+                {
+                    at: [{ x: 71, y: 36, z: 1947 }],
+                    consume: 1,
+                    trigger: "darkfall:getMysteryPotion1",
+                },
+                {
+                    at: [{ x: 99, y: 42, z: 1941 }],
+                    consume: 1,
+                    trigger: "darkfall:getMysteryPotion2",
+                },
+                {
+                    at: [{ x: 120, y: 38, z: 1914 }],
+                    consume: 1,
+                    trigger: "darkfall:getMysteryPotion3",
+                },
+                {
+                    at: [{ x: 131, y: 37, z: 1922 }],
+                    consume: 1,
+                    trigger: "darkfall:getMysteryPotion4",
+                },
+                {
+                    at: [{ x: 120, y: 37, z: 1892 }],
+                    consume: 1,
+                    trigger: "darkfall:getMysteryPotion5",
+                },
+            ],
+            enableMysteryPotion: {
+                locations: [
+                    { x: 71, y: 37, z: 1946 },
+                    { x: 98, y: 43, z: 1941 },
+                    { x: 120, y: 39, z: 1913 },
+                    { x: 130, y: 38, z: 1922 },
+                    { x: 121, y: 38, z: 1892 },
+                ],
+                consume: 1,
+            },
         },
-        interactions: [
-            {
-                at: [{ x: 71, y: 36, z: 1947 }],
-                consume: 1,
-                trigger: "darkfall:getMysteryPotion1",
-            },
-            {
-                at: [{ x: 99, y: 42, z: 1941 }],
-                consume: 1,
-                trigger: "darkfall:getMysteryPotion2",
-            },
-            {
-                at: [{ x: 120, y: 38, z: 1914 }],
-                consume: 1,
-                trigger: "darkfall:getMysteryPotion3",
-            },
-            {
-                at: [{ x: 131, y: 37, z: 1922 }],
-                consume: 1,
-                trigger: "darkfall:getMysteryPotion4",
-            },
-            {
-                at: [{ x: 120, y: 37, z: 1892 }],
-                consume: 1,
-                trigger: "darkfall:getMysteryPotion5",
-            },
-        ],
         events: {
             "darkfall:getMysteryPotion1": {
-                mysteryPotion: { animationLocation: { x: 71, y: 37, z: 1946 } },
+                getMysteryPotion: { animationLocation: { x: 71, y: 37, z: 1946 } },
             },
             "darkfall:getMysteryPotion2": {
-                mysteryPotion: { animationLocation: { x: 98, y: 43, z: 1941 } },
+                getMysteryPotion: { animationLocation: { x: 98, y: 43, z: 1941 } },
             },
             "darkfall:getMysteryPotion3": {
-                mysteryPotion: { animationLocation: { x: 120, y: 39, z: 1913 } },
+                getMysteryPotion: { animationLocation: { x: 120, y: 39, z: 1913 } },
             },
             "darkfall:getMysteryPotion4": {
-                mysteryPotion: { animationLocation: { x: 130, y: 38, z: 1922 } },
+                getMysteryPotion: { animationLocation: { x: 130, y: 38, z: 1922 } },
             },
             "darkfall:getMysteryPotion5": {
-                mysteryPotion: { animationLocation: { x: 121, y: 38, z: 1892 } },
+                getMysteryPotion: { animationLocation: { x: 121, y: 38, z: 1892 } },
             },
         },
     },
@@ -2156,7 +2293,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            playerIntoLava: {},
+            playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "easterWorld:playerIntoLava" }],
+        },
+        events: {
+            "easterWorld:playerIntoLava": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
+            },
         },
     },
     hypixelWorld: {
@@ -2492,7 +2634,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             time: 18000,
-            playerIntoLava: {},
+            playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "hypixelWorld:playerIntoLava" }],
+        },
+        events: {
+            "hypixelWorld:playerIntoLava": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
+            },
         },
     },
     library: {
@@ -2791,7 +2938,36 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            playerIntoVoid: { voidHeight: 40 },
+            interaction: [
+                {
+                    blocks: ["minecraft:spruce_fence_gate"],
+                },
+                {
+                    at: [{ x: -884, y: 102, z: 1923 }],
+                    consume: 1,
+                    trigger: "library:getMysteryPotion1",
+                },
+                {
+                    at: [{ x: -907, y: 102, z: 1909 }],
+                    consume: 1,
+                    trigger: "library:getMysteryPotion2",
+                },
+                {
+                    at: [{ x: -927, y: 102, z: 1935 }],
+                    consume: 1,
+                    trigger: "library:getMysteryPotion3",
+                },
+                {
+                    at: [{ x: -853, y: 102, z: 1953 }],
+                    consume: 1,
+                    trigger: "library:getMysteryPotion4",
+                },
+                {
+                    at: [{ x: -884, y: 111, z: 1966 }],
+                    consume: 1,
+                    trigger: "library:getMysteryPotion5",
+                },
+            ],
             recover: [
                 // 第 1 个神秘药水
                 {
@@ -2889,52 +3065,39 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     ],
                 },
             ],
+            enableMysteryPotion: {
+                locations: [
+                    { x: -884, y: 102, z: 1923 },
+                    { x: -907, y: 102, z: 1909 },
+                    { x: -927, y: 102, z: 1935 },
+                    { x: -853, y: 102, z: 1953 },
+                    { x: -884, y: 111, z: 1966 },
+                ],
+                consume: 1,
+            },
+            playerInArea: {
+                area: { yMax: 40 },
+                trigger: "library:playerIntoVoid",
+            },
         },
-        interactions: [
-            {
-                blocks: ["minecraft:spruce_fence_gate"],
-            },
-            {
-                at: [{ x: -884, y: 102, z: 1923 }],
-                consume: 1,
-                trigger: "library:getMysteryPotion1",
-            },
-            {
-                at: [{ x: -907, y: 102, z: 1909 }],
-                consume: 1,
-                trigger: "library:getMysteryPotion2",
-            },
-            {
-                at: [{ x: -927, y: 102, z: 1935 }],
-                consume: 1,
-                trigger: "library:getMysteryPotion3",
-            },
-            {
-                at: [{ x: -853, y: 102, z: 1953 }],
-                consume: 1,
-                trigger: "library:getMysteryPotion4",
-            },
-            {
-                at: [{ x: -884, y: 111, z: 1966 }],
-                consume: 1,
-                trigger: "library:getMysteryPotion5",
-            },
-        ],
         events: {
             "library:getMysteryPotion1": {
-                mysteryPotion: { animationLocation: { x: -884, y: 102, z: 1923 } },
+                getMysteryPotion: { animationLocation: { x: -884, y: 102, z: 1923 } },
             },
             "library:getMysteryPotion2": {
-                mysteryPotion: { animationLocation: { x: -907, y: 102, z: 1909 } },
+                getMysteryPotion: { animationLocation: { x: -907, y: 102, z: 1909 } },
             },
             "library:getMysteryPotion3": {
-                mysteryPotion: { animationLocation: { x: -927, y: 102, z: 1935 } },
+                getMysteryPotion: { animationLocation: { x: -927, y: 102, z: 1935 } },
             },
             "library:getMysteryPotion4": {
-                mysteryPotion: { animationLocation: { x: -853, y: 102, z: 1953 } },
+                getMysteryPotion: { animationLocation: { x: -853, y: 102, z: 1953 } },
             },
             "library:getMysteryPotion5": {
-                mysteryPotion: { animationLocation: { x: -884, y: 111, z: 1966 } },
+                getMysteryPotion: { animationLocation: { x: -884, y: 111, z: 1966 } },
+            },
+            "library:playerIntoVoid": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Void },
             },
         },
     },
