@@ -24,13 +24,19 @@
 
 - 现在地图档案馆顶层中，掉到坑里之后不再显示为掉进了虚空
 - 现在地图游轮中，玩家会溺死了
+- 现在地图暗景秋色中，可以与酿造台交互获取神秘药水了
 
 ### 技术性
 
 - 更新了行为包和资源包的版本为`1.0.5`
 - 主文件 `main.ts`
   - 为了文件中大量应用的`data`变量不和导入的`data`混淆，重命名了导入的`data`为`gameData`
+  - 为事件管理器新增了`fillBlock`方法和`setStructure`方法
 - 库文件 `lib.ts`
+  - 重命名`PlayerUtils.sendMessage`方法为`PlayerUtils.notify`方法，`MessageOptions`接口为`NotifyOptions`，以更好地表达其意
+  - 更新了`GameSystem.subscribeDelay`方法，现在不再接受结果为`boolean`的回调函数
+  - 更新了`StructureUtils.placeAsync`方法，现在维度接受`Dimension`，且为可选参数
+  - 更新了`BlockUtils.set`方法，现在接受`blockData: BlockData`，而不再是分立的`location`，`blockId`，并且新增了对特定方块状态的支持
 - 数据文件 `data.ts`
   - 导出了全部的接口
   - 移动死亡类型`MurderMysteryDeathType`枚举和`deathTypeOutOfMap`变量到`data`中，并新增了几个死亡方式
@@ -39,7 +45,9 @@
   - 重命名`mysteryPotion`事件响应为`getMysteryPotion`事件响应
   - 新增了`playerInArea`组件，定义玩家在特定区域时可触发事件
   - 新增了`setPlayerDead`事件响应，直接处死玩家
-  - 移除了`playerIntoVoid`组件，同时移除了对应的接口声明，请使用`playerInArea`组件和`setPlayerDead`事件响应代替之
-  - 移除了`endPortal`组件，同时移除了对应的接口声明，请使用`playerInArea`组件和`setPlayerDead`事件响应代替之
+    - 因此，移除了`playerIntoVoid`组件，同时移除了对应的接口声明，请使用`playerInArea`组件和`setPlayerDead`事件响应代替之
+    - 因此，移除了`endPortal`组件，同时移除了对应的接口声明，请使用`playerInArea`组件和`setPlayerDead`事件响应代替之
   - 新增了`playerHurt`组件，定义玩家受到特定类型的伤害后可触发事件
-  - 移除了`playerIntoLava`组件，同时移除了对应的接口声明，请使用`playerHurt`组件和`setPlayerDead`事件响应代替之
+    - 因此，移除了`playerIntoLava`组件，同时移除了对应的接口声明，请使用`playerHurt`组件和`setPlayerDead`事件响应代替之
+  - 升级了`setBlock`事件响应为`place`，现在可以通过`place`事件来放置方块、填充方块或放置结构
+  - 为`openDoor`事件响应新增了`close`参数，以确定何时关门

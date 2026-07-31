@@ -102,6 +102,7 @@ deathMessage.trap=§eYou fell into a trap!
 deathMessage.potion=§eThe poison killed you.
 deathMessage.drowned=§eYou drowned!
 deathMessage.lightningBolt=§eA lightning bolt fell from the sky and hit you!
+deathMessage.draggedByTheDead=§eYou were dragged to the depths by the dead!
 deathMessage.other=§eYou Died!
 chat.knifeKilledPlayer=§eKilled target at %s meters away!
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”

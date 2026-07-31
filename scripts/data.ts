@@ -207,8 +207,8 @@ export interface MurderMysteryEvents {
     /** 开门事件响应，控制当满足特定条件时开启何处的门。 */
     readonly openDoor?: MurderMysteryOpenDoorEvent;
 
-    /** 放置方块事件响应，当玩家和特定位置的方块交互后，放置方块。 */
-    readonly setBlock?: MurderMysterySetBlockEvent;
+    /** 放置方块/结构事件响应，当玩家和特定位置的方块交互后，放置方块/结构。 */
+    readonly place?: MurderMysterySetBlockEvent | MurderMysteryFillBlockEvent | MurderMysterySetStructureEvent;
 
     /** 处死玩家事件响应，以特定理由杀死玩家。 */
     readonly setPlayerDead?: MurderMysterySetPlayerDeadEvent;
@@ -220,10 +220,50 @@ export interface MurderMysteryGetMysteryPotionEvent {
 }
 
 export interface MurderMysterySetBlockEvent extends lib.BlockData {
-    /** 如何通知玩家。 */
-    notifyPlayer?: lib.MessageOptions;
+    /** 放置类型：放置方块。 */
+    type: "setBlock";
 
-    /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。事件的各种功能和需求见 {@link MurderMysteryEvents}。 */
+    /** 如何通知玩家。 */
+    notifyPlayer?: lib.NotifyOptions;
+
+    /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。
+     * 事件的各种功能和需求见 {@link MurderMysteryEvents}。
+     */
+    trigger?: string;
+}
+
+export interface MurderMysteryFillBlockEvent extends lib.BlockFillData {
+    /** 放置类型：填充方块。 */
+    type: "fillBlock";
+
+    /** 如何通知玩家。 */
+    notifyPlayer?: lib.NotifyOptions;
+
+    /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。
+     * 事件的各种功能和需求见 {@link MurderMysteryEvents}。
+     */
+    trigger?: string;
+}
+
+export interface MurderMysterySetStructureEvent {
+    /** 放置类型：放置结构。 */
+    type: "setStructure";
+
+    /** 放置何种结构。 */
+    structure: string;
+
+    /** 放置结构的位置。 */
+    location: minecraft.Vector3;
+
+    /** 放置结构的选项。 */
+    options?: minecraft.StructurePlaceOptions;
+
+    /** 如何通知玩家。 */
+    notifyPlayer?: lib.NotifyOptions;
+
+    /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。
+     * 事件的各种功能和需求见 {@link MurderMysteryEvents}。
+     */
     trigger?: string;
 }
 
@@ -238,7 +278,19 @@ export interface MurderMysteryOpenDoorEvent {
     door: { from: minecraft.Vector3; to: minecraft.Vector3 }[];
 
     /** 如何通知玩家。 */
-    notifyPlayer?: lib.MessageOptions;
+    notifyPlayer?: lib.NotifyOptions;
+
+    /** 在开启了门之后，是否要关闭门。如果不指定则不关闭。 */
+    close?: {
+        /** 在多久之后重新关门。单位：游戏刻。 */
+        delay: number;
+
+        /** 加载何种结构。 */
+        load: string;
+
+        /** 加载结构的位置。 */
+        location: minecraft.Vector3;
+    };
 }
 
 export interface MurderMysterySetPlayerDeadEvent {
@@ -636,28 +688,28 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
-                    trigger: "archives:setBlock1",
+                    trigger: "archives:setFire1",
                 },
                 {
                     at: [{ x: 1038, y: 125, z: -188 }],
                     consume: 1,
                     notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
-                    trigger: "archives:setBlock2",
+                    trigger: "archives:setFire2",
                 },
                 {
                     at: [{ x: 1041, y: 135, z: -184 }],
                     consume: 1,
                     notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
-                    trigger: "archives:setBlock3",
+                    trigger: "archives:setFire3",
                 },
                 {
                     at: [{ x: 1041, y: 135, z: -188 }],
                     consume: 1,
                     notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
-                    trigger: "archives:setBlock4",
+                    trigger: "archives:setFire4",
                 },
             ],
             recover: [
@@ -687,32 +739,36 @@ export const maps: Record<string, MurderMysteryMapData> = {
             playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "archives:playerIntoLava" }],
         },
         events: {
-            "archives:setBlock1": {
-                setBlock: {
+            "archives:setFire1": {
+                place: {
+                    type: "setBlock",
                     id: "minecraft:fire",
                     location: { x: 1038, y: 126, z: -184 },
                     notifyPlayer: { sound: "item.firecharge.use" },
                     trigger: "archives:openDoor",
                 },
             },
-            "archives:setBlock2": {
-                setBlock: {
+            "archives:setFire2": {
+                place: {
+                    type: "setBlock",
                     id: "minecraft:fire",
                     location: { x: 1038, y: 126, z: -188 },
                     notifyPlayer: { sound: "item.firecharge.use" },
                     trigger: "archives:openDoor",
                 },
             },
-            "archives:setBlock3": {
-                setBlock: {
+            "archives:setFire3": {
+                place: {
+                    type: "setBlock",
                     id: "minecraft:fire",
                     location: { x: 1041, y: 136, z: -184 },
                     notifyPlayer: { sound: "item.firecharge.use" },
                     trigger: "archives:openDoor",
                 },
             },
-            "archives:setBlock4": {
-                setBlock: {
+            "archives:setFire4": {
+                place: {
+                    type: "setBlock",
                     id: "minecraft:fire",
                     location: { x: 1041, y: 136, z: -188 },
                     notifyPlayer: { sound: "item.firecharge.use" },
@@ -1906,30 +1962,60 @@ export const maps: Record<string, MurderMysteryMapData> = {
         components: {
             time: 18000,
             interaction: [
+                // 每一个神秘药水的坐标都是第一个为按钮，第二个为酿造台
+                // 因为必须阻止玩家打开酿造台，所以取消事件
                 {
-                    at: [{ x: 71, y: 36, z: 1947 }],
+                    at: [
+                        { x: 71, y: 36, z: 1947 },
+                        { x: 71, y: 37, z: 1946 },
+                    ],
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion1",
+                    stillCancelEvent: true,
                 },
                 {
-                    at: [{ x: 99, y: 42, z: 1941 }],
+                    at: [
+                        { x: 99, y: 42, z: 1941 },
+                        { x: 98, y: 43, z: 1941 },
+                    ],
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion2",
+                    stillCancelEvent: true,
                 },
                 {
-                    at: [{ x: 120, y: 38, z: 1914 }],
+                    at: [
+                        { x: 120, y: 38, z: 1914 },
+                        { x: 120, y: 39, z: 1913 },
+                    ],
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion3",
+                    stillCancelEvent: true,
                 },
                 {
-                    at: [{ x: 131, y: 37, z: 1922 }],
+                    at: [
+                        { x: 131, y: 37, z: 1922 },
+                        { x: 130, y: 38, z: 1922 },
+                    ],
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion4",
+                    stillCancelEvent: true,
                 },
                 {
-                    at: [{ x: 120, y: 37, z: 1892 }],
+                    at: [
+                        { x: 120, y: 37, z: 1892 },
+                        { x: 121, y: 38, z: 1892 },
+                    ],
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion5",
+                    stillCancelEvent: true,
+                },
+                {
+                    at: [
+                        { x: 106, y: 38, z: 1885 },
+                        { x: 106, y: 38, z: 1878 },
+                    ],
+                    consume: 2,
+                    trigger: "darkfall:openTrap",
                 },
             ],
             enableMysteryPotion: {
@@ -1958,6 +2044,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
             "darkfall:getMysteryPotion5": {
                 getMysteryPotion: { animationLocation: { x: 121, y: 38, z: 1892 } },
+            },
+            "darkfall:openTrap": {
+                openDoor: {
+                    door: [{ from: { x: 112, y: 36, z: 1884 }, to: { x: 107, y: 36, z: 1879 } }],
+                    close: { delay: 120, load: "murder_mystery:darkfall/trap", location: { x: 107, y: 36, z: 1879 } },
+                },
             },
         },
     },

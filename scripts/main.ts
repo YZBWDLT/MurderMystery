@@ -630,7 +630,7 @@ class MurderMysterySystem {
                 translate: `subtitle.${reason}.${playerData.role === MurderMysteryPlayerRole.Murderer ? "murderer" : "player"}`,
             };
 
-            lib.PlayerUtils.sendMessage(playerData.player, {
+            lib.PlayerUtils.notify(playerData.player, {
                 title: titleList[playerData.role],
                 subtitle: subtitle,
                 titleOptions: instantTitleDisplay,
@@ -687,7 +687,7 @@ class MurderMysteryEventManager {
         if (!triggedEvent) return false;
 
         // 变量准备
-        const { getMysteryPotion, setBlock, openDoor, setPlayerDead } = triggedEvent;
+        const { getMysteryPotion, place, openDoor, setPlayerDead } = triggedEvent;
         let executeResult = true;
 
         // ===== 触发神秘药水事件（必须要有触发玩家） =====
@@ -697,9 +697,21 @@ class MurderMysteryEventManager {
             if (!result) executeResult = false;
         }
 
-        // ===== 触发放置方块事件 =====
-        if (setBlock) {
-            const result = this.setBlock(setBlock, playerData);
+        // ===== 触发放置方块/结构事件 =====
+        if (place) {
+            let result = true;
+            // 判断 place 的类型
+            switch (place.type) {
+                case "setBlock":
+                    result = this.setBlock(place, playerData);
+                    break;
+                case "fillBlock":
+                    result = this.fillBlock(place, playerData);
+                    break;
+                case "setStructure":
+                    result = this.setStructure(place, playerData);
+                    break;
+            }
             if (!result) executeResult = false;
         }
 
@@ -777,7 +789,7 @@ class MurderMysteryEventManager {
             2
         );
         if (nearbyAnimationEntities.length !== 0) {
-            lib.PlayerUtils.sendMessage(player, {
+            lib.PlayerUtils.notify(player, {
                 message: { translate: "chat.mysteryPotion.occupied" },
                 sound: "random.anvil_land",
             });
@@ -795,7 +807,7 @@ class MurderMysteryEventManager {
             ],
         });
         if (playerPotionCount >= 3) {
-            lib.PlayerUtils.sendMessage(player, {
+            lib.PlayerUtils.notify(player, {
                 message: { translate: "chat.mysteryPotion.inventoryFull" },
                 sound: "random.anvil_land",
             });
@@ -879,7 +891,7 @@ class MurderMysteryEventManager {
         // ===== ↓ 可以成功喝下药水 =====
 
         // 显示副标题
-        lib.PlayerUtils.sendMessage(player, {
+        lib.PlayerUtils.notify(player, {
             title: "§1",
             subtitle: { translate: `subtitle.mysteryPotion.${potionData.id}` },
             titleOptions: instantTitleDisplay,
@@ -907,20 +919,53 @@ class MurderMysteryEventManager {
     }
 
     // #endregion
-    // #region - 放置方块
+    // #region - 放置方块/结构
 
     /** 在特定位置试图放置方块。
      * @returns 返回是否成功放置了方块。
      */
     setBlock(setBlockEvent: gameData.MurderMysterySetBlockEvent, playerData?: MurderMysteryPlayer): boolean {
-        const { id, location, states, notifyPlayer, trigger } = setBlockEvent;
+        const { id, location, notifyPlayer, trigger } = setBlockEvent;
         // 如果该方块已放置过，则终止运行
         if (lib.BlockUtils.get(location)?.typeId === id) return false;
 
         // 放置方块并通知玩家
-        lib.BlockUtils.set(lib.DimensionUtils.getOverworld(), location, id);
+        // 这里 setBlockEvent 的类型是继承自 lib.BlockData 的，所以直接用了
+        lib.BlockUtils.set(setBlockEvent, lib.DimensionUtils.getOverworld());
         if (notifyPlayer && playerData && isPlayer(playerData.player))
-            lib.PlayerUtils.sendMessage(playerData.player, notifyPlayer);
+            lib.PlayerUtils.notify(playerData.player, notifyPlayer);
+        if (trigger) this.triggerEvent(trigger);
+        return true;
+    }
+
+    /** 在特定位置试图填充方块。
+     * @returns 返回是否成功填充了方块。
+     */
+    fillBlock(fillBlockEvent: gameData.MurderMysteryFillBlockEvent, playerData?: MurderMysteryPlayer): boolean {
+        const { notifyPlayer, trigger } = fillBlockEvent;
+
+        // 填充方块并通知玩家
+        // 这里 fillBlockEvent 的类型是继承自 lib.BlockFillData 的，所以直接用了
+        lib.BlockUtils.fill(fillBlockEvent, {}, lib.DimensionUtils.getOverworld());
+        if (notifyPlayer && playerData && isPlayer(playerData.player))
+            lib.PlayerUtils.notify(playerData.player, notifyPlayer);
+        if (trigger) this.triggerEvent(trigger);
+        return true;
+    }
+
+    /** 在特定位置试图填充方块。
+     * @returns 返回是否成功填充了方块。
+     */
+    setStructure(
+        setStructureEvent: gameData.MurderMysterySetStructureEvent,
+        playerData?: MurderMysteryPlayer
+    ): boolean {
+        const { notifyPlayer, trigger, structure, location, options } = setStructureEvent;
+
+        // 填充方块并通知玩家
+        lib.StructureUtils.placeAsync(structure, location, options);
+        if (notifyPlayer && playerData && isPlayer(playerData.player))
+            lib.PlayerUtils.notify(playerData.player, notifyPlayer);
         if (trigger) this.triggerEvent(trigger);
         return true;
     }
@@ -932,7 +977,7 @@ class MurderMysteryEventManager {
      * @returns 返回是否成功开启了门。
      */
     openDoor(openDoorEvent: gameData.MurderMysteryOpenDoorEvent): boolean {
-        const { condition, door, notifyPlayer } = openDoorEvent;
+        const { condition, door, notifyPlayer, close } = openDoorEvent;
         // 如果不满足条件，则终止运行
         if (condition) {
             /** 是否有方块不满足条件 */
@@ -946,9 +991,19 @@ class MurderMysteryEventManager {
             if (hasBlockNotMeetCondition) return false;
         }
         // 否则，填充门
-        door.forEach(d => {
-            lib.BlockUtils.fill({ from: d.from, to: d.to, id: "minecraft:air" });
+        door.forEach(doorData => {
+            lib.BlockUtils.fill({ from: doorData.from, to: doorData.to, id: "minecraft:air" });
             if (notifyPlayer) lib.PlayerUtils.broadcast(notifyPlayer);
+            if (close)
+                lib.gameSystem.subscribeDelay(
+                    // 这里把事件名命名成这样，是防止其他门注册时导致的冲突
+                    // （虽然这样仍然有1/90000的概率冲突，万一真发生了就自认倒霉吧 ┑(￣Д ￣)┍ ）
+                    `recoverDoor${lib.JSUtils.number.randomInt(10000, 99999)}`,
+                    () => {
+                        lib.StructureUtils.placeAsync(close.load, close.location);
+                    },
+                    close.delay
+                );
         });
         return true;
     }
@@ -1180,16 +1235,14 @@ class MurderMysteryComponents {
                 const countdown = system.beforeGameInfo.startCountdown;
                 /** 显示倒计时消息 */
                 function countdownNotice(countdown: string, showTitle = true) {
-                    lib.PlayerUtils.getAll().forEach(player => {
-                        lib.PlayerUtils.sendMessage(player, {
-                            message: {
-                                translate: "chat.beforeGameStart.countdown",
-                                with: [countdown],
-                            },
-                            title: showTitle ? countdown : void 0,
-                            titleOptions: instantTitleDisplay,
-                            sound: "note.hat",
-                        });
+                    lib.PlayerUtils.broadcast({
+                        message: {
+                            translate: "chat.beforeGameStart.countdown",
+                            with: [countdown],
+                        },
+                        title: showTitle ? countdown : void 0,
+                        titleOptions: instantTitleDisplay,
+                        sound: "note.hat",
                     });
                 }
                 switch (countdown) {
@@ -1245,7 +1298,7 @@ class MurderMysteryComponents {
                     system.alivePlayers.murderer.forEach(murderer => {
                         if (!isPlayer(murderer.player)) return;
                         if (murderer.kills > 0) return;
-                        lib.PlayerUtils.sendMessage(murderer.player, {
+                        lib.PlayerUtils.notify(murderer.player, {
                             message: { translate: "chat.remindMurderer" },
                             title: { translate: "title.remindMurderer" },
                             subtitle: { translate: "subtitle.remindMurderer" },
@@ -1253,17 +1306,15 @@ class MurderMysteryComponents {
                         });
                     });
                 if (system.timeLeft === 60)
-                    lib.PlayerUtils.getAll().forEach(player => {
-                        lib.PlayerUtils.sendMessage(player, {
-                            message: { translate: "chat.gameWillOver" },
-                            sound: "note.hat",
-                        });
+                    lib.PlayerUtils.broadcast({
+                        message: { translate: "chat.gameWillOver" },
+                        sound: "note.hat",
                     });
                 if (system.timeLeft === 30) {
                     system.alivePlayers.murderer.forEach(murderer => murderer.getLocator());
                     system.alivePlayers.allPlayers.forEach(playerData => {
                         if (isPlayer(playerData.player))
-                            lib.PlayerUtils.sendMessage(playerData.player, {
+                            lib.PlayerUtils.notify(playerData.player, {
                                 message: { translate: `chat.murdererGetLocator.${playerData.role}` },
                                 sound: "note.hat",
                             });
@@ -1290,7 +1341,7 @@ class MurderMysteryComponents {
                 if (getSpecialItemTimeLeft > 0 && getSpecialItemTimeLeft <= 5) {
                     system.alivePlayers.allPlayers.forEach(playerData => {
                         if (!isPlayer(playerData.player)) return;
-                        lib.PlayerUtils.sendMessage(playerData.player, {
+                        lib.PlayerUtils.notify(playerData.player, {
                             message: {
                                 translate: `chat.murderWillGetSword.${playerData.role}`,
                                 with: [`§c${getSpecialItemTimeLeft}`],
@@ -1303,7 +1354,7 @@ class MurderMysteryComponents {
                 if (getSpecialItemTimeLeft <= 0) {
                     system.alivePlayers.allPlayers.forEach(playerData => {
                         if (!isPlayer(playerData.player)) return;
-                        lib.PlayerUtils.sendMessage(playerData.player, {
+                        lib.PlayerUtils.notify(playerData.player, {
                             message: {
                                 translate: `chat.murderGetSword.${playerData.role}`,
                                 with: [`§c${getSpecialItemTimeLeft}`],
@@ -1398,7 +1449,7 @@ class MurderMysteryComponents {
                 if (playerData.role === MurderMysteryPlayerRole.Detective) return;
                 if (isPlayer(playerData.player)) {
                     lib.ItemUtils.removeItem(playerData.player, goldId, -1, 10);
-                    lib.PlayerUtils.sendMessage(playerData.player, {
+                    lib.PlayerUtils.notify(playerData.player, {
                         message: { translate: "chat.10GoldCollected" },
                         title: "§1",
                         subtitle: { translate: "subtitle.10GoldCollected" },
@@ -1549,7 +1600,7 @@ class MurderMysteryComponents {
                         };
                         player.teleport(teleportLocations[outOfDirection]);
                         if (isPlayer(player)) {
-                            lib.PlayerUtils.sendMessage(player, {
+                            lib.PlayerUtils.notify(player, {
                                 title: "§1",
                                 subtitle: { translate: "subtitle.spectatorOutOfBorder" },
                                 titleOptions: instantTitleDisplay,
@@ -1742,7 +1793,7 @@ class MurderMysteryComponents {
             if (playerGoldCount < consume) {
                 if (notifyPlayerWhenGoldNotEnough) {
                     minecraft.system.run(() =>
-                        lib.PlayerUtils.sendMessage(player, {
+                        lib.PlayerUtils.notify(player, {
                             message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consume}`] },
                             sound: "random.anvil_land",
                         })
@@ -2027,7 +2078,7 @@ class MurderMysteryComponents {
                                 },
                                 onClick: () => {
                                     if (!playerData.player.isValid) {
-                                        lib.PlayerUtils.sendMessage(player, {
+                                        lib.PlayerUtils.notify(player, {
                                             message: { translate: "chat.spectatorTeleport.playerIsInvalid" },
                                             sound: "random.anvil_land",
                                         });
@@ -2035,7 +2086,7 @@ class MurderMysteryComponents {
                                     }
                                     player.teleport(playerData.player.location);
                                     minecraft.system.runTimeout(() =>
-                                        lib.PlayerUtils.sendMessage(player, {
+                                        lib.PlayerUtils.notify(player, {
                                             message: {
                                                 translate: "chat.spectatorTeleport.teleported",
                                                 with: [`${playerData.getName()}`],
@@ -2280,7 +2331,7 @@ class MurderMysteryPlayer {
         const { player, role } = this;
         if (!isPlayer(player)) return;
         const sendMessage = (sound: string) =>
-            lib.PlayerUtils.sendMessage(player, {
+            lib.PlayerUtils.notify(player, {
                 title: { translate: `title.gameStart.${role}` },
                 subtitle: { translate: `subtitle.gameStart.${role}` },
                 titleOptions: instantTitleDisplay,
@@ -2340,7 +2391,7 @@ class MurderMysteryPlayer {
         // 对玩家显示死因，并设置为旁观
         if (isPlayer(this.player)) {
             this.player.setGameMode(minecraft.GameMode.Spectator);
-            lib.PlayerUtils.sendMessage(this.player, {
+            lib.PlayerUtils.notify(this.player, {
                 title: { translate: "title.youDied" },
                 subtitle: { translate: `deathMessage.${deathType}` },
                 titleOptions: instantTitleDisplay,
@@ -2518,7 +2569,7 @@ class MurderMysteryPlayer {
             const message = this.isFirstDetective ? "detectiveKilled" : "bowDropped";
             this.system.alivePlayers.allPlayers.forEach(playerData => {
                 if (!isPlayer(playerData.player)) return;
-                lib.PlayerUtils.sendMessage(playerData.player, {
+                lib.PlayerUtils.notify(playerData.player, {
                     message: { translate: `chat.${message}` },
                     title: { text: "§1" },
                     subtitle: { translate: `subtitle.${message}` },
@@ -2547,7 +2598,7 @@ class MurderMysteryPlayer {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,
         });
-        lib.PlayerUtils.sendMessage(this.player, {
+        lib.PlayerUtils.notify(this.player, {
             title: "§1",
             subtitle: { translate: "subtitle.murderGetSword.murder" },
             titleOptions: instantTitleDisplay,

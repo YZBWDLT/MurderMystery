@@ -83,16 +83,17 @@ class GameSystem {
     // ===== 延迟管理器 =====
 
     /** 订阅特定 ID 的延迟。
+     * @remarks 在该延迟执行后将立刻清除之，不会保留。
      * @param callback 若为 false 则终止延迟的运行
      * @returns 返回是否成功订阅延迟。
      */
-    subscribeDelay(id: string, callback: () => boolean | void, tickDelay = 1) {
+    subscribeDelay(id: string, callback: () => void, tickDelay = 1) {
         // 检查延迟是否重叠，若存在重叠则阻止运行
         if (this.getAllDelayIds().includes(id)) return false;
         // 订阅延迟，并记录到延迟列表中，同时追踪该延迟
         const numberId = minecraft.system.runTimeout(() => {
-            const shouldExist = callback();
-            if (shouldExist === false) this.unsubscribeDelay(id);
+            callback();
+            this.unsubscribeDelay(id);
         }, tickDelay);
         this.gameDelay[id] = numberId;
         if (this.showDebugMessage) minecraft.world.sendMessage(`§a+ 延迟 ${id}`);
@@ -187,11 +188,11 @@ export class StructureUtils {
     /** 放置结构（支持异步）。 */
     static placeAsync(
         structure: string,
-        dimensionId: string,
         location: minecraft.Vector3,
-        options: minecraft.StructurePlaceOptions
+        options?: minecraft.StructurePlaceOptions,
+        dimension?: string | minecraft.Dimension
     ) {
-        minecraft.world.structureManager.place(structure, minecraft.world.getDimension(dimensionId), location, options);
+        minecraft.world.structureManager.place(structure, DimensionUtils.getDefault(dimension), location, options);
         let animationSeconds = options?.animationSeconds ? options.animationSeconds : 0;
         return minecraft.system.waitTicks(animationSeconds * 20);
     }
@@ -700,9 +701,19 @@ export class BlockUtils {
 
     /** 在某个位置放置方块。
      * @throws 当试图在未加载区块放置方块时会报错。
+     * @throws 在指定方块状态时，请确保该方块存在这个方块状态！
      */
-    static set(dimension: string | minecraft.Dimension, location: minecraft.Vector3, blockId: string) {
-        DimensionUtils.getDefault(dimension).setBlockType(location, blockId);
+    static set(blockData: BlockData, dimension?: string | minecraft.Dimension) {
+        const { id, location, states } = blockData;
+        DimensionUtils.getDefault(dimension).setBlockType(location, id);
+        // 设定方块的方块状态
+        states?.forEach(state => {
+            const placedBlock = this.get(location, dimension);
+            if (!placedBlock) return;
+            const oldPermutation = placedBlock.permutation;
+            // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
+            placedBlock.setPermutation(oldPermutation.withState(state.name, state.value));
+        });
         return this.get(location, dimension);
     }
 
@@ -894,7 +905,7 @@ export class Vector3Utils {
 // #region 实体 & 玩家
 
 /** 对玩家发送的消息信息。 */
-export interface MessageOptions {
+export interface NotifyOptions {
     /** 显示在聊天栏中的信息。 */
     readonly message?: string | minecraft.RawMessage | (string | minecraft.RawMessage)[];
 
@@ -1028,12 +1039,12 @@ export class PlayerUtils {
     }
 
     /** 对全体玩家广播消息。 */
-    static broadcast(options: MessageOptions) {
-        this.getAll().forEach(player => this.sendMessage(player, options));
+    static broadcast(options: NotifyOptions) {
+        this.getAll().forEach(player => this.notify(player, options));
     }
 
-    /** 发送消息。 */
-    static sendMessage(player: minecraft.Player, options: MessageOptions) {
+    /** 对特定玩家发送通知。 */
+    static notify(player: minecraft.Player, options: NotifyOptions) {
         const {
             message,
             title,
