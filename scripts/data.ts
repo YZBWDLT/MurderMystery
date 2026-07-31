@@ -53,6 +53,9 @@ export enum MurderMysteryDeathType {
     /** 被闪电杀死。 */
     LightningBolt = "lightningBolt",
 
+    /** 被亡魂拖进深渊。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    DraggedByTheDead = "draggedByTheDead",
+
     /** 其他死因。 */
     Other = "other",
 }
@@ -64,6 +67,7 @@ export const deathTypeOutOfMap: MurderMysteryDeathType[] = [
     MurderMysteryDeathType.Lava,
     MurderMysteryDeathType.EndPortal,
     MurderMysteryDeathType.Hole,
+    MurderMysteryDeathType.DraggedByTheDead,
 ];
 
 // #endregion
@@ -2028,6 +2032,10 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 ],
                 consume: 1,
             },
+            playerInArea: {
+                area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 112, yMax: 36, zMax: 1884 },
+                trigger: "darkfall:playerIntoTrap",
+            },
         },
         events: {
             "darkfall:getMysteryPotion1": {
@@ -2050,6 +2058,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     door: [{ from: { x: 112, y: 36, z: 1884 }, to: { x: 107, y: 36, z: 1879 } }],
                     close: { delay: 120, load: "murder_mystery:darkfall/trap", location: { x: 107, y: 36, z: 1879 } },
                 },
+            },
+            "darkfall:playerIntoTrap": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.DraggedByTheDead },
             },
         },
     },
