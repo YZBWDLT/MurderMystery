@@ -627,7 +627,7 @@ export interface BlockData {
     location: minecraft.Vector3;
 
     /** 方块状态。 */
-    states?: { name: string; value?: boolean | number | string }[];
+    states?: Record<string, boolean | number | string | undefined>;
 }
 
 /** 表示填充一个方块区域的信息。 */
@@ -642,7 +642,7 @@ export interface BlockFillData {
     to: minecraft.Vector3;
 
     /** 方块状态。 */
-    states?: { name: string; value?: boolean | number | string }[];
+    states?: Record<string, boolean | number | string | undefined>;
 }
 
 /** 方块操作工具。 */
@@ -707,13 +707,14 @@ export class BlockUtils {
         const { id, location, states } = blockData;
         DimensionUtils.getDefault(dimension).setBlockType(location, id);
         // 设定方块的方块状态
-        states?.forEach(state => {
-            const placedBlock = this.get(location, dimension);
-            if (!placedBlock) return;
-            const oldPermutation = placedBlock.permutation;
-            // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
-            placedBlock.setPermutation(oldPermutation.withState(state.name, state.value));
-        });
+        if (states)
+            Object.entries(states).forEach(([state, value]) => {
+                const placedBlock = this.get(location, dimension);
+                if (!placedBlock) return;
+                const oldPermutation = placedBlock.permutation;
+                // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
+                placedBlock.setPermutation(oldPermutation.withState(state, value));
+            });
         return this.get(location, dimension);
     }
 
@@ -734,6 +735,26 @@ export class BlockUtils {
             East: Vector3Utils.east(location),
         };
         return placeLocation[blockFace];
+    }
+
+    /** 检查特定位置的方块是否为符合条件的方块。 */
+    static match(blockData: BlockData, dimension?: string | minecraft.Dimension): boolean {
+        const { id, location, states } = blockData;
+        const block = this.get(location, dimension);
+        // 如果方块不存在，或者 ID 无法匹配，则返回 false
+        if (!block) return false;
+        if (block.typeId !== id) return false;
+        // 检查所有的方块状态，如果存在不能对应的方块状态则返回 false
+        if (states) {
+            const hasUnmatchedState = Object.entries(states).some(([state, value]) => {
+                // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
+                if (block.permutation.getState(state) !== value) return true;
+                return false;
+            });
+
+            if (hasUnmatchedState) return false;
+        }
+        return true;
     }
 }
 

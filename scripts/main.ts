@@ -163,6 +163,10 @@ class MurderMysterySystem {
 
         // 进入等待阶段
         this.enterWaitingStage();
+
+        // 若地图注册了 onMapInit 组件，则触发其规定的事件
+        const onMapInit = this.mapData.components?.onMapInit;
+        if (onMapInit) this.eventManager.triggerEvent(onMapInit.trigger);
     }
 
     // #region - 系统变量
@@ -319,7 +323,6 @@ class MurderMysterySystem {
 
         // 注册可选组件
         MurderMysteryComponents.mysteryPotion(this);
-        MurderMysteryComponents.recover(this);
         MurderMysteryComponents.applyNightVision(this);
         MurderMysteryComponents.playerInArea(this);
     }
@@ -687,50 +690,64 @@ class MurderMysteryEventManager {
         if (!triggedEvent) return false;
 
         // 变量准备
-        const { getMysteryPotion, place, openDoor, setPlayerDead } = triggedEvent;
-        let executeResult = true;
+        const { condition, getMysteryPotion, place, setPlayerDead, notify, broadcast, trigger } = triggedEvent;
 
-        // ===== 触发神秘药水事件（必须要有触发玩家） =====
-        if (getMysteryPotion && playerData) {
-            const animationLocation = getMysteryPotion.animationLocation;
-            const result = this.getMysteryPotion(playerData, animationLocation);
-            if (!result) executeResult = false;
+        // ===== 判断条件是否通过 =====
+        // 如果这里的条件不通过，则直接返回 false，不触发后续的事件
+        if (condition) {
+            const { isBlock } = condition;
+
+            // 检查方块条件是否通过，如果未指定则默认通过
+            const hasBlockUnmatched: boolean = isBlock?.some(data => !lib.BlockUtils.match(data)) ?? false;
+            if (hasBlockUnmatched) return false;
         }
 
-        // ===== 触发放置方块/结构事件 =====
+        // ===== 执行神秘药水事件 =====
+        if (getMysteryPotion) {
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+
+            // 尝试执行神秘药水事件，若执行失败直接返回 false
+            const result = this.getMysteryPotion(getMysteryPotion, playerData);
+            if (!result) return false;
+        }
+
+        // ===== 执行放置方块/结构事件 =====
         if (place) {
-            let result = true;
-            // 判断 place 的类型
-            switch (place.type) {
-                case "setBlock":
-                    result = this.setBlock(place, playerData);
-                    break;
-                case "fillBlock":
-                    result = this.fillBlock(place, playerData);
-                    break;
-                case "setStructure":
-                    result = this.setStructure(place, playerData);
-                    break;
-            }
-            if (!result) executeResult = false;
-        }
-
-        // ===== 触发开门事件 =====
-        if (openDoor) {
-            const result = this.openDoor(openDoor);
-            if (!result) executeResult = false;
+            // 如果有方块/结构未能放置，立刻判定为失败
+            const hasPlaceFailed = place.some(data => {
+                // 判断 data 的类型
+                let result = true;
+                if (data.type === "setBlock") result = this.setBlock(data);
+                else if (data.type === "fillBlock") result = this.fillBlock(data);
+                else result = this.setStructure(data);
+                if (!result) return true;
+            });
+            if (hasPlaceFailed) return false;
         }
 
         // ===== 触发处死玩家事件 =====
         if (setPlayerDead) {
-            if (!playerData) executeResult = false;
-            else {
-                const result = this.setPlayerDead(setPlayerDead, playerData);
-                if (!result) executeResult = false;
-            }
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+
+            // 尝试执行神秘药水事件，若执行失败直接返回 false
+            const result = this.setPlayerDead(setPlayerDead, playerData);
+            if (!result) return false;
         }
 
-        return executeResult;
+        // ===== 执行成功后，通告玩家/通知触发玩家 =====
+        if (broadcast) lib.PlayerUtils.broadcast(broadcast);
+        if (notify && playerData && isPlayer(playerData.player)) lib.PlayerUtils.notify(playerData.player, notify);
+
+        // ===== 执行成功后，触发新的事件 =====
+        if (trigger) {
+            const { id, delay } = trigger;
+            if (!delay) this.triggerEvent(id, playerData);
+            else minecraft.system.runTimeout(() => this.triggerEvent(id, playerData), delay);
+        }
+
+        return true;
     }
 
     // #region - 神秘药水
@@ -775,7 +792,10 @@ class MurderMysteryEventManager {
     /** 令玩家试图获取神秘药水。
      * @returns 返回是否成功获得了药水。
      */
-    getMysteryPotion(playerData: MurderMysteryPlayer, animationLocation: minecraft.Vector3): boolean {
+    private getMysteryPotion(
+        getMysteryPotionEvent: gameData.MurderMysteryGetMysteryPotionEvent,
+        playerData: MurderMysteryPlayer
+    ): boolean {
         // ===== 条件检查 =====
 
         // 如果玩家不是 Player，终止运行
@@ -783,6 +803,7 @@ class MurderMysteryEventManager {
         if (!isPlayer(player)) return false;
 
         // 如果已有人在使用（附近有药水动画时），提示玩家后终止运行
+        const animationLocation = getMysteryPotionEvent.animationLocation;
         const nearbyAnimationEntities = lib.EntityUtils.getNearby(
             "murder_mystery:mystery_potion",
             animationLocation,
@@ -924,87 +945,33 @@ class MurderMysteryEventManager {
     /** 在特定位置试图放置方块。
      * @returns 返回是否成功放置了方块。
      */
-    setBlock(setBlockEvent: gameData.MurderMysterySetBlockEvent, playerData?: MurderMysteryPlayer): boolean {
-        const { id, location, notifyPlayer, trigger } = setBlockEvent;
+    private setBlock(setBlockEvent: gameData.MurderMysterySetBlockEvent): boolean {
+        const { id, location } = setBlockEvent;
         // 如果该方块已放置过，则终止运行
         if (lib.BlockUtils.get(location)?.typeId === id) return false;
 
-        // 放置方块并通知玩家
+        // 放置方块
         // 这里 setBlockEvent 的类型是继承自 lib.BlockData 的，所以直接用了
         lib.BlockUtils.set(setBlockEvent, lib.DimensionUtils.getOverworld());
-        if (notifyPlayer && playerData && isPlayer(playerData.player))
-            lib.PlayerUtils.notify(playerData.player, notifyPlayer);
-        if (trigger) this.triggerEvent(trigger);
         return true;
     }
 
     /** 在特定位置试图填充方块。
      * @returns 返回是否成功填充了方块。
      */
-    fillBlock(fillBlockEvent: gameData.MurderMysteryFillBlockEvent, playerData?: MurderMysteryPlayer): boolean {
-        const { notifyPlayer, trigger } = fillBlockEvent;
-
-        // 填充方块并通知玩家
+    private fillBlock(fillBlockEvent: gameData.MurderMysteryFillBlockEvent): boolean {
+        // 填充方块
         // 这里 fillBlockEvent 的类型是继承自 lib.BlockFillData 的，所以直接用了
         lib.BlockUtils.fill(fillBlockEvent, {}, lib.DimensionUtils.getOverworld());
-        if (notifyPlayer && playerData && isPlayer(playerData.player))
-            lib.PlayerUtils.notify(playerData.player, notifyPlayer);
-        if (trigger) this.triggerEvent(trigger);
         return true;
     }
 
     /** 在特定位置试图填充方块。
      * @returns 返回是否成功填充了方块。
      */
-    setStructure(
-        setStructureEvent: gameData.MurderMysterySetStructureEvent,
-        playerData?: MurderMysteryPlayer
-    ): boolean {
-        const { notifyPlayer, trigger, structure, location, options } = setStructureEvent;
-
-        // 填充方块并通知玩家
+    private setStructure(setStructureEvent: gameData.MurderMysterySetStructureEvent): boolean {
+        const { structure, location, options } = setStructureEvent;
         lib.StructureUtils.placeAsync(structure, location, options);
-        if (notifyPlayer && playerData && isPlayer(playerData.player))
-            lib.PlayerUtils.notify(playerData.player, notifyPlayer);
-        if (trigger) this.triggerEvent(trigger);
-        return true;
-    }
-
-    // #endregion
-    // #region - 开启门
-
-    /** 开启游戏中的门，将特定区域的方块设置为空气。
-     * @returns 返回是否成功开启了门。
-     */
-    openDoor(openDoorEvent: gameData.MurderMysteryOpenDoorEvent): boolean {
-        const { condition, door, notifyPlayer, close } = openDoorEvent;
-        // 如果不满足条件，则终止运行
-        if (condition) {
-            /** 是否有方块不满足条件 */
-            const hasBlockNotMeetCondition = condition.isBlock?.some(data => {
-                const { id, location, states } = data;
-                const block = lib.BlockUtils.get(location);
-                // 如果方块 ID 不对应则返回 true
-                if (block?.typeId !== id) return true;
-                return false;
-            });
-            if (hasBlockNotMeetCondition) return false;
-        }
-        // 否则，填充门
-        door.forEach(doorData => {
-            lib.BlockUtils.fill({ from: doorData.from, to: doorData.to, id: "minecraft:air" });
-            if (notifyPlayer) lib.PlayerUtils.broadcast(notifyPlayer);
-            if (close)
-                lib.gameSystem.subscribeDelay(
-                    // 这里把事件名命名成这样，是防止其他门注册时导致的冲突
-                    // （虽然这样仍然有1/90000的概率冲突，万一真发生了就自认倒霉吧 ┑(￣Д ￣)┍ ）
-                    `recoverDoor${lib.JSUtils.number.randomInt(10000, 99999)}`,
-                    () => {
-                        lib.StructureUtils.placeAsync(close.load, close.location);
-                    },
-                    close.delay
-                );
-        });
         return true;
     }
 
@@ -1163,23 +1130,23 @@ class MurderMysteryComponents {
      */
     static onPlayerHurt(system: MurderMysterySystem) {
         lib.gameSystem.subscribeEvent("onPlayerHurt", minecraft.world.beforeEvents.entityHurt, event => {
+            // ===== 变量准备 & 取消游戏引擎事件 =====
+            const thisCause = event.damageSource.cause;
+            const eventManager = system.eventManager;
+            event.cancel = true;
+
             // ===== 条件判断 =====
             // 如果不是玩家和假玩家受伤，则直接终止运行
             const player = event.hurtEntity;
             const playerData = system.getPlayer(player);
             if (!playerData) return;
 
-            // ===== 变量准备 & 取消游戏引擎事件 =====
-            const thisCause = event.damageSource.cause;
-            const eventManager = system.eventManager;
-            event.cancel = true;
-
             // ===== 触发系统事件 =====
             const playerHurtComponent = system.mapData.components?.playerHurt;
             if (!playerHurtComponent) return;
             playerHurtComponent.forEach(({ cause, trigger }) => {
                 if (cause !== thisCause) return;
-                eventManager.triggerEvent(trigger, playerData);
+                minecraft.system.run(() => eventManager.triggerEvent(trigger, playerData));
             });
         });
     }
@@ -2226,16 +2193,6 @@ class MurderMysteryComponents {
             },
             5
         );
-    }
-
-    /** 恢复地图内的场景。
-     * @description 会自动判断系统的地图数据是否含有`recover`组件，若不含该组件则不会注册该组件。
-     * @description 会在游戏开始时尝试恢复场景。
-     */
-    static recover(system: MurderMysterySystem) {
-        const component = system.mapData.components?.recover;
-        if (!component) return;
-        component.forEach(fillData => lib.BlockUtils.fill(fillData));
     }
 
     /** 对所有玩家施加夜视效果。
