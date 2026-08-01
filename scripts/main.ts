@@ -150,6 +150,10 @@ class MurderMysterySystem {
         minecraft.world.gameRules.showTags = false;
         minecraft.world.gameRules.doDayLightCycle = false;
         minecraft.world.gameRules.doWeatherCycle = false;
+        minecraft.world.gameRules.fallDamage = true;
+        minecraft.world.gameRules.fireDamage = true;
+        minecraft.world.gameRules.drowningDamage = true;
+        minecraft.world.gameRules.freezeDamage = true;
         lib.DimensionUtils.getOverworld().runCommand("gamerule playerWaypoints off");
 
         // 设置为和平模式
@@ -706,11 +710,18 @@ class MurderMysteryEventManager {
         // ===== 判断条件是否通过 =====
         // 如果这里的条件不通过，则直接返回 false，不触发后续的事件
         if (condition) {
-            const { isBlock } = condition;
+            const { isBlock, playerBelowHeight } = condition;
 
             // 检查方块条件是否通过，如果未指定则默认通过
             const hasBlockUnmatched: boolean = isBlock?.some(data => !lib.BlockUtils.match(data)) ?? false;
             if (hasBlockUnmatched) return false;
+
+            // 检查玩家高度条件是否通过
+            if (playerBelowHeight) {
+                if (!playerData) return false;
+                const { y } = playerData.player.location;
+                if (y >= playerBelowHeight) return false;
+            }
         }
 
         // ===== 执行神秘药水事件 =====
