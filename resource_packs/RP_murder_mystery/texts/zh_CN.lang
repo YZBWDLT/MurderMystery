@@ -5,6 +5,7 @@ tile.player_head:jhy2189.name=JHY2189 的头
 tile.player_head:violetmiaw.name=VioletMiaw 的头
 tile.player_head:cheesey.name=Cheesey 的头
 tile.player_head:fudgiethewhale.name=_fudgiethewhale 的头
+tile.murder_mystery:portal.name=传送门
 
 ## ===== 实体 =====
 
@@ -24,6 +25,8 @@ entity.murder_mystery:text_display.name=文本展示实体
 item.spawn_egg.entity.murder_mystery:text_display.name=文本展示实体 刷怪蛋
 entity.murder_mystery:mystery_potion.name=神秘药水
 item.spawn_egg.entity.murder_mystery:mystery_potion.name=神秘药水 刷怪蛋
+entity.murder_mystery:the_dead.name=亡魂
+item.spawn_egg.entity.murder_mystery:the_dead.name=亡魂 刷怪蛋
 
 ## ===== 物品 =====
 item.murder_mystery:mystery_potion_0=§a？？？神秘药水？？？

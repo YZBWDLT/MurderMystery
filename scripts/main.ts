@@ -163,10 +163,6 @@ class MurderMysterySystem {
 
         // 进入等待阶段
         this.enterWaitingStage();
-
-        // 若地图注册了 onMapInit 组件，则触发其规定的事件
-        const onMapInit = this.mapData.components?.onMapInit;
-        if (onMapInit) this.eventManager.triggerEvent(onMapInit.trigger);
     }
 
     // #region - 系统变量
@@ -325,6 +321,10 @@ class MurderMysterySystem {
         MurderMysteryComponents.mysteryPotion(this);
         MurderMysteryComponents.applyNightVision(this);
         MurderMysteryComponents.playerInArea(this);
+
+        // 若地图注册了 onGameStart 组件，则触发其规定的事件
+        const onGameStart = this.mapData.components?.onGameStart;
+        if (onGameStart) this.eventManager.triggerEvent(onGameStart.trigger);
     }
 
     /** 令游戏进入结束阶段。
@@ -716,11 +716,13 @@ class MurderMysteryEventManager {
         if (place) {
             // 如果有方块/结构未能放置，立刻判定为失败
             const hasPlaceFailed = place.some(data => {
-                // 判断 data 的类型
                 let result = true;
+
                 if (data.type === "setBlock") result = this.setBlock(data);
                 else if (data.type === "fillBlock") result = this.fillBlock(data);
-                else result = this.setStructure(data);
+                else if (data.type === "setStructure") result = this.setStructure(data);
+                else result = this.setEntity(data);
+
                 if (!result) return true;
             });
             if (hasPlaceFailed) return false;
@@ -946,9 +948,8 @@ class MurderMysteryEventManager {
      * @returns 返回是否成功放置了方块。
      */
     private setBlock(setBlockEvent: gameData.MurderMysterySetBlockEvent): boolean {
-        const { id, location } = setBlockEvent;
         // 如果该方块已放置过，则终止运行
-        if (lib.BlockUtils.get(location)?.typeId === id) return false;
+        if (lib.BlockUtils.match(setBlockEvent)) return false;
 
         // 放置方块
         // 这里 setBlockEvent 的类型是继承自 lib.BlockData 的，所以直接用了
@@ -972,6 +973,15 @@ class MurderMysteryEventManager {
     private setStructure(setStructureEvent: gameData.MurderMysterySetStructureEvent): boolean {
         const { structure, location, options } = setStructureEvent;
         lib.StructureUtils.placeAsync(structure, location, options);
+        return true;
+    }
+
+    /** 在特定位置试图填充方块。
+     * @returns 返回是否成功填充了方块。
+     */
+    private setEntity(setEntityEvent: gameData.MurderMysterySetEntityEvent): boolean {
+        const { id, location, options } = setEntityEvent;
+        lib.EntityUtils.add(id, location, "overworld", options);
         return true;
     }
 
@@ -2680,10 +2690,10 @@ class MurderMysteryPlayer {
 // #endregion
 // #region 创建实例
 minecraft.world.afterEvents.worldLoad.subscribe(() => {
-    let murderMysterySystem: MurderMysterySystem = new MurderMysterySystem();
+    let murderMysterySystem: MurderMysterySystem | undefined;
     minecraft.system.runInterval(() => {
         // 地图无效化后，对下一张地图预加载后再开启新地图
-        if (!murderMysterySystem.isValid) {
+        if (!murderMysterySystem || !murderMysterySystem.isValid) {
             const nextMap = MurderMysterySystem.getMapData();
             const { from, to } = nextMap.description.range;
             lib.TickingAreaUtils.add("nextMapPreLoad", from, to)?.then(() => {

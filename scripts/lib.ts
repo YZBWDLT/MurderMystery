@@ -925,7 +925,7 @@ export class Vector3Utils {
 // #endregion
 // #region 实体 & 玩家
 
-/** 对玩家发送的消息信息。 */
+/** 对一个特定玩家发送一个信息。 */
 export interface NotifyOptions {
     /** 显示在聊天栏中的信息。 */
     readonly message?: string | minecraft.RawMessage | (string | minecraft.RawMessage)[];
@@ -956,6 +956,12 @@ export interface NotifyOptions {
      * @remarks 要指定副标题时请直接在 subtitle 属性中指定。
      */
     readonly titleOptions?: minecraft.TitleDisplayOptions;
+}
+
+/** 对全部玩家公告一个信息。 */
+export interface BroadcastOptions extends NotifyOptions {
+    /** 对何种玩家播放。 */
+    readonly playerOptions?: minecraft.EntityQueryOptions;
 }
 
 /** 实体操作工具。
@@ -1060,8 +1066,8 @@ export class PlayerUtils {
     }
 
     /** 对全体玩家广播消息。 */
-    static broadcast(options: NotifyOptions) {
-        this.getAll().forEach(player => this.notify(player, options));
+    static broadcast(options: BroadcastOptions) {
+        this.getAll(options.playerOptions).forEach(player => this.notify(player, options));
     }
 
     /** 对特定玩家发送通知。 */

@@ -5,6 +5,7 @@ tile.player_head:jhy2189.name=JHY2189's Head
 tile.player_head:violetmiaw.name=VioletMiaw's Head
 tile.player_head:cheesey.name=Cheesey's Head
 tile.player_head:fudgiethewhale.name=_fudgiethewhale's Head
+tile.murder_mystery:portal.name=Portal
 
 ## ===== Entities =====
 
@@ -24,6 +25,8 @@ entity.murder_mystery:text_display.name=Text Display
 item.spawn_egg.entity.murder_mystery:text_display.name=Text Display Spawn Egg
 entity.murder_mystery:mystery_potion.name=Mystery Potion
 item.spawn_egg.entity.murder_mystery:mystery_potion.name=Mystery Potion Spawn Egg
+entity.murder_mystery:the_dead.name=The Dead
+item.spawn_egg.entity.murder_mystery:the_dead.name=The Dead Spawn Egg
 
 ## ===== Item =====
 item.murder_mystery:mystery_potion_0=§a??? Mystery Potion ???

@@ -1,0 +1,20 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.the_dead.normal": {
+			"loop": "hold_on_last_frame",
+			"bones": {
+				"body": {
+					"rotation": [-60, 0, 0],
+					"position": [0, -21, 0]
+				},
+				"rightArm": {
+					"rotation": [-75, 0, 0]
+				},
+				"leftArm": {
+					"rotation": [-75, 0, 0]
+				}
+			}
+		}
+	}
+}

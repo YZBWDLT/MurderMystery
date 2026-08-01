@@ -1,0 +1,25 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "murder_mystery:the_dead",
+            "render_controllers": ["controller.render.the_dead"],
+            "materials": { "default": "entity_alphatest" },
+            "textures": {
+                "skin_0": "textures/entity/skeleton/skeleton",
+                "skin_1": "textures/entity/skeleton/wither_skeleton"
+            },
+            "geometry": {
+                "default": "geometry.skeleton.v1.8"
+            },
+            "spawn_egg": { "base_color": "#ffffff", "overlay_color": "#000000" },
+            "scripts": {
+                "initialize": ["variable.skin=math.random(0, 1) > 0.5 ? 0 : 1;"],
+                "animate": ["normal"]
+            },
+            "animations": {
+                "normal": "animation.the_dead.normal"
+            }
+        }
+    }
+}

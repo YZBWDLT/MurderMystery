@@ -1,0 +1,33 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:block": {
+        "description": {
+            "identifier": "murder_mystery:portal",
+            "menu_category": {
+                "category": "items"
+            },
+            "traits": {
+                "minecraft:placement_direction": {
+                    "enabled_states": ["minecraft:cardinal_direction"]
+                }
+            }
+        },
+        "components": {
+            "minecraft:geometry": { "identifier": "geometry.portal", "culling": "murder_mystery:portal" },
+            "minecraft:material_instances": {
+                "*": { "texture": "portal", "render_method": "blend", "ambient_occlusion": 0.0, "face_dimming": false }
+            },
+            "minecraft:selection_box": { "origin": [-2, 0, -8], "size": [4, 16, 16] },
+            "minecraft:collision_box": false,
+            "minecraft:light_emission": 11
+        },
+        "permutations": [
+            {
+                "condition": "q.block_state('minecraft:cardinal_direction') == 'south' || q.block_state('minecraft:cardinal_direction') == 'north'",
+                "components": {
+                    "minecraft:transformation": { "rotation": [0, 90, 0] }
+                }
+            }
+        ]
+    }
+}

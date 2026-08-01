@@ -30,6 +30,9 @@
 ### 技术性
 
 - 更新了行为包和资源包的版本为`1.0.5`
+- 新增了一个亡魂实体，在暗景秋色地图的坑中应用
+- 新增了一个传送门方块，在暗景秋色地图中应用，该方块相比于原版的传送门没有实际的传送效果，为了简便也没有做音效和粒子
+  - 这是为了避免原版的传送门方块在接收了方块更新后就会被立刻摧毁
 - 主文件 `main.ts`
   - 为了文件中大量应用的`data`变量不和导入的`data`混淆，重命名了导入的`data`为`gameData`
   - 为事件管理器新增了`fillBlock`方法和`setStructure`方法
@@ -38,6 +41,7 @@
   - 更新了`GameSystem.subscribeDelay`方法，现在不再接受结果为`boolean`的回调函数
   - 更新了`StructureUtils.placeAsync`方法，现在维度接受`Dimension`，且为可选参数
   - 更新了`BlockUtils.set`方法，现在接受`blockData: BlockData`，而不再是分立的`location`，`blockId`，并且新增了对特定方块状态的支持
+  - 新增了`BroadcastOptions`接口，继承自`NotifyOptions`接口，现在可以用该接口中的`playerOptions`来决定对哪些玩家公告
 - 数据文件 `data.ts`
   - 导出了全部的接口
   - 移动死亡类型`MurderMysteryDeathType`枚举和`deathTypeOutOfMap`变量到`data`中，并新增了几个死亡方式
@@ -50,10 +54,10 @@
     - 因此，移除了`endPortal`组件，同时移除了对应的接口声明，请使用`playerInArea`组件和`setPlayerDead`事件响应代替之
   - 新增了`playerHurt`组件，定义玩家受到特定类型的伤害后可触发事件
     - 因此，移除了`playerIntoLava`组件，同时移除了对应的接口声明，请使用`playerHurt`组件和`setPlayerDead`事件响应代替之
-  - 升级了`setBlock`事件响应为`place`，现在可以通过`place`事件来放置方块、填充方块或放置结构
-    - 同时，`place`事件响应要求输入放置信息的数组，接受同时进行多处的方块放置、填充方块或放置结构的操作
-  - 新增了`onMapInit`组件，定义地图在初始化时执行的事件，该组件不含有任何玩家执行
-    - 因此，移除了`recover`组件，请使用`onMapInit`组件和`place`事件
+  - 升级了`setBlock`事件响应为`place`，现在可以通过`place`事件来放置方块、填充方块、放置结构和放置实体
+    - 同时，`place`事件响应要求输入放置信息的数组，接受同时进行多处放置操作
+  - 新增了`onGameStart`组件，定义开始游戏时执行的事件，该组件不含有任何玩家执行
+    - 因此，移除了`recover`组件，请使用`onGameStart`组件和`place`事件
   - 新增了`condition`事件响应，系统会首先判断该条件是否通过，仅当触发该事件时，所有的条件都通过时才能触发事件，否则无法触发事件。
   - 新增了`broadcast`事件响应，事件触发成功后，如何通知全体玩家
     - 因此，移除了`openDoor`事件响应，同时移除了对应的接口声明，请使用`condition`事件响应、`place`事件响应和`broadcast`事件响应代替之

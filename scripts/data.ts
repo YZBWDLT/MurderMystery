@@ -144,10 +144,10 @@ export interface MurderMysteryMapDataComponent {
     /** 检查玩家受伤组件。当玩家受伤的时候，触发特定事件。 */
     readonly playerHurt?: MurderMysteryPlayerHurtComponent[];
 
-    /** 地图重新加载组件。当地图重新加载时，触发特定事件。
-     * @remarks 注意：在地图未开始时，由该组件触发的各事件响应不能获得操作的玩家。
+    /** 游戏开始组件。当游戏开始时，触发特定事件。
+     * @remarks 注意：由该组件触发的各事件响应不能获得操作的玩家。
      */
-    readonly onMapInit?: MurderMysteryOnMapInitComponent;
+    readonly onGameStart?: MurderMysteryOnGameStartComponent;
 }
 
 export interface MurderMysteryInteractionComponent {
@@ -206,7 +206,7 @@ export interface MurderMysteryPlayerHurtComponent {
     trigger: string;
 }
 
-export interface MurderMysteryOnMapInitComponent {
+export interface MurderMysteryOnGameStartComponent {
     /** 当地图重载后，触发何种事件。 */
     trigger: string;
 }
@@ -215,11 +215,16 @@ export interface MurderMysteryEvents {
     /** 触发事件的条件。系统会首先判断该条件是否通过，仅当触发该事件时，所有的条件都通过时才能触发事件，否则无法触发事件。 */
     readonly condition?: MurderMysteryEventCondition;
 
-    /** 获取神秘药水事件响应，当玩家和特定位置的方块交互后，为玩家添加药水。 */
+    /** 获取神秘药水事件响应，为玩家添加神秘药水。 */
     readonly getMysteryPotion?: MurderMysteryGetMysteryPotionEvent;
 
-    /** 放置方块/结构事件响应，当玩家和特定位置的方块交互后，放置方块/结构。 */
-    readonly place?: (MurderMysterySetBlockEvent | MurderMysteryFillBlockEvent | MurderMysterySetStructureEvent)[];
+    /** 放置事件响应，可放置方块、结构、实体和填充方块。 */
+    readonly place?: (
+        | MurderMysterySetBlockEvent
+        | MurderMysteryFillBlockEvent
+        | MurderMysterySetStructureEvent
+        | MurderMysterySetEntityEvent
+    )[];
 
     /** 处死玩家事件响应，以特定理由杀死玩家。 */
     readonly setPlayerDead?: MurderMysterySetPlayerDeadEvent;
@@ -228,9 +233,11 @@ export interface MurderMysteryEvents {
     readonly notify?: lib.NotifyOptions;
 
     /** 事件触发成功后，如何通知全体玩家。 */
-    readonly broadcast?: lib.NotifyOptions;
+    readonly broadcast?: lib.BroadcastOptions;
 
-    /** 事件触发成功后，以触发玩家的名义触发另一个事件。可延迟触发事件。 */
+    /** 事件触发成功后，以触发玩家的名义触发另一个事件。可延迟触发事件。
+     * @remarks 警告：禁止调用同一个事件，例如 A 事件调用 A 事件本身！
+     */
     readonly trigger?: MurderMysteryTriggerEvent;
 }
 
@@ -266,6 +273,20 @@ export interface MurderMysterySetStructureEvent {
 
     /** 放置结构的选项。 */
     options?: minecraft.StructurePlaceOptions;
+}
+
+export interface MurderMysterySetEntityEvent {
+    /** 放置类型：生成实体。 */
+    type: "setEntity";
+
+    /** 生成何种实体。 */
+    id: string;
+
+    /** 生成实体的位置。 */
+    location: minecraft.Vector3;
+
+    /** 生成实体的选项。 */
+    options?: minecraft.SpawnEntityOptions;
 }
 
 export interface MurderMysterySetPlayerDeadEvent {
@@ -696,7 +717,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
             ],
             playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "archives:playerIntoLava" }],
-            onMapInit: { trigger: "archives:recover" },
+            onGameStart: { trigger: "archives:recover" },
         },
         events: {
             "archives:setFire1": {
@@ -785,7 +806,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     {
                         type: "setStructure",
                         structure: "murder_mystery:archives/door",
-                        location: { x: 1035, y: 126, z: -188 },
+                        location: { x: 1035, y: 125, z: -188 },
                     },
                 ],
             },
@@ -2001,6 +2022,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     ],
                     consume: 2,
                     trigger: "darkfall:openTrap",
+                    stillCancelEvent: true,
                 },
             ],
             enableMysteryPotion: {
@@ -2017,7 +2039,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 112, yMax: 36, zMax: 1884 },
                 trigger: "darkfall:playerIntoTrap",
             },
-            onMapInit: { trigger: "darkfall:recoverTrap" },
+            onGameStart: { trigger: "darkfall:recover" },
         },
         events: {
             "darkfall:getMysteryPotion1": {
@@ -2051,6 +2073,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         },
                     ],
                 },
+                // 若检测成功，两个拉杆都改为拉下状态
                 place: [
                     {
                         type: "fillBlock",
@@ -2058,7 +2081,23 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         from: { x: 112, y: 36, z: 1884 },
                         to: { x: 107, y: 36, z: 1879 },
                     },
+                    {
+                        type: "setBlock",
+                        id: "minecraft:lever",
+                        location: { x: 106, y: 38, z: 1878 },
+                        states: { open_bit: true, lever_direction: "north" },
+                    },
+                    {
+                        type: "setBlock",
+                        id: "minecraft:lever",
+                        location: { x: 106, y: 38, z: 1885 },
+                        states: { open_bit: true, lever_direction: "south" },
+                    },
                 ],
+                broadcast: {
+                    sound: "random.lever_click",
+                    playerOptions: { location: { x: 106, y: 38, z: 1881.5 }, maxDistance: 15 },
+                },
                 // 6 秒后连同拉杆一起复原
                 trigger: { id: "darkfall:recoverTrap", delay: 120 },
             },
@@ -2085,7 +2124,56 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         states: { open_bit: false, lever_direction: "south" },
                     },
                 ],
+                broadcast: {
+                    sound: "random.lever_click",
+                    playerOptions: { location: { x: 106, y: 38, z: 1881.5 }, maxDistance: 15 },
+                },
             },
+            "darkfall:recover": {
+                place: [
+                    // 设置亡魂实体
+                    {
+                        type: "setEntity",
+                        id: "murder_mystery:the_dead",
+                        location: { x: 108, y: 36, z: 1880 },
+                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
+                    },
+                    {
+                        type: "setEntity",
+                        id: "murder_mystery:the_dead",
+                        location: { x: 111, y: 36, z: 1880 },
+                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
+                    },
+                    {
+                        type: "setEntity",
+                        id: "murder_mystery:the_dead",
+                        location: { x: 109, y: 36, z: 1882 },
+                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
+                    },
+                    {
+                        type: "setEntity",
+                        id: "murder_mystery:the_dead",
+                        location: { x: 111, y: 36, z: 1882 },
+                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
+                    },
+                    {
+                        type: "setEntity",
+                        id: "murder_mystery:the_dead",
+                        location: { x: 107, y: 36, z: 1883 },
+                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
+                    },
+                    {
+                        type: "setEntity",
+                        id: "murder_mystery:the_dead",
+                        location: { x: 110, y: 36, z: 1884 },
+                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
+                    },
+                ],
+                // 恢复陷阱
+                trigger: { id: "darkfall:recoverTrap" },
+            },
+            "darkfall:teleportPlayer1": {},
+            "darkfall:teleportPlayer2": {},
         },
     },
     easterWorld: {
@@ -3106,7 +3194,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 consume: 1,
             },
             playerInArea: { area: { yMax: 40 }, trigger: "library:playerIntoVoid" },
-            onMapInit: { trigger: "library:recover" },
+            onGameStart: { trigger: "library:recover" },
         },
         events: {
             "library:getMysteryPotion1": {
