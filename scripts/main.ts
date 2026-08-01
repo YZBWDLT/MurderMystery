@@ -1735,6 +1735,11 @@ class MurderMysteryComponents {
                 event.cancel = true;
                 return;
             }
+            // 如果不是游戏阶段，取消事件并直接终止
+            if (system.gameStage !== GameStage.GamingStage) {
+                event.cancel = true;
+                return;
+            }
             // 如果不是有效玩家，直接终止
             const playerData = system.getPlayer(player);
             if (!playerData) return;
