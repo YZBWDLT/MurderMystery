@@ -601,10 +601,20 @@ class MurderMysterySystem {
     gameOverNotice(reason: MurderMysteryGameOverReason, hero?: MurderMysteryPlayer) {
         const playerWin = reason === MurderMysteryGameOverReason.AllPlayersDied ? false : true;
 
-        const firstDetectiveName = this.players.detective.find(detective => detective.isFirstDetective)?.getName();
-        const murdererName: string | undefined = this.players.murderer[0]?.getName();
+        /** 为玩家名称添加颜色。
+         * - 如果该玩家仍然存活，则显示为绿色 §a，否则显示为灰色 §7。
+         * - 特别地，如果没有引入一个正确的`playerData`，则返回`undefined`。
+         */
+        function colorName(playerData?: MurderMysteryPlayer) {
+            if (!playerData) return;
+            return playerData.isDead ? `§7${playerData.getName()}` : `§a${playerData.getName()}`;
+        }
+
+        // 为首位侦探、杀手和英雄添加颜色
+        const firstDetectiveName = colorName(this.players.detective.find(detective => detective.isFirstDetective));
+        const murdererName = colorName(this.players.murderer[0]);
         const murdererKills = this.players.murderer[0]?.kills ?? 0;
-        const heroName = hero?.getName();
+        const heroName = colorName(hero);
 
         const titleList: Record<MurderMysteryPlayerRole, minecraft.RawMessage> = {
             innocent: { translate: `${playerWin ? "title.win" : "title.lose"}` },
