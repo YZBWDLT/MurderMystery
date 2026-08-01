@@ -690,7 +690,8 @@ class MurderMysteryEventManager {
         if (!triggedEvent) return false;
 
         // 变量准备
-        const { condition, getMysteryPotion, place, setPlayerDead, notify, broadcast, trigger } = triggedEvent;
+        const { condition, getMysteryPotion, place, setPlayerDead, notify, broadcast, trigger, teleport } =
+            triggedEvent;
 
         // ===== 判断条件是否通过 =====
         // 如果这里的条件不通过，则直接返回 false，不触发后续的事件
@@ -735,6 +736,16 @@ class MurderMysteryEventManager {
 
             // 尝试执行神秘药水事件，若执行失败直接返回 false
             const result = this.setPlayerDead(setPlayerDead, playerData);
+            if (!result) return false;
+        }
+
+        // ===== 触发传送玩家事件 =====
+        if (teleport) {
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+
+            // 尝试执行传送玩家事件，若执行失败直接返回 false
+            const result = this.teleport(teleport, playerData);
             if (!result) return false;
         }
 
@@ -997,6 +1008,18 @@ class MurderMysteryEventManager {
     ): boolean {
         const result = playerData.setDead(setPlayerDeadEvent.deathType);
         return result;
+    }
+
+    // #endregion
+    // #region - 传送玩家
+
+    /** 传送玩家到指定位置。
+     * @returns 返回是否成功传送了玩家。
+     */
+    private teleport(teleportEvent: gameData.MurderMysteryTeleportEvent, playerData: MurderMysteryPlayer): boolean {
+        const { location, facingLocation } = teleportEvent;
+        playerData.player.teleport(location, { facingLocation });
+        return true;
     }
 
     // #endregion
@@ -2180,31 +2203,33 @@ class MurderMysteryComponents {
         const component = system.mapData.components?.playerInArea;
         if (!component) return;
 
-        const { area, trigger } = component;
         const eventManager = system.eventManager;
 
         // ===== 主程序 =====
         lib.gameSystem.subscribeTimeline(
             "playerInArea",
             () => {
-                system.alivePlayers.allPlayers
-                    .filter(playerData => {
-                        const { x, y, z } = playerData.player.location;
-                        // 判断玩家实体的位置，如果规定了条件且不满足条件的则返回 false
-                        // 先判断坐标值是否大于最大值，若是则不在该区域内
-                        if (area.xMax && x > area.xMax) return false;
-                        if (area.yMax && y > area.yMax) return false;
-                        if (area.zMax && z > area.zMax) return false;
-                        // 再判断坐标值是否小于最小值，若是则不在该区域内
-                        if (area.xMin && x < area.xMin) return false;
-                        if (area.yMin && y < area.yMin) return false;
-                        if (area.zMin && z < area.zMin) return false;
-                        // 否则，实体在该区域内
-                        return true;
-                    })
-                    .forEach(playerData => {
-                        eventManager.triggerEvent(trigger, playerData);
-                    });
+                component.forEach(areaData => {
+                    const { area, trigger } = areaData;
+                    system.alivePlayers.allPlayers
+                        .filter(playerData => {
+                            const { x, y, z } = playerData.player.location;
+                            // 判断玩家实体的位置，如果规定了条件且不满足条件的则返回 false
+                            // 先判断坐标值是否大于最大值，若是则不在该区域内
+                            if (area.xMax && x > area.xMax) return false;
+                            if (area.yMax && y > area.yMax) return false;
+                            if (area.zMax && z > area.zMax) return false;
+                            // 再判断坐标值是否小于最小值，若是则不在该区域内
+                            if (area.xMin && x < area.xMin) return false;
+                            if (area.yMin && y < area.yMin) return false;
+                            if (area.zMin && z < area.zMin) return false;
+                            // 否则，实体在该区域内
+                            return true;
+                        })
+                        .forEach(playerData => {
+                            eventManager.triggerEvent(trigger, playerData);
+                        });
+                });
             },
             5
         );

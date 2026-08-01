@@ -960,8 +960,11 @@ export interface NotifyOptions {
 
 /** 对全部玩家公告一个信息。 */
 export interface BroadcastOptions extends NotifyOptions {
-    /** 对何种玩家播放。 */
-    readonly playerOptions?: minecraft.EntityQueryOptions;
+    /** 对何位置附近的玩家播放。 */
+    readonly location?: minecraft.Vector3;
+
+    /** 指定`location`后的距离。 | 默认值：`16` */
+    readonly distance?: number;
 }
 
 /** 实体操作工具。
@@ -1067,7 +1070,13 @@ export class PlayerUtils {
 
     /** 对全体玩家广播消息。 */
     static broadcast(options: BroadcastOptions) {
-        this.getAll(options.playerOptions).forEach(player => this.notify(player, options));
+        if (options.location) {
+            const { location, distance = 16 } = options;
+            const nearbyPlayers = this.getNearby(location, distance);
+            nearbyPlayers.forEach(player => this.notify(player, options));
+        } else {
+            this.getAll().forEach(player => this.notify(player, options));
+        }
     }
 
     /** 对特定玩家发送通知。 */

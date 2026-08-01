@@ -139,7 +139,7 @@ export interface MurderMysteryMapDataComponent {
     readonly interaction?: MurderMysteryInteractionComponent[];
 
     /** 检查玩家进入特定区域组件。当玩家进入特定区域的时候，触发特定事件。 */
-    readonly playerInArea?: MurderMysteryPlayerInAreaComponent;
+    readonly playerInArea?: MurderMysteryPlayerInAreaComponent[];
 
     /** 检查玩家受伤组件。当玩家受伤的时候，触发特定事件。 */
     readonly playerHurt?: MurderMysteryPlayerHurtComponent[];
@@ -229,6 +229,9 @@ export interface MurderMysteryEvents {
     /** 处死玩家事件响应，以特定理由杀死玩家。 */
     readonly setPlayerDead?: MurderMysterySetPlayerDeadEvent;
 
+    /** 传送玩家事件响应，将玩家传送到指定位置。 */
+    readonly teleport?: MurderMysteryTeleportEvent;
+
     /** 事件触发成功后，如何通知触发事件的玩家。 */
     readonly notify?: lib.NotifyOptions;
 
@@ -292,6 +295,14 @@ export interface MurderMysterySetEntityEvent {
 export interface MurderMysterySetPlayerDeadEvent {
     /** 玩家的死亡类型。 */
     readonly deathType?: MurderMysteryDeathType;
+}
+
+export interface MurderMysteryTeleportEvent {
+    /** 传送到的位置。 */
+    location: minecraft.Vector3;
+
+    /** 面向的位置。 */
+    facingLocation?: minecraft.Vector3;
 }
 
 export interface MurderMysteryTriggerEvent {
@@ -682,10 +693,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            playerInArea: {
-                area: { xMin: 1052, yMin: 124, zMin: -219, xMax: 1054, yMax: 126, zMax: -217 },
-                trigger: "archives:playerIntoEndPortal",
-            },
+            playerInArea: [
+                {
+                    area: { xMin: 1052, yMin: 124, zMin: -219, xMax: 1054, yMax: 126, zMax: -217 },
+                    trigger: "archives:playerIntoEndPortal",
+                },
+            ],
             interaction: [
                 {
                     at: [{ x: 1038, y: 125, z: -184 }],
@@ -1184,10 +1197,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            playerInArea: {
-                area: { yMax: 80 },
-                trigger: "archivesTopFloorV1:playerIntoHole",
-            },
+            playerInArea: [
+                {
+                    area: { yMax: 80 },
+                    trigger: "archivesTopFloorV1:playerIntoHole",
+                },
+            ],
         },
         events: {
             "archivesTopFloorV1:playerIntoHole": {
@@ -1536,8 +1551,19 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 700.5, y: 76.5, z: 533.5 },
             ],
         },
-        components: {},
-        events: {},
+        components: {
+            playerInArea: [
+                {
+                    area: { yMax: 60 },
+                    trigger: "archivesTopFloor:playerIntoHole",
+                },
+            ],
+        },
+        events: {
+            "archivesTopFloor:playerIntoHole": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Hole },
+            },
+        },
     },
     cruiseShip: {
         description: {
@@ -2379,10 +2405,20 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 ],
                 consume: 1,
             },
-            playerInArea: {
-                area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 112, yMax: 36, zMax: 1884 },
-                trigger: "darkfall:playerIntoTrap",
-            },
+            playerInArea: [
+                {
+                    area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 112, yMax: 36, zMax: 1884 },
+                    trigger: "darkfall:playerIntoTrap",
+                },
+                {
+                    area: { xMin: 155, yMin: 37, zMin: 1912, xMax: 156, yMax: 41, zMax: 1917 },
+                    trigger: "darkfall:teleportToCave",
+                },
+                {
+                    area: { xMin: 68, yMin: 37, zMin: 1958, xMax: 74, yMax: 42, zMax: 1959 },
+                    trigger: "darkfall:teleportToHouse",
+                },
+            ],
             onGameStart: { trigger: "darkfall:recover" },
         },
         events: {
@@ -2440,7 +2476,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 ],
                 broadcast: {
                     sound: "random.lever_click",
-                    playerOptions: { location: { x: 106, y: 38, z: 1881.5 }, maxDistance: 15 },
+                    location: { x: 106, y: 38, z: 1881.5 },
                 },
                 // 6 秒后连同拉杆一起复原
                 trigger: { id: "darkfall:recoverTrap", delay: 120 },
@@ -2470,7 +2506,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 ],
                 broadcast: {
                     sound: "random.lever_click",
-                    playerOptions: { location: { x: 106, y: 38, z: 1881.5 }, maxDistance: 15 },
+                    location: { x: 106, y: 38, z: 1881.5 },
                 },
             },
             "darkfall:recover": {
@@ -2516,8 +2552,14 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 // 恢复陷阱
                 trigger: { id: "darkfall:recoverTrap" },
             },
-            "darkfall:teleportPlayer1": {},
-            "darkfall:teleportPlayer2": {},
+            "darkfall:teleportToCave": {
+                teleport: { location: { x: 71, y: 37, z: 1957 }, facingLocation: { x: 71, y: 37, z: 1946 } },
+                notify: { sound: "portal.travel", soundDelay: 3 },
+            },
+            "darkfall:teleportToHouse": {
+                teleport: { location: { x: 154, y: 37.1, z: 1915 }, facingLocation: { x: 140, y: 37, z: 1915 } },
+                notify: { sound: "portal.travel", soundDelay: 3 },
+            },
         },
     },
     easterWorld: {
@@ -3537,7 +3579,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 ],
                 consume: 1,
             },
-            playerInArea: { area: { yMax: 40 }, trigger: "library:playerIntoVoid" },
+            playerInArea: [{ area: { yMax: 40 }, trigger: "library:playerIntoVoid" }],
             onGameStart: { trigger: "library:recover" },
         },
         events: {
