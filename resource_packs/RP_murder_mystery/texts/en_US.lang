@@ -41,6 +41,7 @@ item.murder_mystery:locator=Locator
 ### Map name
 map.archives=Archives
 map.archivesTopFloor=Archives Top Floor
+map.archivesTopFloorV1=Archives Top Floor V1
 map.cruiseShip=Cruise Ship
 map.darkFall=Dark Fall
 map.easterWorld=Easter World
