@@ -2404,6 +2404,8 @@ class MurderMysteryPlayer {
                     translate: "chat.youDied",
                     with: { rawtext: [{ translate: `deathMessage.${deathType}` }] },
                 },
+                sound: "mob.skeleton.death",
+                soundDelay: 3,
             });
             this.player.sendMessage({ translate: "chat.spectatorTeleport.tip" });
         } else {
@@ -2414,6 +2416,9 @@ class MurderMysteryPlayer {
         // 对所有玩家播放音效
         this.system.alivePlayers.allPlayers.forEach(playerData => {
             if (!isPlayer(playerData.player)) return;
+            // 对自己播放骷髅死亡音效（上文已写，这里直接终止）
+            if (playerData.player.id === this.player.id) return;
+            // 对其他玩家播放受伤音效
             playerData.player.playSound("game.player.hurt");
         });
 
