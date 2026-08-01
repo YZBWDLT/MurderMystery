@@ -672,8 +672,10 @@ export class BlockUtils {
                     const block = DimensionUtils.getOverworld().getBlock(location);
                     if (!block) return;
                     let permutation = block.permutation;
-                    // @ts-ignore
-                    states.forEach(({ name, value }) => (permutation = permutation.withState(name, value)));
+                    Object.entries(states).forEach(([state, value]) => {
+                        // @ts-ignore
+                        permutation = permutation.withState(state, value);
+                    });
                     block.setPermutation(permutation);
                 });
         }
