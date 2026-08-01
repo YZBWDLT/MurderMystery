@@ -196,6 +196,9 @@ chat.murdererGetLocator.murderer=§e你的定位器现在可以指向其他玩�
 ### 档案馆秘密通道
 subtitle.archives.passageOpened=§a一个秘密通道开启了！
 
+### 陷阱
+textDisplay.trap=陷阱 - %s§6块金锭
+
 ## ===== 信息板消息 =====
 
 infoboard.title=§l§e    密室杀手    

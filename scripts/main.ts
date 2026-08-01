@@ -790,18 +790,6 @@ class MurderMysteryEventManager {
         return Number(match[1]);
     }
 
-    /** 在动画位置处生成展示文本。 */
-    setMysteryPotionText(locations: minecraft.Vector3[], consume: number) {
-        locations.forEach(location => {
-            const textLocation = lib.Vector3Utils.add(location, 0.5, 1, 0.5);
-            const textDisplay = new minecraft.TextPrimitive(textLocation, {
-                translate: "textDisplay.mysteryPotion",
-                with: [`${consume}`],
-            });
-            minecraft.world.primitiveShapesManager.addText(textDisplay);
-        });
-    }
-
     /** 令玩家试图获取神秘药水。
      * @returns 返回是否成功获得了药水。
      */
@@ -1748,6 +1736,20 @@ class MurderMysteryComponents {
      * @description 不会阻止创造模式玩家和方块交互。
      */
     static interaction(system: MurderMysterySystem) {
+        // 游戏开始后和结束后，添加文本
+        const interactionComponent = system.mapData.components?.interaction;
+        if (system.gameStage === GameStage.GamingStage && interactionComponent) {
+            interactionComponent.forEach(component => {
+                const setText = component.setText;
+                if (!setText) return;
+                // 添加文本
+                const { location, text } = setText;
+                const textDisplay = new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text);
+                minecraft.world.primitiveShapesManager.addText(textDisplay);
+            });
+        }
+
+        // 检查玩家交互
         lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
             // ===== 初步判断 =====
             const { isFirstEvent, block, player } = event;
@@ -1772,7 +1774,7 @@ class MurderMysteryComponents {
 
             // ===== 解析地图交互属性 =====
 
-            const matchedInteraction = system.mapData.components?.interaction?.find(data => {
+            const matchedInteraction = interactionComponent?.find(data => {
                 // 如果有给定坐标或给定方块则返回
                 if (data.at && lib.Vector3Utils.hasPosition(data.at, location)) return true;
                 if (data.blocks && data.blocks.includes(blockId)) return true;
@@ -2177,10 +2179,6 @@ class MurderMysteryComponents {
 
         // 变量准备
         const eventManager = system.eventManager;
-        const { locations, consume } = mysteryPotionComponent;
-
-        // 生成展示文本
-        eventManager.setMysteryPotionText(locations, consume);
 
         // 喝下神秘药水
         lib.gameSystem.subscribeEvent(

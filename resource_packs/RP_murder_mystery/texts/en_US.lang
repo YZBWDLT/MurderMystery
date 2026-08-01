@@ -196,6 +196,9 @@ chat.murdererGetLocator.murderer=§eYou've got a locator! Hold it to find the re
 ### Passage in Map Archives
 subtitle.archives.passageOpened=§aA secret passage has been opened!
 
+### Trap
+textDisplay.trap=Trap - %s§6 Golds
+
 ## ===== Infoboard Message =====
 
 infoboard.title=§l§e MURDER MYSTERY 

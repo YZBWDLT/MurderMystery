@@ -123,15 +123,7 @@ export interface MurderMysteryMapDataComponent {
     /** 是否启用神秘药水。使用该组件决定喝下神秘药水后会使用神秘药水的随机药效，以及神秘药水的文本位置。
      * - 通常和`interaction`组件联合使用，并且需要使用带有`getMysteryPotion`的事件以使玩家能够获得神秘药水。
      */
-    readonly enableMysteryPotion?: {
-        /** 神秘药水的文本位置。 */
-        locations: minecraft.Vector3[];
-
-        /** 本局神秘药水的价格。
-         * @remarks 该值仅限显示用，实际扣除的金锭数由`interaction`组件决定。
-         */
-        consume: number;
-    };
+    readonly enableMysteryPotion?: MurderMysteryEnableMysteryPotionComponent;
 
     /** 交互组件，定义地图可能出现的交互。默认情况下，阻止玩家与一切方块的交互。而在交互列表中的方块或位置则除外。
      * 并且，与这些方块交互还可以规定触发特殊事件。
@@ -168,7 +160,18 @@ export interface MurderMysteryInteractionComponent {
 
     /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。事件的各种功能和需求见 {@link MurderMysteryEvents}。 */
     trigger?: string;
+
+    /** 设置交互文本。 */
+    setText?: {
+        /** 文本的内容。 */
+        text: minecraft.RawMessage;
+
+        /** 文本的位置。 */
+        location: minecraft.Vector3;
+    };
 }
+
+export interface MurderMysteryEnableMysteryPotionComponent {}
 
 export interface MurderMysteryPlayerInAreaComponent {
     /** 待检测的区域的条件。仅当所有条件都完全符合时才会触发事件。
@@ -2348,6 +2351,10 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion1",
                     stillCancelEvent: true,
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 71, y: 38, z: 1946 },
+                    },
                 },
                 {
                     at: [
@@ -2357,6 +2364,10 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion2",
                     stillCancelEvent: true,
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 98, y: 44, z: 1941 },
+                    },
                 },
                 {
                     at: [
@@ -2366,6 +2377,10 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion3",
                     stillCancelEvent: true,
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 120, y: 40, z: 1913 },
+                    },
                 },
                 {
                     at: [
@@ -2375,6 +2390,10 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion4",
                     stillCancelEvent: true,
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 130, y: 39, z: 1922 },
+                    },
                 },
                 {
                     at: [
@@ -2384,27 +2403,33 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion5",
                     stillCancelEvent: true,
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 121, y: 39, z: 1892 },
+                    },
                 },
                 {
-                    at: [
-                        { x: 106, y: 38, z: 1885 },
-                        { x: 106, y: 38, z: 1878 },
-                    ],
+                    at: [{ x: 106, y: 38, z: 1885 }],
                     consume: 2,
                     trigger: "darkfall:openTrap",
                     stillCancelEvent: true,
+                    setText: {
+                        text: { translate: "textDisplay.trap", with: [`2`] },
+                        location: { x: 106, y: 38, z: 1885 },
+                    },
+                },
+                {
+                    at: [{ x: 106, y: 38, z: 1878 }],
+                    consume: 2,
+                    trigger: "darkfall:openTrap",
+                    stillCancelEvent: true,
+                    setText: {
+                        text: { translate: "textDisplay.trap", with: [`2`] },
+                        location: { x: 106, y: 38, z: 1878 },
+                    },
                 },
             ],
-            enableMysteryPotion: {
-                locations: [
-                    { x: 71, y: 37, z: 1946 },
-                    { x: 98, y: 43, z: 1941 },
-                    { x: 120, y: 39, z: 1913 },
-                    { x: 130, y: 38, z: 1922 },
-                    { x: 121, y: 38, z: 1892 },
-                ],
-                consume: 1,
-            },
+            enableMysteryPotion: {},
             playerInArea: [
                 {
                     area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 112, yMax: 36, zMax: 1884 },
@@ -3547,26 +3572,46 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     at: [{ x: -884, y: 102, z: 1923 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion1",
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -884, y: 103, z: 1923 },
+                    },
                 },
                 {
                     at: [{ x: -907, y: 102, z: 1909 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion2",
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -907, y: 103, z: 1909 },
+                    },
                 },
                 {
                     at: [{ x: -927, y: 102, z: 1935 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion3",
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -927, y: 103, z: 1935 },
+                    },
                 },
                 {
                     at: [{ x: -853, y: 102, z: 1953 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion4",
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -853, y: 103, z: 1953 },
+                    },
                 },
                 {
                     at: [{ x: -884, y: 111, z: 1966 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion5",
+                    setText: {
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -884, y: 112, z: 1966 },
+                    },
                 },
             ],
             enableMysteryPotion: {
