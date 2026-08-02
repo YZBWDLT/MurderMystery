@@ -453,6 +453,9 @@ class MurderMysterySystem {
         const maxPlayerCount = this.settings.waiting.maxPlayerCount;
         const maxLocationCount = locations.length;
         players.forEach((player, index) => {
+            // 隐藏玩家的名称
+            player.nameTag = "";
+
             // 分配身份，第 1 名玩家设置为杀手，第 2 名玩家设置为侦探，
             // 第 3 ~ maxPlayerCount 名玩家设置为平民，其余玩家设置为旁观者
             if (index === 0) {
@@ -468,9 +471,6 @@ class MurderMysterySystem {
             if (isPlayer(player)) {
                 player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getOverworld() });
             }
-
-            // 隐藏玩家的名称
-            player.nameTag = "";
         });
     }
 
@@ -2346,6 +2346,9 @@ class MurderMysteryPlayer {
     /** 神秘药水的解锁情况。 */
     readonly mysteryPotionUnlocked: [boolean, boolean, boolean, boolean, boolean] = [false, false, false, false, false];
 
+    /** 正在显示定位栏。 */
+    isShowingLocatorBar = false;
+
     /** 对玩家展示身份。
      * @remarks 只对非旁观者的玩家生效。
      */
@@ -2675,10 +2678,16 @@ class MurderMysteryPlayer {
 
     /** 为玩家显示定位栏。 */
     showLocatorBar() {
+        // 若正在显示定位栏，则直接终止运行
+        if (this.isShowingLocatorBar) return;
+
+        // 如果不是玩家，则直接终止运行
         const player = this.player;
         if (!isPlayer(player)) return;
+
         // 杀手的定位栏，定位到其他所有存活的玩家
         if (this.role === MurderMysteryPlayerRole.Murderer) {
+            player.locatorBar.removeAllWaypoints();
             this.system.alivePlayers.allPlayers.forEach(playerData => {
                 // 不注册自己的定位栏
                 if (player.id === playerData.player.id) return;
@@ -2699,6 +2708,7 @@ class MurderMysteryPlayer {
                 );
                 player.locatorBar.addWaypoint(waypoint);
             });
+            this.isShowingLocatorBar = true;
             return;
         }
         // 平民的定位栏，定位到弓的位置
@@ -2733,15 +2743,25 @@ class MurderMysteryPlayer {
                 },
                 { red: 0.333, green: 1, blue: 1 }
             );
+            player.locatorBar.removeAllWaypoints();
             player.locatorBar.addWaypoint(waypoint);
+            this.isShowingLocatorBar = true;
+            return;
         }
     }
 
     /** 为玩家隐藏定位栏。 */
     hideLocatorBar() {
+        // 若未在显示定位栏，则直接终止运行
+        if (!this.isShowingLocatorBar) return;
+
+        // 如果不是玩家，则直接终止运行
         const player = this.player;
         if (!isPlayer(player)) return;
+
+        // 隐藏定位栏
         player.locatorBar.removeAllWaypoints();
+        this.isShowingLocatorBar = false;
     }
 
     // #endregion
