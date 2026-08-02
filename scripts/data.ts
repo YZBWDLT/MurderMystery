@@ -1225,7 +1225,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 facingLocation: { x: 702, y: 75, z: 486 },
             },
             range: {
-                from: { x: 600, y: 67, z: 451 }, // 600 67 451
+                from: { x: 600, y: 30, z: 451 }, // 600 30 451
                 to: { x: 708, y: 95, z: 542 }, // 708 95 542
             },
             spawnPoints: [
