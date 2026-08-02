@@ -1744,7 +1744,8 @@ class MurderMysteryComponents {
             minecraft.world.afterEvents.projectileHitBlock,
             event => {
                 const arrow = event.projectile;
-                if (event.projectile.typeId !== "minecraft:arrow") return;
+                if (!arrow.isValid) return;
+                if (arrow.typeId !== "minecraft:arrow") return;
                 arrow.triggerEvent("murder_mystery:remove_player_arrow");
                 arrow.setDynamicProperty("hit", true);
             }
