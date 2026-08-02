@@ -802,6 +802,9 @@ class MurderMysteryEventManager {
     /** 默认神秘药水的物品备注。 */
     static readonly mysteryPotionDefaultLore = ["§r§7这是一瓶药水。天知道它会给你什么效果。"];
 
+    /** 记录玩家当前是否处于神秘药水效果影响下。 */
+    readonly inPotionEffect: Record<string, MurderMysteryPlayer> = {};
+
     /** 从药水的 ID 获取索引。 */
     static getPotionIndex(potionId: string) {
         // 匹配完整格式，并捕获数字部分
@@ -920,10 +923,8 @@ class MurderMysteryEventManager {
         const player = playerData.player;
         if (!isPlayer(player)) return false;
 
-        // 如果玩家已有 5 种药效中的一种，则不给予药效，重新给予药水并提示玩家
-        const checkEffects: string[] = this.mysteryPotionData.map(data => `minecraft:${data.id}`);
-        const playerHasEffects = player.getEffects().filter(effect => checkEffects.includes(effect.typeId)).length > 0;
-        if (playerHasEffects) {
+        // 如果玩家正受神秘药水效果影响，则不给予药效，重新给予药水并提示玩家
+        if (this.inPotionEffect[player.id]) {
             lib.ItemUtils.equipment.set(player, potionId, minecraft.EquipmentSlot.Mainhand, {
                 itemLock: minecraft.ItemLockMode.slot,
             });
@@ -957,6 +958,10 @@ class MurderMysteryEventManager {
             containerSlot.nameTag = `§r§a${potionData.name}药水`;
             containerSlot.setLore([`§r§7这瓶药水将会使你获得${potionData.name}效果！`]);
         });
+
+        // 记录玩家当前处于神秘药水效果影响下，并在计时结束后移除之
+        this.inPotionEffect[player.id] = playerData;
+        minecraft.system.runTimeout(() => delete this.inPotionEffect[player.id], potionData.duration ?? 200);
 
         return true;
     }
