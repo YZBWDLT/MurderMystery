@@ -116,6 +116,8 @@ export interface MurderMysteryWaitHallDescription {
     readonly facingLocation?: minecraft.Vector3;
 }
 
+// ===== 组件 =====
+
 export interface MurderMysteryMapDataComponent {
     /** 时间组件，设定该地图使用的游戏内时间。 | 默认值：`6000` */
     readonly time?: number;
@@ -213,6 +215,8 @@ export interface MurderMysteryOnGameStartComponent {
     /** 当地图重载后，触发何种事件。 */
     trigger: string;
 }
+
+// ===== 事件响应 =====
 
 export interface MurderMysteryEvents {
     /** 触发事件的条件。系统会首先判断该条件是否通过，仅当触发该事件时，所有的条件都通过时才能触发事件，否则无法触发事件。 */
@@ -323,7 +327,7 @@ export interface MurderMysteryTriggerEvent {
 // #region 地图数据
 
 /** 地图数据。 */
-export const maps: Record<string, MurderMysteryMapData> = {
+export const maps = {
     archives: {
         description: {
             id: "archives",
@@ -4680,6 +4684,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
-};
+} satisfies Record<string, MurderMysteryMapData>;
 
 // #endregion

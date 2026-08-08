@@ -35,6 +35,7 @@ item.murder_mystery:mystery_potion_2=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_3=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_4=§a？？？神秘药水？？？
 item.murder_mystery:locator=定位器
+item.murder_mystery:settings=设置
 
 ## ===== 名词翻译 =====
 
@@ -201,6 +202,36 @@ subtitle.archives.passageOpened=§a一个秘密通道开启了！
 
 ### 陷阱
 textDisplay.trap=陷阱 - %s§6块金锭
+
+### 设置
+interact.settings=地图设置...
+ui.settings.main.title=设置
+ui.settings.main.playerSettings=§l玩家设置
+ui.settings.main.about=关于我们
+ui.settings.main.updateLog=更新日志
+ui.settings.main.operatorSettings=§l管理员设置
+ui.settings.main.selectMap=选择地图
+ui.settings.main.enableMap=启用地图...
+ui.settings.main.waiting=等待时...
+ui.settings.main.gaming=游戏时...
+ui.settings.main.goldSpawn=金锭生成...
+ui.settings.main.murdererSword=杀手刀剑...
+ui.settings.main.miscellaneous=杂项...
+ui.settings.about.title=关于我们
+ui.settings.about.author=§l作者
+ui.settings.about.version=§l版本
+ui.settings.about.tester=§l测试员
+ui.settings.about.specialThanks=§l特别感谢
+ui.settings.updateLog.title=更新日志
+ui.settings.updateLog.line1=本段使用中文编写，若您需要请使用翻译软件进行翻译。
+ui.settings.selectMap.title=选择地图
+ui.settings.enableMap.title=启用地图
+ui.settings.miscellaneous.title=杂项设置
+ui.settings.miscellaneous.description=杂项设置，控制游戏中一些其他内容的设置项。
+ui.settings.miscellaneous.infoboardLastLine.title=信息板最后一行
+ui.settings.miscellaneous.infoboardLastLine.description=信息板最后一行的内容，使用黄色字体。
+ui.settings.defaultSettings.title=恢复默认设置
+ui.settings.confirm=确认
 
 ## ===== 信息板消息 =====
 

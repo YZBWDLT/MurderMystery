@@ -1690,40 +1690,58 @@ export class ItemUtils {
 
 /** UI 数据。 */
 interface UIDataBase {
-    /** UI 类型 */ type: "action" | "message" | "modal";
-    /** UI 标题 */ title?: string | minecraft.RawMessage;
-    /** UI 的父表单，在此表单关闭后显示的表单 @remarks 通常来说该参数无需额外定义，在启动子界面时会自动注册父界面 */ parentForm?: UIData;
+    /** UI 标题。 */
+    title?: string | minecraft.RawMessage;
+
+    /** UI 的父表单，在此表单关闭后显示的表单。
+     * @remarks 通常来说该参数无需额外定义，在启动子界面时会自动注册父界面。
+     */
+    parentForm?: UIData;
 }
 
 /** ActionUI 数据。 */
 export interface ActionUIData extends UIDataBase {
     type: "action";
-    /** UI 内部的文字简介信息 */ body?: string | minecraft.RawMessage;
-    /** UI 使用的表单组件 */ components?: ActionUIComponent[];
-    /** UI 被取消时执行的事件 */ onCancel?: (
-        reason?: ui.FormCancelationReason,
-        thisForm?: ActionUIData | ModalUIData
-    ) => void | OpenNewFormOptions;
+
+    /** UI 内部的文字简介信息。 */
+    body?: string | minecraft.RawMessage;
+
+    /** UI 使用的表单组件。 */
+    components?: ActionUIComponent[];
+
+    /** UI 被取消时执行的事件。 */
+    onCancel?: (reason?: ui.FormCancelationReason, thisForm?: ActionUIData | ModalUIData) => void | OpenNewFormOptions;
 }
 
 /** MessageUI 数据。 */
 export interface MessageUIData extends UIDataBase {
     type: "message";
-    /** UI 内部的文字简介信息 */ body?: string | minecraft.RawMessage;
-    /** UI 的第一个按钮 */ button1: FormButtonComponent;
-    /** UI 的第二个按钮 */ button2: FormButtonComponent;
+
+    /** UI 内部的文字简介信息。 */
+    body?: string | minecraft.RawMessage;
+
+    /** UI 的第一个按钮。 */
+    button1: FormButtonComponent;
+
+    /** UI 的第二个按钮。 */
+    button2: FormButtonComponent;
 }
 
 /** ModalUI 数据。 */
 export interface ModalUIData extends UIDataBase {
     type: "modal";
-    /** UI 的提交信息 */ submitButton?: string | minecraft.RawMessage;
-    /** UI 使用的表单组件 */ components?: ModalUIComponent[];
-    /** UI 被取消时执行的事件，该事件会在各组件的数据处理完后执行 */ onCancel?: (
-        reason?: ui.FormCancelationReason,
-        thisForm?: ActionUIData | ModalUIData
-    ) => void | OpenNewFormOptions;
-    /** UI 被提交后执行的事件，该事件会在各组件的数据处理完后执行 */ onSubmit?: (
+
+    /** UI 的提交信息。 */
+    submitButton?: string | minecraft.RawMessage;
+
+    /** UI 使用的表单组件。 */
+    components?: ModalUIComponent[];
+
+    /** UI 被取消时执行的事件，该事件会在各组件的数据处理完后执行。 */
+    onCancel?: (reason?: ui.FormCancelationReason, thisForm?: ActionUIData | ModalUIData) => void | OpenNewFormOptions;
+
+    /** UI 被提交后执行的事件，该事件会在各组件的数据处理完后执行。 */
+    onSubmit?: (
         result?: (string | number | boolean | undefined)[],
         thisForm?: ActionUIData | ModalUIData
     ) => void | OpenNewFormOptions;
@@ -1735,7 +1753,10 @@ export type UIData = ActionUIData | MessageUIData | ModalUIData;
 
 /** 表单组件。 */
 interface FormComponentBase {
-    /** 是否可见 @remarks 对 MessageUI 无效，因为该 UI 固定使用两个按钮 @default true */ visible?: boolean;
+    /** 是否可见。 | 默认值：`true`
+     * @remarks 对 MessageUI 无效，因为该 UI 固定使用两个按钮
+     */
+    visible?: boolean;
 }
 
 /** ModalUI 表单组件。 */
@@ -1774,36 +1795,53 @@ export interface FormDividerComponent extends FormComponentBase {
 /** 按钮表单组件。 */
 export interface FormButtonComponent extends FormComponentBase {
     type: "button";
-    /** 按钮文本 */ text: string | minecraft.RawMessage;
-    /** 按钮图标 @remarks 仅限 ActionUI 可用 @example "textures/items/apple" */ icon?: string;
-    /** 按钮被选中后的设置 */ onClick: () => void | OpenNewFormOptions;
+
+    /** 按钮文本。 */
+    text: string | minecraft.RawMessage;
+
+    /** 按钮图标。
+     * @remarks 仅限 ActionUI 可用。
+     * @example "textures/items/apple"
+     */
+    icon?: string;
+
+    /** 按钮被选中后的设置。 */
+    onClick: () => void | OpenNewFormOptions;
 }
 
 /** 下拉栏表单组件。 */
 export interface FormDropdownComponent extends ModalFormComponentBase {
     type: "dropdown";
     default?: number;
-    /** 下拉栏全部可用选项 */ items: (minecraft.RawMessage | string)[];
-    /** 在此下拉栏选择特定值提交后执行的函数 */ onSubmit: (
-        result: number,
-        items: (minecraft.RawMessage | string)[]
-    ) => void;
+
+    /** 下拉栏全部可用选项。 */
+    items: (minecraft.RawMessage | string)[];
+
+    /** 在此下拉栏选择特定值提交后执行的函数。 */
+    onSubmit: (result: number, items: (minecraft.RawMessage | string)[]) => void;
 }
 
 /** 滑块表单组件。 */
 export interface FormSliderComponent extends ModalFormComponentBase {
     type: "slider";
     default?: number;
-    /** 滑块范围最小值 */ min: number;
-    /** 滑块范围最大值 */ max: number;
-    /** 每次滑动滑块时的步长 @default 1 */ step?: number;
-    /** 在此滑块选择特定值提交后执行的函数 */ onSubmit: (result: number) => void;
+
+    /** 滑块范围最小值。 */
+    min: number;
+
+    /** 滑块范围最大值。 */
+    max: number;
+
+    /** 每次滑动滑块时的步长。 | 默认值：`1` */
+    step?: number;
+
+    /** 在此滑块选择特定值提交后执行的函数。 */
+    onSubmit: (result: number) => void;
 }
 
 /** 文字输入框表单组件。 */
 export interface FormTextFieldComponent extends ModalFormComponentBase {
     type: "textField";
-
     default?: string;
 
     /** 文本输入框背景字。 */

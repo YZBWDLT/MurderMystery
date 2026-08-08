@@ -143,7 +143,7 @@ class MurderMysterySystem {
         this.beforeGameInfo.maxPlayerCount = maxPlayerCount;
         this.resetStartCountdown();
 
-        const { timePerGame } = this.settings.game;
+        const { timePerGame } = this.settings.gaming;
         this.timeLeft = timePerGame;
 
         // 初始化游戏规则
@@ -170,6 +170,9 @@ class MurderMysterySystem {
     }
 
     // #region - 系统变量
+
+    /** 系统版本。 */
+    readonly version = "1.0 - Snapshot 5";
 
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage: GameStage;
@@ -224,6 +227,9 @@ class MurderMysterySystem {
     /** 是否是一个有效的系统。在游戏结束后，该系统将变得无效化。 */
     isValid = true;
 
+    /** 该系统变得无效化后，下一张地图指定为何种地图。 */
+    nextMap?: keyof typeof gameData.maps;
+
     /** 全局金锭的生成次数。该值将会决定每次生成会在哪个玩家周围生成金锭。 */
     globalGoldSpawnTimes: number = 0;
 
@@ -242,6 +248,7 @@ class MurderMysterySystem {
         MurderMysteryComponents.infoboard(this);
         MurderMysteryComponents.onPlayerHurt(this);
         MurderMysteryComponents.interaction(this);
+        MurderMysteryComponents.settings(this);
     }
 
     /** 令游戏进入清除阶段，在清除阶段清空原有的地图。 */
@@ -301,6 +308,9 @@ class MurderMysterySystem {
 
         // 移除多余实体
         this.removeAllEntities();
+
+        // 移除所有玩家的所有物品
+        lib.PlayerUtils.getAll().forEach(player => player.getComponent("inventory")?.container.clearAll());
 
         // 注册必选组件
         this.general();
@@ -366,12 +376,10 @@ class MurderMysterySystem {
     // #region - 地图管理
 
     /** 获取地图数据。若不指定地图名称，则返回所有可用地图中的一张随机地图。 */
-    static getMapData(mapName?: string): gameData.MurderMysteryMapData {
+    static getMapData(mapName?: keyof typeof gameData.maps): gameData.MurderMysteryMapData {
         // 选择其中一张地图
         const maps = Object.values(gameData.maps);
-        return mapName
-            ? (gameData.maps[mapName] as gameData.MurderMysteryMapData)
-            : lib.JSUtils.array.randomElement(maps);
+        return mapName ? gameData.maps[mapName] : lib.JSUtils.array.randomElement(maps);
     }
 
     // #endregion
@@ -509,7 +517,7 @@ class MurderMysterySystem {
     }
 
     /** 在游戏开始前初始化玩家。
-     * @description 会清除玩家的物品。
+     * @description 会清除玩家的物品，在快捷栏最后一位留下一个设置物品。
      * @description 会传送玩家到等待大厅，并将玩家的重生点设置在这里。
      * @description 会将玩家的游戏模式设为冒险模式。
      * @description 会恢复玩家的命名牌。
@@ -517,6 +525,7 @@ class MurderMysterySystem {
      */
     initPlayer(player: minecraft.Entity) {
         player.getComponent("inventory")?.container.clearAll();
+        lib.ItemUtils.inventory.set(player, 8, "murder_mystery:settings", { itemLock: minecraft.ItemLockMode.slot });
 
         const { location, facingLocation } = this.mapData.description.waitHall;
         player.teleport(location, { facingLocation });
@@ -1101,17 +1110,21 @@ type MurderMysteryMiscellaneousSettings = {
 
 /** 密室杀手设置。在设置内包含众多玩家可以调控的设置项。 */
 class MurderMysterySettings {
-    constructor() {}
+    constructor() {
+        (Object.keys(gameData.maps) as (keyof typeof gameData.maps)[]).forEach(mapName => {
+            this.mapEnabled[mapName] = true;
+        });
+    }
 
     /** 等待设置，在等待期间可以调控的设置项。 */
-    readonly waiting: MurderMysteryWaitingSettings = {
+    waiting: MurderMysteryWaitingSettings = {
         minPlayerCount: 2,
         maxPlayerCount: 16,
         startCountdown: 16,
     };
 
     /** 游戏设置，在游戏期间可以调控的设置项。 */
-    readonly game: MurderMysteryGameSettings = {
+    gaming: MurderMysteryGameSettings = {
         timePerGame: 270,
         getSpecialItemDelay: 15,
         pickupBowMethod: "nearby",
@@ -1121,23 +1134,307 @@ class MurderMysterySettings {
     };
 
     /** 金锭生成设置，控制在游戏过程中金锭生成的表现。 */
-    readonly goldSpawn: MurderMysteryGoldSpawnSettings = {
+    goldSpawn: MurderMysteryGoldSpawnSettings = {
         spawnRadius: 5,
         spawnChance: 0.15,
         spawnInterval: 16,
     };
 
     /** 杀手刀剑设置，控制在游戏过程中杀手的刀的表现。 */
-    readonly murdererSword: MurderMysteryMurdererSwordSettings = {
+    murdererSword: MurderMysteryMurdererSwordSettings = {
         knifeCollideArrowDistance: 5,
         knifeSpeed: 1.0,
         knifeThrowTime: 10,
     };
 
     /** 杂项设置，控制游戏中一些其他内容的设置项。 */
-    readonly miscellaneous: MurderMysteryMiscellaneousSettings = {
+    miscellaneous: MurderMysteryMiscellaneousSettings = {
         infoboardLastLine: "一只卑微的量筒",
     };
+
+    mapEnabled: Record<keyof typeof gameData.maps, boolean> = {
+        archives: true,
+        archivesTopFloorV1: false,
+        archivesTopFloor: true,
+        cattleridgeFarm: true,
+        cruiseShip: true,
+        darkfall: true,
+        easterWorld: true,
+        headQuarters: true,
+        hypixelWorld: true,
+        library: true,
+        towerFall: true,
+    };
+
+    // #region - 设置 UI
+
+    /** 对玩家显示设置界面。 */
+    static showMainSettingsUI(system: MurderMysterySystem, player: minecraft.Player) {
+        // ===== 变量准备 =====
+
+        /** 玩家权限。部分选项仅对管理员或更高权限的玩家开放。 */
+        const permission = player.playerPermissionLevel;
+
+        /** 玩家设置选项。 */
+        const playerSettings: lib.ActionUIComponent[] = [
+            { type: "divider" },
+            { type: "label", text: { translate: "ui.settings.main.playerSettings" } },
+            {
+                type: "button",
+                text: { translate: "ui.settings.main.about" },
+                icon: "textures/items/spyglass",
+                onClick: () => this.showAboutUI(system, player),
+            },
+            {
+                type: "button",
+                text: { translate: "ui.settings.main.updateLog" },
+                icon: "textures/items/book_writable",
+                onClick: () => this.showUpdateLogUI(system, player),
+            },
+        ];
+
+        /** 管理员设置选项。 */
+        const operatorSettings: lib.ActionUIComponent[] = [];
+        if (permission >= 2)
+            operatorSettings.push(
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.main.operatorSettings" } },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.selectMap" },
+                    icon: "textures/items/map_empty",
+                    onClick: () => this.showSelectMapUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.enableMap" },
+                    icon: "textures/items/map_filled",
+                    onClick: () => this.showEnableMapUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.waiting" },
+                    icon: "textures/items/clock_item",
+                    onClick: () => this.showWaitingUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.gaming" },
+                    icon: "textures/items/bow_standby",
+                    onClick: () => this.showGamingUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.goldSpawn" },
+                    icon: "textures/items/gold_ingot",
+                    onClick: () => this.showGoldSpawnUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.murdererSword" },
+                    icon: "textures/items/iron_sword",
+                    onClick: () => this.showMurdererSwordUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.miscellaneous" },
+                    icon: "textures/items/diamond_pickaxe",
+                    onClick: () => this.showMiscellaneousUI(system, player),
+                }
+            );
+
+        // ===== 显示设置界面 =====
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            components: [
+                { type: "header", text: { translate: "ui.settings.main.title" } },
+                ...playerSettings,
+                ...operatorSettings,
+            ],
+        });
+    }
+
+    /** 对系统保存设置。 */
+    static saveSettings(system: MurderMysterySystem) {}
+
+    /** 对玩家显示关于我们 UI。 */
+    private static showAboutUI(system: MurderMysterySystem, player: minecraft.Player) {
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.settings.about.title" } },
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.about.author" } },
+                { type: "label", text: "§a一只卑微的量筒 (YZBWDLT)" },
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.about.version" } },
+                { type: "label", text: `§a${system.version}` },
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.about.tester" } },
+                { type: "label", text: "§a1.0 正式版更新后同步……" },
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.about.specialThanks" } },
+                { type: "label", text: "§a珂朵莉（Tetrisoo）" },
+                { type: "label", text: "§a欧拉（EurluoL）" },
+                // { type: "label", text: "§a祉语（xhduoduobaby）" }, 应祉语要求，不显示
+            ],
+        });
+    }
+
+    /** 对玩家显示更新日志 UI。 */
+    private static showUpdateLogUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const texts: string[] = [
+            "§l1.0 - Snapshot 5 更新日志",
+            "在本周，我们继续对底层架构进行了多处改动，与此同时也几乎完美还原了暗景秋色这张地图！",
+            "同时，我们在本周也隆重引入设置功能！虽然仍然处于前期版本，但是已经有不少功能可用了哦。",
+            "一起来看看本周的更新吧~",
+            "==========",
+            "§7§l地图",
+            "§7- 新增了三张地图：高坠塔、总部、牛脊农场",
+            "§7- 新增了一张地图：档案馆顶层",
+            "§7  §o开发者注：我们发现以前添加的档案馆顶层地图是很久以前的旧版地图，在 Hypixel 中早已废弃。因此，以前的档案馆顶层地图作为 V1 版本使用，并且添加设置之后，默认状态下将不会启用",
+            "§7- 现在地图档案馆顶层中，掉到坑里之后不再显示为掉进了虚空",
+            "§7- 现在地图游轮中，玩家会溺死了",
+            "§7- 完全还原了暗景秋色的所有功能",
+            "§7  - 现在地图暗景秋色中，可以与酿造台交互获取神秘药水了",
+            "§7  - 还原了暗景秋色的一个陷阱",
+            "§7  - 还原了暗景秋色的传送门的功能",
+            "§7§l设置",
+            "§7- 引入了全新的设置选项！",
+            "§7- 在游戏开始之前，所有玩家的快捷栏都会获得一个设置物品",
+            "§7- 对所有玩家均可用，但不同玩家看到的选项将有所不同",
+            "§7- 目前仍为早期版本，之后会做更多相关更改，例如 reload 保留设置等，同时一些本应禁用的地图也将在保留设置更新后真正禁用",
+            "§7§l特性更改&漏洞修复",
+            "§7- #32 对定位栏退出重进无法正确运作的问题进行了尝试性修复",
+            "§7  §o开发者注：目前无法保证该修复是有效的，还需要进行验证",
+            "§7- #34 现在非游戏阶段下，玩家不再能与场景交互了",
+            "§7- #35 现在当剩余最后一人时，杀手的迅捷效果不再会和神秘药水的效果冲突",
+            "§7- #36 实装了地图暗景秋色的陷阱",
+            "§7- #38 现在死去的首位侦探和杀手在结算时会以灰色显示名字",
+            "§7- #41 现在对死亡玩家本身播放骷髅死亡的音效",
+        ];
+        const textComponent: lib.FormLabelComponent[] = texts.map(text => ({ type: "label", text: text }));
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.settings.updateLog.title" } },
+                { type: "label", text: { translate: "ui.settings.updateLog.line1" } },
+                { type: "divider" },
+                ...textComponent,
+            ],
+        });
+    }
+
+    /** 对玩家显示选择地图 UI。
+     * @description 不会显示已被禁用的地图。
+     */
+    private static showSelectMapUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const mapNames = Object.keys(gameData.maps) as (keyof typeof gameData.maps)[];
+        const validMapNames = mapNames.filter(mapName => system.settings.mapEnabled[mapName]);
+        const selectMapButton: lib.FormButtonComponent[] = validMapNames.map(mapName => ({
+            type: "button",
+            text: { translate: `map.${mapName}` },
+            onClick: () => {
+                // 立刻无效化系统
+                system.isValid = false;
+
+                // 移除所有正在监听的时间线和事件
+                lib.gameSystem.unsubscribeAllTimelines();
+                lib.gameSystem.unsubscribeAllEvents();
+                lib.gameSystem.unsubscribeAllDelays();
+
+                // 设定下一张地图
+                system.nextMap = mapName;
+            },
+        }));
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.settings.selectMap.title" } },
+                { type: "divider" },
+                ...selectMapButton,
+            ],
+        });
+    }
+
+    /** 对玩家显示启用地图 UI。 */
+    private static showEnableMapUI(system: MurderMysterySystem, player: minecraft.Player) {
+        player.sendMessage("§c还未做完，敬请期待！");
+        // const mapNames = Object.keys(gameData.maps) as (keyof typeof gameData.maps)[];
+        // const enableMapButton: lib.FormToggleComponent[] = mapNames.map(mapName => ({
+        //     type: "toggle",
+        //     description: { translate: `map.${mapName}` },
+        //     default: system.settings.mapEnabled[mapName],
+        //     onSubmit: result => (system.settings.mapEnabled[mapName] = result),
+        // }));
+        // lib.UIUtils.createModal(player, {
+        //     type: "modal",
+        //     onCancel: () => this.showMainSettingsUI(system, player),
+        //     components: [
+        //         { type: "header", text: { translate: "ui.settings.enableMap.title" } },
+        //         { type: "divider" },
+        //         ...enableMapButton,
+        //     ],
+        // });
+    }
+
+    /** 对玩家显示等待时 UI。 */
+    private static showWaitingUI(system: MurderMysterySystem, player: minecraft.Player) {
+        player.sendMessage("§c还未做完，敬请期待！");
+    }
+
+    /** 对玩家显示游戏时 UI。 */
+    private static showGamingUI(system: MurderMysterySystem, player: minecraft.Player) {
+        player.sendMessage("§c还未做完，敬请期待！");
+    }
+
+    /** 对玩家显示金锭生成 UI。 */
+    private static showGoldSpawnUI(system: MurderMysterySystem, player: minecraft.Player) {
+        player.sendMessage("§c还未做完，敬请期待！");
+    }
+
+    /** 对玩家显示杀手刀剑 UI。 */
+    private static showMurdererSwordUI(system: MurderMysterySystem, player: minecraft.Player) {
+        player.sendMessage("§c还未做完，敬请期待！");
+    }
+
+    /** 对玩家显示杂项 UI。 */
+    private static showMiscellaneousUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const { infoboardLastLine } = system.settings.miscellaneous;
+        lib.UIUtils.createModal(player, {
+            type: "modal",
+            submitButton: { translate: "ui.settings.confirm" },
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.settings.miscellaneous.title" } },
+                { type: "label", text: { translate: "ui.settings.miscellaneous.description" } },
+                { type: "divider" },
+                {
+                    type: "textField",
+                    description: { translate: "ui.settings.miscellaneous.infoboardLastLine.title" },
+                    tipText: { translate: "ui.settings.miscellaneous.infoboardLastLine.description" },
+                    default: infoboardLastLine,
+                    placeholderText: "",
+                    onSubmit: result => {
+                        system.settings.miscellaneous.infoboardLastLine = result;
+                    },
+                },
+                { type: "divider" },
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.defaultSettings.title" },
+                    onSubmit: result => {
+                        if (result) system.settings.miscellaneous = new MurderMysterySettings().miscellaneous;
+                    },
+                },
+            ],
+        });
+    }
+
+    // #endregion
 }
 
 // #endregion
@@ -1195,6 +1492,106 @@ class MurderMysteryComponents {
                 if (cause !== thisCause) return;
                 minecraft.system.run(() => eventManager.triggerEvent(trigger, playerData));
             });
+        });
+    }
+
+    /** 玩家和方块交互组件。
+     * @description 阻止玩家和地图交互组件`interactions`中指定之外的方块交互。
+     * @description 触发具有交互组件的其他事件，例如门、获得神秘药水等。
+     * @description 不会阻止创造模式玩家和方块交互。
+     */
+    static interaction(system: MurderMysterySystem) {
+        // 游戏开始后和结束后，添加文本
+        const interactionComponent = system.mapData.components?.interaction;
+        if (system.gameStage === GameStage.GamingStage && interactionComponent) {
+            interactionComponent.forEach(component => {
+                const setText = component.setText;
+                if (!setText) return;
+                // 添加文本
+                const { location, text } = setText;
+                const textDisplay = new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text);
+                minecraft.world.primitiveShapesManager.addText(textDisplay);
+            });
+        }
+
+        // 检查玩家交互
+        lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
+            // ===== 初步判断 =====
+            const { isFirstEvent, block, player } = event;
+            const location = block.location;
+            const blockId = block.typeId;
+            // 如果不是首次交互，取消事件并直接终止
+            if (!isFirstEvent) {
+                event.cancel = true;
+                return;
+            }
+            // 如果是创造模式玩家，直接终止
+            if (player.getGameMode() === minecraft.GameMode.Creative) return;
+
+            // 如果不是游戏阶段，取消事件并直接终止
+            if (system.gameStage !== GameStage.GamingStage) {
+                event.cancel = true;
+                return;
+            }
+            // 如果不是有效玩家，直接终止
+            const playerData = system.getPlayer(player);
+            if (!playerData) return;
+
+            // ===== 解析地图交互属性 =====
+
+            const matchedInteraction = interactionComponent?.find(data => {
+                // 如果有给定坐标或给定方块则返回
+                if (data.at && lib.Vector3Utils.hasPosition(data.at, location)) return true;
+                if (data.blocks && data.blocks.includes(blockId)) return true;
+                // 否则不返回
+                return false;
+            });
+
+            // 如果地图交互属性不存在，取消事件并直接终止运行
+            if (!matchedInteraction) {
+                event.cancel = true;
+                return;
+            }
+
+            const {
+                consume = 0,
+                notifyPlayerWhenGoldNotEnough = true,
+                stillCancelEvent = false,
+                trigger = "",
+            } = matchedInteraction;
+
+            // 如果玩家没有足够的金锭，则取消事件并终止运行
+            const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
+            if (playerGoldCount < consume) {
+                if (notifyPlayerWhenGoldNotEnough) {
+                    minecraft.system.run(() =>
+                        lib.PlayerUtils.notify(player, {
+                            message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consume}`] },
+                            sound: "random.anvil_land",
+                        })
+                    );
+                }
+                event.cancel = true;
+                return;
+            }
+
+            // ===== 执行交互属性的功能 =====
+            if (stillCancelEvent) event.cancel = true;
+            minecraft.system.run(() => {
+                // 检查是否成功执行了相关逻辑，仅当成功执行才能移除金锭
+                const result = system.eventManager.triggerEvent(trigger, playerData);
+                if (result) lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, consume);
+            });
+        });
+    }
+
+    /** 玩家使用设置。
+     * @description 为使用玩家开启一个设置界面。
+     */
+    static settings(system: MurderMysterySystem) {
+        lib.gameSystem.subscribeEvent("settings", minecraft.world.afterEvents.itemUse, event => {
+            if (event.itemStack.typeId === "murder_mystery:settings")
+                MurderMysterySettings.showMainSettingsUI(system, event.source);
         });
     }
 
@@ -1282,9 +1679,7 @@ class MurderMysteryComponents {
         );
     }
 
-    /** 初始化刚进入的玩家。
-     * @description 当玩家进入时，清除玩家的物品。
-     */
+    /** 初始化刚进入的玩家。 */
     static initJoinedPlayer(system: MurderMysterySystem) {
         lib.gameSystem.subscribeEvent("initJoinedPlayer", minecraft.world.afterEvents.playerSpawn, event => {
             const { player, initialSpawn } = event;
@@ -1308,7 +1703,7 @@ class MurderMysteryComponents {
             "gameTimer",
             () => {
                 system.timeLeft--;
-                if (system.settings.game.timePerGame - system.timeLeft === 60)
+                if (system.settings.gaming.timePerGame - system.timeLeft === 60)
                     system.alivePlayers.murderer.forEach(murderer => {
                         if (!isPlayer(murderer.player)) return;
                         if (murderer.kills > 0) return;
@@ -1349,7 +1744,7 @@ class MurderMysteryComponents {
             "getSpecialItem",
             () => {
                 const getSpecialItemTimeLeft =
-                    system.settings.game.getSpecialItemDelay - (system.settings.game.timePerGame - system.timeLeft);
+                    system.settings.gaming.getSpecialItemDelay - (system.settings.gaming.timePerGame - system.timeLeft);
 
                 // 当给杀手刀剩余 1-5 秒时，对所有玩家提示
                 if (getSpecialItemTimeLeft > 0 && getSpecialItemTimeLeft <= 5) {
@@ -1541,7 +1936,7 @@ class MurderMysteryComponents {
      * @description 如果是右键拾取，则检查玩家与实体交互，如果是存活的平民则令其拾取。
      */
     static playerPickupBowTest(system: MurderMysterySystem) {
-        const pickupBowMethod = system.settings.game.pickupBowMethod;
+        const pickupBowMethod = system.settings.gaming.pickupBowMethod;
         const isAliveInnocentData = (
             playerData: MurderMysteryPlayer | undefined
         ): playerData is MurderMysteryPlayer => {
@@ -1755,96 +2150,6 @@ class MurderMysteryComponents {
                 arrow.setDynamicProperty("hit", true);
             }
         );
-    }
-
-    /** 玩家和方块交互组件。
-     * @description 阻止玩家和地图交互组件`interactions`中指定之外的方块交互。
-     * @description 触发具有交互组件的其他事件，例如门、获得神秘药水等。
-     * @description 不会阻止创造模式玩家和方块交互。
-     */
-    static interaction(system: MurderMysterySystem) {
-        // 游戏开始后和结束后，添加文本
-        const interactionComponent = system.mapData.components?.interaction;
-        if (system.gameStage === GameStage.GamingStage && interactionComponent) {
-            interactionComponent.forEach(component => {
-                const setText = component.setText;
-                if (!setText) return;
-                // 添加文本
-                const { location, text } = setText;
-                const textDisplay = new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text);
-                minecraft.world.primitiveShapesManager.addText(textDisplay);
-            });
-        }
-
-        // 检查玩家交互
-        lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
-            // ===== 初步判断 =====
-            const { isFirstEvent, block, player } = event;
-            const location = block.location;
-            const blockId = block.typeId;
-            // 如果不是首次交互，取消事件并直接终止
-            if (!isFirstEvent) {
-                event.cancel = true;
-                return;
-            }
-            // 如果是创造模式玩家，直接终止
-            if (player.getGameMode() === minecraft.GameMode.Creative) return;
-
-            // 如果不是游戏阶段，取消事件并直接终止
-            if (system.gameStage !== GameStage.GamingStage) {
-                event.cancel = true;
-                return;
-            }
-            // 如果不是有效玩家，直接终止
-            const playerData = system.getPlayer(player);
-            if (!playerData) return;
-
-            // ===== 解析地图交互属性 =====
-
-            const matchedInteraction = interactionComponent?.find(data => {
-                // 如果有给定坐标或给定方块则返回
-                if (data.at && lib.Vector3Utils.hasPosition(data.at, location)) return true;
-                if (data.blocks && data.blocks.includes(blockId)) return true;
-                // 否则不返回
-                return false;
-            });
-
-            // 如果地图交互属性不存在，取消事件并直接终止运行
-            if (!matchedInteraction) {
-                event.cancel = true;
-                return;
-            }
-
-            const {
-                consume = 0,
-                notifyPlayerWhenGoldNotEnough = true,
-                stillCancelEvent = false,
-                trigger = "",
-            } = matchedInteraction;
-
-            // 如果玩家没有足够的金锭，则取消事件并终止运行
-            const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
-            if (playerGoldCount < consume) {
-                if (notifyPlayerWhenGoldNotEnough) {
-                    minecraft.system.run(() =>
-                        lib.PlayerUtils.notify(player, {
-                            message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consume}`] },
-                            sound: "random.anvil_land",
-                        })
-                    );
-                }
-                event.cancel = true;
-                return;
-            }
-
-            // ===== 执行交互属性的功能 =====
-            if (stillCancelEvent) event.cancel = true;
-            minecraft.system.run(() => {
-                // 检查是否成功执行了相关逻辑，仅当成功执行才能移除金锭
-                const result = system.eventManager.triggerEvent(trigger, playerData);
-                if (result) lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, consume);
-            });
-        });
     }
 
     /** 杀手飞刀。
@@ -2097,7 +2402,7 @@ class MurderMysteryComponents {
                         player.teleport(player.location, { rotation: { ...playerRotation, x: 0 } });
                         // 调用 UI
                         if (!isPlayer(player)) return;
-                        const showRole = system.settings.game.showRoleInSpectatorTeleportUI;
+                        const showRole = system.settings.gaming.showRoleInSpectatorTeleportUI;
                         let playerList = system.alivePlayers.allPlayers.map(playerData => {
                             const button: lib.FormButtonComponent = {
                                 type: "button",
@@ -2183,7 +2488,7 @@ class MurderMysteryComponents {
                 const alivePlayerCount = [...system.alivePlayers.innocent, ...system.alivePlayers.detective].length;
                 if (alivePlayerCount !== 1) return;
                 // 为杀手添加速度效果，并终止该时间线的检查
-                const gameTime = system.settings.game.timePerGame;
+                const gameTime = system.settings.gaming.timePerGame;
                 murdererData.player.addEffect("speed", 20 * gameTime, { showParticles: false });
                 return false;
             },
@@ -2265,7 +2570,7 @@ class MurderMysteryComponents {
      * @description 会在游戏开始时尝试对所有玩家施加夜视效果。
      */
     static applyNightVision(system: MurderMysterySystem) {
-        if (!system.settings.game.applyNightVision) return;
+        if (!system.settings.gaming.applyNightVision) return;
         lib.PlayerUtils.getAll().forEach(player => player.runCommand("effect @s night_vision infinite 0 true"));
     }
 
@@ -2774,7 +3079,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
     minecraft.system.runInterval(() => {
         // 地图无效化后，对下一张地图预加载后再开启新地图
         if (!murderMysterySystem || !murderMysterySystem.isValid) {
-            const nextMap = MurderMysterySystem.getMapData();
+            const nextMap = MurderMysterySystem.getMapData(murderMysterySystem?.nextMap);
             const { from, to } = nextMap.description.range;
             lib.TickingAreaUtils.add("nextMapPreLoad", from, to)?.then(() => {
                 murderMysterySystem = new MurderMysterySystem(nextMap);

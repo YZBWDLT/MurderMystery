@@ -35,6 +35,7 @@ item.murder_mystery:mystery_potion_2=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_3=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_4=§a??? Mystery Potion ???
 item.murder_mystery:locator=Locator
+item.murder_mystery:settings=Settings
 
 ## ===== Noun Translations =====
 
@@ -201,6 +202,36 @@ subtitle.archives.passageOpened=§aA secret passage has been opened!
 
 ### Trap
 textDisplay.trap=Trap - %s§6 Golds
+
+### Settings
+interact.settings=Map Settings...
+ui.settings.main.title=Settings
+ui.settings.main.playerSettings=§lPlayer Settings
+ui.settings.main.about=About Us
+ui.settings.main.updateLog=Update Log
+ui.settings.main.operatorSettings=§lOperator Settings
+ui.settings.main.selectMap=Select Map
+ui.settings.main.enableMap=Enable Map...
+ui.settings.main.waiting=Waiting...
+ui.settings.main.gaming=Gaming...
+ui.settings.main.goldSpawn=Gold Spawn...
+ui.settings.main.murdererSword=Murderer Sword...
+ui.settings.main.miscellaneous=Miscellaneous...
+ui.settings.about.title=About Us
+ui.settings.about.author=§lAuthor
+ui.settings.about.version=§lVersion
+ui.settings.about.tester=§lTesters
+ui.settings.about.specialThanks=§lSpecial Thanks
+ui.settings.updateLog.title=Update Log
+ui.settings.updateLog.line1=This paragraph is written in Chinese. Please use translation software if in need.
+ui.settings.selectMap.title=Select Map
+ui.settings.enableMap.title=Enable Map
+ui.settings.miscellaneous.title=Miscellaneous Settings
+ui.settings.miscellaneous.description=Miscellaneous settings, control other things in game.
+ui.settings.miscellaneous.infoboardLastLine.title=Last Line of Infoboard
+ui.settings.miscellaneous.infoboardLastLine.description=The content of last line of infoboard, with the color of yellow.
+ui.settings.defaultSettings.title=Change to Default
+ui.settings.confirm=Confirm
 
 ## ===== Infoboard Message =====
 
