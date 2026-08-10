@@ -718,6 +718,9 @@ class MurderMysteryEventManager {
      * @returns 返回是否成功地触发了事件。这会影响是否移除金锭等情况。
      */
     triggerEvent(id: string, playerData?: MurderMysteryPlayer): boolean {
+        // 如果游戏已结束，直接终止
+        if (this.system.gameStage !== GameStage.GamingStage) return false;
+
         // 如果不存在对应事件，直接终止
         const triggedEvent = this.events[id];
         if (!triggedEvent) return false;
@@ -2915,6 +2918,9 @@ class MurderMysteryPlayer {
         deathType: gameData.MurderMysteryDeathType = gameData.MurderMysteryDeathType.Other,
         killer?: MurderMysteryPlayer
     ) {
+        // 如果游戏已结束，直接终止
+        if (this.system.gameStage !== GameStage.GamingStage) return false;
+
         // 若该玩家已死亡，则跳过之
         if (this.isDead) return false;
 
