@@ -1527,7 +1527,7 @@ class MurderMysterySettings {
             "一起来看看本周的更新吧~",
             "==========",
             "§7§l地图",
-            "§7- 完全还原了 Hypixel 游乐园和复活节游乐园的功能，现在它们支持进入鬼屋门和使用单轨列车和过山车了",
+            "§7- #37 完全还原了 Hypixel 游乐园和复活节游乐园的功能，现在它们支持进入鬼屋门和使用单轨列车和过山车了",
             "§7- 略微修改了两张游乐园地图的金点，确保金点不会尝试遍历禁区",
             "§7- 略微修改了两张游乐园地图的金点，确保不会离岩浆过近",
             "§7- 现在地图总部可以开启云杉门了",
@@ -1536,6 +1536,7 @@ class MurderMysterySettings {
             "§7- 补充了部分地图的画",
             "§7§l特性更改&漏洞修复",
             "§7- 修复了默认会启用所有地图的问题",
+            "§7- #49 现在游戏结束后玩家不再能死亡，导致游戏产生进一步的误判",
         ];
         const textComponent: lib.FormLabelComponent[] = texts.map(text => ({ type: "label", text: text }));
         lib.UIUtils.createAction(player, {
