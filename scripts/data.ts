@@ -213,7 +213,7 @@ export interface MurderMysteryPlayerHurtComponent {
 
 export interface MurderMysteryOnGameStartComponent {
     /** 当地图重载后，触发何种事件。 */
-    trigger: string;
+    trigger: string | string[];
 }
 
 // ===== 事件响应 =====
@@ -224,6 +224,18 @@ export interface MurderMysteryEvents {
 
     /** 获取神秘药水事件响应，为玩家添加神秘药水。 */
     readonly getMysteryPotion?: MurderMysteryGetMysteryPotionEvent;
+
+    /** 进入鬼屋门事件响应。进入门时有 1/3 的概率发生：
+     * - 进入正确的门，玩家获得 3 个金锭；
+     * - 进入错误的门，玩家掉进下面的跑酷逃生区域；
+     * - 进入错误的门，玩家掉进虚空。
+     *
+     * 仅对具有特定结构的地图生效。
+     */
+    readonly intoHauntedHouseDoor?: MurderMysteryIntoHauntedHouseDoorEvent;
+
+    /** 离开鬼屋门事件响应。只有玩家离开鬼屋门之后才能重新进入鬼屋门。 */
+    readonly outOfHauntedHouseDoor?: MurderMysteryOutOfHauntedHouseDoorEvent;
 
     /** 放置事件响应，可放置方块、结构、实体和填充方块。 */
     readonly place?: (
@@ -263,6 +275,22 @@ export interface MurderMysteryGetMysteryPotionEvent {
     /** 动画和悬浮文本的坐标。 */
     animationLocation: minecraft.Vector3;
 }
+
+export interface MurderMysteryIntoHauntedHouseDoorEvent {
+    /** 门的位置。当玩家进入到鬼屋门时，关闭何位置的门。 */
+    doorLocation: minecraft.Vector3;
+
+    /** 岩浆跑酷房通道的玻璃位置。 */
+    lavaCaveGlassLocation: minecraft.Vector3;
+
+    /** 虚空通道的玻璃位置。 */
+    voidGlassLocation: minecraft.Vector3;
+
+    /** 虚空通道的屏障位置，强制令玩家跌到虚空。 */
+    voidBarrierLocation: { from: minecraft.Vector3; to: minecraft.Vector3 };
+}
+
+export interface MurderMysteryOutOfHauntedHouseDoorEvent {}
 
 export interface MurderMysterySetBlockEvent extends lib.BlockData {
     /** 放置类型：放置方块。 */
@@ -327,7 +355,7 @@ export interface MurderMysteryTriggerEvent {
 // #region 地图数据
 
 /** 地图数据。 */
-export const maps = {
+export const maps: Record<string, MurderMysteryMapData> = {
     archives: {
         description: {
             id: "archives",
@@ -3261,10 +3289,85 @@ export const maps = {
         },
         components: {
             playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "easterWorld:playerIntoLava" }],
+            playerInArea: [
+                {
+                    area: { xMin: -166, xMax: -165, yMin: 21, yMax: 22, zMin: 3104, zMax: 3105 },
+                    trigger: "easterWorld:intoHauntedHouseDoor1",
+                },
+                {
+                    area: { xMin: -166, xMax: -165, yMin: 21, yMax: 22, zMin: 3101, zMax: 3102 },
+                    trigger: "easterWorld:intoHauntedHouseDoor1",
+                },
+                {
+                    area: { xMin: -166, xMax: -165, yMin: 21, yMax: 22, zMin: 3098, zMax: 3099 },
+                    trigger: "easterWorld:intoHauntedHouseDoor1",
+                },
+                { area: { yMax: 0 }, trigger: "easterWorld:playerIntoVoid" },
+            ],
+            onGameStart: {
+                trigger: ["easterWorld:recoverDoor1", "easterWorld:recoverDoor2", "easterWorld:recoverDoor3"],
+            },
         },
         events: {
             "easterWorld:playerIntoLava": {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
+            },
+            "easterWorld:intoHauntedHouseDoor1": {
+                intoHauntedHouseDoor: {
+                    doorLocation: { x: -165, y: 21, z: 3104 },
+                    lavaCaveGlassLocation: { x: -166, y: 20, z: 3104 },
+                    voidGlassLocation: { x: -166, y: 13, z: 3104 },
+                    voidBarrierLocation: { from: { x: -165, y: 14, z: 3104 }, to: { x: -165, y: 16, z: 3104 } },
+                },
+                trigger: { id: "easterWorld:recoverDoor1", delay: 160 },
+            },
+            "easterWorld:intoHauntedHouseDoor2": {
+                intoHauntedHouseDoor: {
+                    doorLocation: { x: -165, y: 21, z: 3101 },
+                    lavaCaveGlassLocation: { x: -166, y: 20, z: 3101 },
+                    voidGlassLocation: { x: -166, y: 13, z: 3101 },
+                    voidBarrierLocation: { from: { x: -165, y: 14, z: 3101 }, to: { x: -165, y: 16, z: 3101 } },
+                },
+                trigger: { id: "easterWorld:recoverDoor2", delay: 160 },
+            },
+            "easterWorld:intoHauntedHouseDoor3": {
+                intoHauntedHouseDoor: {
+                    doorLocation: { x: -165, y: 21, z: 3098 },
+                    lavaCaveGlassLocation: { x: -166, y: 20, z: 3098 },
+                    voidGlassLocation: { x: -166, y: 13, z: 3098 },
+                    voidBarrierLocation: { from: { x: -165, y: 14, z: 3098 }, to: { x: -165, y: 16, z: 3098 } },
+                },
+                trigger: { id: "easterWorld:recoverDoor3", delay: 160 },
+            },
+            "easterWorld:recoverDoor1": {
+                place: [
+                    {
+                        type: "setStructure",
+                        structure: "murder_mystery:easterWorld/door",
+                        location: { x: -166, y: 13, z: 3104 },
+                    },
+                ],
+            },
+            "easterWorld:recoverDoor2": {
+                place: [
+                    {
+                        type: "setStructure",
+                        structure: "murder_mystery:easterWorld/door",
+                        location: { x: -166, y: 13, z: 3101 },
+                    },
+                ],
+            },
+            "easterWorld:recoverDoor3": {
+                place: [
+                    {
+                        type: "setStructure",
+                        structure: "murder_mystery:easterWorld/door",
+                        location: { x: -166, y: 13, z: 3098 },
+                    },
+                ],
+            },
+            "easterWorld:playerIntoVoid": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Void },
             },
         },
     },
@@ -3619,8 +3722,6 @@ export const maps = {
                 { x: 875.5, y: 30.5, z: 3889.5 },
             ],
         },
-        components: {},
-        events: {},
     },
     hypixelWorld: {
         description: {
@@ -3956,10 +4057,119 @@ export const maps = {
         components: {
             time: 18000,
             playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "hypixelWorld:playerIntoLava" }],
+            playerInArea: [
+                {
+                    area: { xMin: -960, xMax: -959, yMin: 45, yMax: 47, zMin: 2882, zMax: 2884 },
+                    trigger: "hypixelWorld:intoHauntedHouseDoor1",
+                },
+                {
+                    area: { xMin: -960, xMax: -959, yMin: 45, yMax: 47, zMin: 2879, zMax: 2881 },
+                    trigger: "hypixelWorld:intoHauntedHouseDoor2",
+                },
+                {
+                    area: { xMin: -960, xMax: -959, yMin: 45, yMax: 47, zMin: 2876, zMax: 2878 },
+                    trigger: "hypixelWorld:intoHauntedHouseDoor3",
+                },
+                {
+                    area: { xMin: -958, xMax: -956, yMin: 46, yMax: 50, zMin: 2875, zMax: 2885 },
+                    trigger: "hypixelWorld:outOfHauntedHouseDoor",
+                },
+                { area: { yMax: 20 }, trigger: "hypixelWorld:playerIntoVoid" },
+            ],
+            onGameStart: {
+                trigger: ["hypixelWorld:recoverDoor1", "hypixelWorld:recoverDoor2", "hypixelWorld:recoverDoor3"],
+            },
         },
         events: {
             "hypixelWorld:playerIntoLava": {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
+            },
+            "hypixelWorld:intoHauntedHouseDoor1": {
+                condition: {
+                    isBlock: [
+                        {
+                            id: "minecraft:wooden_door",
+                            location: { x: -959, y: 46, z: 2883 },
+                            states: { open_bit: true },
+                        },
+                    ],
+                },
+                intoHauntedHouseDoor: {
+                    doorLocation: { x: -959, y: 46, z: 2883 },
+                    lavaCaveGlassLocation: { x: -960, y: 45, z: 2883 },
+                    voidGlassLocation: { x: -960, y: 38, z: 2883 },
+                    voidBarrierLocation: { from: { x: -959, y: 39, z: 2883 }, to: { x: -959, y: 41, z: 2883 } },
+                },
+                trigger: { id: "hypixelWorld:recoverDoor1", delay: 180 },
+            },
+            "hypixelWorld:intoHauntedHouseDoor2": {
+                condition: {
+                    isBlock: [
+                        {
+                            id: "minecraft:wooden_door",
+                            location: { x: -959, y: 46, z: 2880 },
+                            states: { open_bit: true },
+                        },
+                    ],
+                },
+                intoHauntedHouseDoor: {
+                    doorLocation: { x: -959, y: 46, z: 2880 },
+                    lavaCaveGlassLocation: { x: -960, y: 45, z: 2880 },
+                    voidGlassLocation: { x: -960, y: 38, z: 2880 },
+                    voidBarrierLocation: { from: { x: -959, y: 39, z: 2880 }, to: { x: -959, y: 41, z: 2880 } },
+                },
+                trigger: { id: "hypixelWorld:recoverDoor2", delay: 180 },
+            },
+            "hypixelWorld:intoHauntedHouseDoor3": {
+                condition: {
+                    isBlock: [
+                        {
+                            id: "minecraft:wooden_door",
+                            location: { x: -959, y: 46, z: 2877 },
+                            states: { open_bit: true },
+                        },
+                    ],
+                },
+                intoHauntedHouseDoor: {
+                    doorLocation: { x: -959, y: 46, z: 2877 },
+                    lavaCaveGlassLocation: { x: -960, y: 45, z: 2877 },
+                    voidGlassLocation: { x: -960, y: 38, z: 2877 },
+                    voidBarrierLocation: { from: { x: -959, y: 39, z: 2877 }, to: { x: -959, y: 41, z: 2877 } },
+                },
+                trigger: { id: "hypixelWorld:recoverDoor3", delay: 180 },
+            },
+            "hypixelWorld:outOfHauntedHouseDoor": {
+                outOfHauntedHouseDoor: {},
+            },
+            "hypixelWorld:recoverDoor1": {
+                place: [
+                    {
+                        type: "setStructure",
+                        structure: "murder_mystery:hypixelWorld/door",
+                        location: { x: -960, y: 38, z: 2883 },
+                    },
+                ],
+            },
+            "hypixelWorld:recoverDoor2": {
+                place: [
+                    {
+                        type: "setStructure",
+                        structure: "murder_mystery:hypixelWorld/door",
+                        location: { x: -960, y: 38, z: 2880 },
+                    },
+                ],
+            },
+            "hypixelWorld:recoverDoor3": {
+                place: [
+                    {
+                        type: "setStructure",
+                        structure: "murder_mystery:hypixelWorld/door",
+                        location: { x: -960, y: 38, z: 2877 },
+                    },
+                ],
+            },
+            "hypixelWorld:playerIntoVoid": {
+                setPlayerDead: { deathType: MurderMysteryDeathType.Void },
             },
         },
     },
@@ -4684,6 +4894,6 @@ export const maps = {
             },
         },
     },
-} satisfies Record<string, MurderMysteryMapData>;
+};
 
 // #endregion

@@ -200,6 +200,10 @@ chat.murdererGetLocator.murderer=§e你的定位器现在可以指向其他玩�
 ### 档案馆秘密通道
 subtitle.archives.passageOpened=§a一个秘密通道开启了！
 
+### Hypixel游乐园的门
+chat.hypixelWorld.doors.right=§a你选择了正确的门！但是请注意，下次门后等待着你的可能是重重危机……
+chat.hypixelWorld.doors.wrong=§c错误选项！
+
 ### 陷阱
 textDisplay.trap=陷阱 - %s§6块金锭
 

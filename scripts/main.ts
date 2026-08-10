@@ -338,7 +338,11 @@ class MurderMysterySystem {
 
         // 若地图注册了 onGameStart 组件，则触发其规定的事件
         const onGameStart = this.mapData.components?.onGameStart;
-        if (onGameStart) this.eventManager.triggerEvent(onGameStart.trigger);
+        if (onGameStart) {
+            const trigger = onGameStart.trigger;
+            if (typeof trigger === "string") this.eventManager.triggerEvent(trigger);
+            else trigger.forEach(t => this.eventManager.triggerEvent(t));
+        }
     }
 
     /** 令游戏进入结束阶段。
@@ -376,10 +380,15 @@ class MurderMysterySystem {
     // #region - 地图管理
 
     /** 获取地图数据。若不指定地图名称，则返回所有可用地图中的一张随机地图。 */
-    static getMapData(mapName?: keyof typeof gameData.maps): gameData.MurderMysteryMapData {
+    static getMapData(mapName?: string): gameData.MurderMysteryMapData {
         // 选择其中一张地图
         const maps = Object.values(gameData.maps);
-        return mapName ? gameData.maps[mapName] : lib.JSUtils.array.randomElement(maps);
+        let resultMap = lib.JSUtils.array.randomElement(maps);
+        if (mapName) {
+            const selectedMap = gameData.maps[mapName];
+            if (selectedMap) resultMap = selectedMap;
+        }
+        return resultMap;
     }
 
     // #endregion
@@ -713,8 +722,18 @@ class MurderMysteryEventManager {
         if (!triggedEvent) return false;
 
         // 变量准备
-        const { condition, getMysteryPotion, place, setPlayerDead, notify, broadcast, trigger, teleport } =
-            triggedEvent;
+        const {
+            condition,
+            getMysteryPotion,
+            intoHauntedHouseDoor,
+            outOfHauntedHouseDoor,
+            place,
+            setPlayerDead,
+            notify,
+            broadcast,
+            trigger,
+            teleport,
+        } = triggedEvent;
 
         // ===== 判断条件是否通过 =====
         // 如果这里的条件不通过，则直接返回 false，不触发后续的事件
@@ -741,6 +760,25 @@ class MurderMysteryEventManager {
             // 尝试执行神秘药水事件，若执行失败直接返回 false
             const result = this.getMysteryPotion(getMysteryPotion, playerData);
             if (!result) return false;
+        }
+
+        // ===== 执行鬼屋门事件 =====
+        if (intoHauntedHouseDoor) {
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+
+            // 尝试执行鬼屋门事件，若执行失败直接返回 false
+            const result = this.intoHauntedHouseDoor(intoHauntedHouseDoor, playerData);
+            if (!result) return false;
+        }
+
+        // ===== 执行离开鬼屋门事件 =====
+        if (outOfHauntedHouseDoor) {
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+
+            // 标记玩家离开鬼屋门
+            playerData.isInHauntedHouseDoor = false;
         }
 
         // ===== 执行放置方块/结构事件 =====
@@ -1046,6 +1084,84 @@ class MurderMysteryEventManager {
     }
 
     // #endregion
+    // #region - 鬼屋门
+
+    private intoHauntedHouseDoor(
+        intoHauntedHouseDoorEvent: gameData.MurderMysteryIntoHauntedHouseDoorEvent,
+        playerData: MurderMysteryPlayer
+    ): boolean {
+        // ===== 变量准备 =====
+        const { doorLocation, voidGlassLocation, lavaCaveGlassLocation, voidBarrierLocation } =
+            intoHauntedHouseDoorEvent;
+        const player = playerData.player;
+
+        // ===== 条件判断 =====
+        // 如果没有方块，则终止运行
+        const door = lib.BlockUtils.get(doorLocation);
+        if (!door) return false;
+        // 如果不是玩家，则终止运行
+        if (!isPlayer(player)) return false;
+        // 如果玩家已在鬼屋门内，则终止运行
+        if (playerData.isInHauntedHouseDoor) return false;
+
+        // ===== 开启鬼屋门的判断 =====
+        // 关门
+        door.setPermutation(door.permutation.withState("open_bit", false));
+        lib.PlayerUtils.notify(player, { sound: "close.wooden_door" });
+
+        // 标记玩家进入鬼屋门
+        playerData.isInHauntedHouseDoor = true;
+
+        // 播放音效
+        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 20 });
+        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 40 });
+        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 60 });
+        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 80 });
+        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 100 });
+        // 6 秒后随机一个结果
+        minecraft.system.runTimeout(() => {
+            // 随机结果
+            const randomResult = lib.JSUtils.number.randomInt(1, 3) as 1 | 2 | 3;
+            switch (randomResult) {
+                // 1. 正确的门，给予玩家 3 个金锭并放行
+                case 1:
+                    lib.ItemUtils.addEntity(player.location, goldId, { amount: 3 });
+                    lib.PlayerUtils.notify(player, {
+                        message: { translate: "chat.hypixelWorld.doors.right" },
+                        sound: "random.pop",
+                    });
+                    break;
+
+                // 2. 错误的门，但不把玩家送到虚空
+                case 2:
+                    lib.BlockUtils.set({ id: "minecraft:air", location: lavaCaveGlassLocation });
+                    lib.PlayerUtils.notify(player, {
+                        message: { translate: "chat.hypixelWorld.doors.wrong" },
+                        sound: "mob.enderdragon.flap",
+                    });
+                    break;
+
+                // 3. 错误的门，且把玩家送到虚空
+                case 3:
+                    lib.BlockUtils.set({ id: "minecraft:air", location: lavaCaveGlassLocation });
+                    lib.BlockUtils.set({ id: "minecraft:air", location: voidGlassLocation });
+                    lib.BlockUtils.fill({ id: "minecraft:barrier", ...voidBarrierLocation });
+                    lib.PlayerUtils.notify(player, {
+                        message: { translate: "chat.hypixelWorld.doors.wrong" },
+                        sound: "mob.enderdragon.flap",
+                    });
+                    break;
+            }
+        }, 120);
+        // 7 秒后开门
+        minecraft.system.runTimeout(() => {
+            door.setPermutation(door.permutation.withState("open_bit", true));
+            lib.PlayerUtils.notify(player, { sound: "open.wooden_door" });
+        }, 140);
+        return true;
+    }
+
+    // #endregion
 }
 
 // #endregion
@@ -1110,11 +1226,7 @@ type MurderMysteryMiscellaneousSettings = {
 
 /** 密室杀手设置。在设置内包含众多玩家可以调控的设置项。 */
 class MurderMysterySettings {
-    constructor() {
-        (Object.keys(gameData.maps) as (keyof typeof gameData.maps)[]).forEach(mapName => {
-            this.mapEnabled[mapName] = true;
-        });
-    }
+    constructor() {}
 
     /** 等待设置，在等待期间可以调控的设置项。 */
     waiting: MurderMysteryWaitingSettings = {
@@ -2648,9 +2760,6 @@ class MurderMysteryPlayer {
     /** 杀手的飞刀的蓄力时间。单位：游戏刻。 */
     throwingTime = 0;
 
-    /** 神秘药水的解锁情况。 */
-    readonly mysteryPotionUnlocked: [boolean, boolean, boolean, boolean, boolean] = [false, false, false, false, false];
-
     /** 正在显示定位栏。 */
     isShowingLocatorBar = false;
 
@@ -3068,6 +3177,15 @@ class MurderMysteryPlayer {
         player.locatorBar.removeAllWaypoints();
         this.isShowingLocatorBar = false;
     }
+
+    // #endregion
+    // #region - 特殊地图属性
+
+    /** 神秘药水的解锁情况。 */
+    readonly mysteryPotionUnlocked: [boolean, boolean, boolean, boolean, boolean] = [false, false, false, false, false];
+
+    /** 是否在鬼屋门内。 */
+    isInHauntedHouseDoor = false;
 
     // #endregion
 }

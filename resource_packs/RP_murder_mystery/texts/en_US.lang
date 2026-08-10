@@ -200,6 +200,10 @@ chat.murdererGetLocator.murderer=§eYou've got a locator! Hold it to find the re
 ### Passage in Map Archives
 subtitle.archives.passageOpened=§aA secret passage has been opened!
 
+### Doors in Hypixel World
+chat.hypixelWorld.doors.right=§aYou chose the right door! But beware—next time, grave dangers may be waiting behind it...
+chat.hypixelWorld.doors.wrong=§cWrong door!
+
 ### Trap
 textDisplay.trap=Trap - %s§6 Golds
 

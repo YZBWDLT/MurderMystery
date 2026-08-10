@@ -18,31 +18,17 @@
 
 如果还有什么想要了解的，请联系我们的 QQ 群，进群申请填写为「GitHub 密室杀手」。
 
-## 1.0 - Snapshot 5 更新日志
+## 1.0 - Exp 6 更新日志
 
-### 设置
+### 地图
 
-- 引入了全新的设置选项！
-- 在游戏开始之前，所有玩家的快捷栏都会获得一个设置物品
-- 对所有玩家均可用，但不同玩家看到的选项将有所不同
-- 目前仍为早期版本，之后会做更多相关更改，例如`reload`保留设置等，同时一些本应禁用的地图也将在保留设置更新后真正禁用
+- 现在地图 Hypixel 游乐园支持进入鬼屋门了
 
 ### 特性更改&漏洞修复
 
-- #32 对定位栏退出重进无法正确运作的问题进行了尝试性修复  
-  **开发者注**：*目前无法保证该修复是有效的，还需要进行验证*
-- #35 现在当剩余最后一人时，杀手的迅捷效果不再会和神秘药水的效果冲突
-- #46 修复了玩家掉进新版档案馆顶层的坑后，“你跑得太远了！”消息会覆盖玩家死亡消息的问题
-- #47 修复了一处脚本报错
+- 修复了默认会启用所有地图的问题
 
 ### 技术性
 
-- 新增了一个设置物品`murder_mystery:settings`
-- 主文件 `main.js`
-  - 为事件管理器添加了一个`inPotionEffect`属性，可用于记录玩家是否处于神秘药水的效果下
-  - 为`MurderMysteryPlayer`类新增了`isShowingLocatorBar`属性，标记玩家是否正在展示定位栏
-  - 将`game`设置更名为`gaming`设置
-  - 为`MurderMysterySystem`新增了系统版本属性`version`
-  - 为`MurderMysterySystem`新增了下一张地图属性`nextMap`
-  - 为`MurderMysterySettings`新增了多个调用 UI 的静态方法
-  - 为`MurderMysteryComponents`新增了`settings`组件
+- 现在`onGameStart`事件响应支持触发多个事件
+- 新增了`intoHauntedHouseDoor`和`outOfHauntedHouseDoor`事件响应，代表进入和离开鬼屋门；同时，为密室杀手玩家添加了`isInHauntedHouseDoor`属性，以标记玩家是否进入了鬼屋门
