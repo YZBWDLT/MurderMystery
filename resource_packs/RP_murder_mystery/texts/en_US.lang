@@ -51,6 +51,8 @@ map.headQuarters=Head Quarters
 map.hypixelWorld=Hypixel World
 map.library=Library
 map.towerFall=Tower Fall
+map.transportV1=Transport V1
+map.transportV2=Transport V2
 
 ### Mode name
 mode.classic=Classic

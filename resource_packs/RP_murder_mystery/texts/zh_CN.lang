@@ -51,6 +51,8 @@ map.headQuarters=总部
 map.hypixelWorld=Hypixel游乐园
 map.library=图书馆
 map.towerFall=高坠塔
+map.transportV1=运输塔V1
+map.transportV2=运输塔V2
 
 ### 模式名
 mode.classic=经典
