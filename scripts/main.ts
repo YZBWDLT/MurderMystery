@@ -1396,6 +1396,8 @@ class MurderMysterySettings {
         hypixelWorld: true,
         library: true,
         towerFall: true,
+        transportV1: false,
+        transportV2: true,
     };
 
     // #region - 设置 UI
@@ -1507,9 +1509,9 @@ class MurderMysterySettings {
                 { type: "label", text: "§a1.0 正式版更新后同步……" },
                 { type: "divider" },
                 { type: "label", text: { translate: "ui.settings.about.specialThanks" } },
-                { type: "label", text: "§a珂朵莉（Tetrisoo）" },
-                { type: "label", text: "§a欧拉（EurluoL）" },
-                // { type: "label", text: "§a祉语（xhduoduobaby）" }, 应祉语要求，不显示
+                { type: "label", text: "§a珂朵莉 (Tetrisoo)" },
+                { type: "label", text: "§a欧拉 (EurluoL)" },
+                // { type: "label", text: "§a祉语 (xhduoduobaby)" }, 应祉语要求，不显示
             ],
         });
     }
@@ -1522,9 +1524,13 @@ class MurderMysterySettings {
             "一起来看看本周的更新吧~",
             "==========",
             "§7§l地图",
-            "§7- 完全还原了 Hypixel 游乐园和复活节游乐园的功能，现在它们支持进入鬼屋门和使用单轨列车和过山车了；同时，略微修改了两张地图的金点，确保金点不会尝试遍历禁区",
+            "§7- 完全还原了 Hypixel 游乐园和复活节游乐园的功能，现在它们支持进入鬼屋门和使用单轨列车和过山车了",
+            "§7- 略微修改了两张游乐园地图的金点，确保金点不会尝试遍历禁区",
+            "§7- 略微修改了两张游乐园地图的金点，确保不会离岩浆过近",
             "§7- 现在地图总部可以开启云杉门了",
             "§7- 新增了运输塔 V1 和运输塔 V2",
+            "§7- 修复了部分地图可能的出图点位，或卡位点位",
+            "§7- 补充了部分地图的画",
             "§7§l特性更改&漏洞修复",
             "§7- 修复了默认会启用所有地图的问题",
         ];

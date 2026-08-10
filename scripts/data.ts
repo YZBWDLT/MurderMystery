@@ -5619,6 +5619,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1218.5, y: 55.5, z: -3118.5 },
             ],
         },
+        components: {
+            time: 18000,
+        },
     },
     // #endregion
 
@@ -6008,6 +6011,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1250.5, y: 19.5, z: -2223.5 },
                 { x: 1250.5, y: 19.5, z: -2219.5 },
             ],
+        },
+        components: {
+            time: 18000,
         },
     },
     // #endregion
