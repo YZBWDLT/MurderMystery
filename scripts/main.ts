@@ -335,6 +335,7 @@ class MurderMysterySystem {
         MurderMysteryComponents.mysteryPotion(this);
         MurderMysteryComponents.applyNightVision(this);
         MurderMysteryComponents.playerInArea(this);
+        MurderMysteryComponents.preventDamage(this);
 
         // 若地图注册了 onGameStart 组件，则触发其规定的事件
         const onGameStart = this.mapData.components?.onGameStart;
@@ -733,12 +734,14 @@ class MurderMysteryEventManager {
             broadcast,
             trigger,
             teleport,
+            rideMinecart,
+            cooldown,
         } = triggedEvent;
 
         // ===== 判断条件是否通过 =====
         // 如果这里的条件不通过，则直接返回 false，不触发后续的事件
         if (condition) {
-            const { isBlock, playerBelowHeight } = condition;
+            const { isBlock, playerBelowHeight, cooldownCompleted } = condition;
 
             // 检查方块条件是否通过，如果未指定则默认通过
             const hasBlockUnmatched: boolean = isBlock?.some(data => !lib.BlockUtils.match(data)) ?? false;
@@ -747,8 +750,22 @@ class MurderMysteryEventManager {
             // 检查玩家高度条件是否通过
             if (playerBelowHeight) {
                 if (!playerData) return false;
-                const { y } = playerData.player.location;
-                if (y >= playerBelowHeight) return false;
+                if (playerData.player.location.y >= playerBelowHeight) return false;
+            }
+
+            // 检查玩家特定冷却是否仍在运行
+            if (cooldownCompleted) {
+                if (!playerData) return false;
+                const { type, itemName } = cooldownCompleted;
+                const leftDuration = playerData.eventCooldown[type] ?? 0;
+                if (leftDuration > 0) {
+                    if (isPlayer(playerData.player))
+                        playerData.player.sendMessage({
+                            translate: "chat.cooldown",
+                            with: { rawtext: [{ translate: itemName }, { text: `${leftDuration}` }] },
+                        });
+                    return false;
+                }
             }
         }
 
@@ -808,6 +825,16 @@ class MurderMysteryEventManager {
             if (!result) return false;
         }
 
+        // ===== 触发乘坐矿车事件 =====
+        if (rideMinecart) {
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+
+            // 尝试执行乘坐矿车事件，若执行失败直接返回 false
+            const result = this.rideMinecart(rideMinecart, playerData);
+            if (!result) return false;
+        }
+
         // ===== 触发传送玩家事件 =====
         if (teleport) {
             // 如果执行此事件时没有执行玩家，返回 false
@@ -815,6 +842,16 @@ class MurderMysteryEventManager {
 
             // 尝试执行传送玩家事件，若执行失败直接返回 false
             const result = this.teleport(teleport, playerData);
+            if (!result) return false;
+        }
+
+        // ===== 触发冷却事件 =====
+        if (cooldown) {
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+
+            // 尝试执行冷却事件，若执行失败直接返回 false
+            const result = this.cooldown(cooldown, playerData);
             if (!result) return false;
         }
 
@@ -1173,6 +1210,77 @@ class MurderMysteryEventManager {
         return true;
     }
 
+    // #endregion
+    // #region - 玩家乘坐矿车
+    private rideMinecart(
+        rideMinecartEvent: gameData.MurderMysteryRideMinecartEvent,
+        playerData: MurderMysteryPlayer
+    ): boolean {
+        // ===== 变量准备&条件检查 =====
+        const { from, to, initVelocity, onArrival } = rideMinecartEvent;
+        const player = playerData.player;
+
+        if (!isPlayer(player)) return false;
+
+        // ===== 生成矿车并锁定玩家 =====
+
+        // 生成矿车并施加初始速度
+        const minecart = lib.EntityUtils.add("minecraft:minecart", from);
+        minecart.applyImpulse(initVelocity);
+
+        // 禁用玩家的下车权限
+        player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, false);
+        player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, false);
+
+        // 令玩家坐在矿车上
+        const rideableComp = minecart.getComponent("rideable");
+        if (!rideableComp) return false;
+        rideableComp.addRider(player);
+
+        // 当矿车到达终点时，移除矿车，启用玩家的下车权限并终止时间线
+        lib.gameSystem.subscribeTimeline(`${player.id}RideMinecart`, () => {
+            const location = minecart.location;
+            if (lib.Vector3Utils.distance(location, to, true) <= 1) {
+                player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
+                player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
+                minecart.remove();
+                this.triggerEvent(onArrival, playerData);
+                return false;
+            }
+        });
+        return true;
+    }
+
+    // #endregion
+    // #region - 玩家进入冷却
+    private cooldown(cooldownEvent: gameData.MurderMysteryCooldownEvent, playerData: MurderMysteryPlayer): boolean {
+        // 记录玩家的冷却
+        const { type, duration } = cooldownEvent;
+        playerData.eventCooldown[type] = duration;
+        // 注册时间线进行倒计时
+        lib.gameSystem.subscribeTimeline(
+            "eventCooldown",
+            () => {
+                // 检查还有哪些玩家正处于倒计时下，如果没有玩家则终止这个时间线
+                const inCooldownPlayers = this.system.alivePlayers.allPlayers.filter(
+                    playerData => Object.keys(playerData.eventCooldown).length > 0
+                );
+                if (inCooldownPlayers.length === 0) return false;
+                // 如果仍有玩家处于冷却，对每个玩家的每个冷却 -1 秒倒计时
+                inCooldownPlayers.forEach(playerData => {
+                    const cooldowns = Object.keys(playerData.eventCooldown);
+                    cooldowns.forEach(cooldown => {
+                        const currentDuration = playerData.eventCooldown[cooldown] ?? 0;
+                        // 当前值 ≤ 1 时，下一秒归零，直接删除，否则减 1 秒
+                        if (currentDuration <= 1) delete playerData.eventCooldown[cooldown];
+                        else playerData.eventCooldown[cooldown] = currentDuration - 1;
+                    });
+                });
+            },
+            20
+        );
+        return true;
+    }
     // #endregion
 }
 
@@ -2613,7 +2721,7 @@ class MurderMysteryComponents {
     // #region - 开始后可选
 
     /** 神秘药水组件。
-     * @description 会自动判断系统的地图数据是否含有`enabledMysteryPotion`组件，若不含该组件则不会注册该组件。
+     * @description 会自动判断系统的地图数据是否含有`enableMysteryPotion`组件，若不含该组件则不会注册该组件。
      * @description 会在游戏开始时尝试在规定的位置生成展示文本。
      * @description 当玩家喝下神秘药水时，会导致玩家拥有不同的药效。
      */
@@ -2685,6 +2793,24 @@ class MurderMysteryComponents {
     static applyNightVision(system: MurderMysterySystem) {
         if (!system.settings.gaming.applyNightVision) return;
         lib.PlayerUtils.getAll().forEach(player => player.runCommand("effect @s night_vision infinite 0 true"));
+    }
+
+    /** 阻止实体受到伤害组件。
+     * @description 会自动判断系统的地图数据是否含有`preventDamage`组件，若不含该组件则不会注册该组件。
+     * @description 会阻止特定实体受到伤害。
+     */
+    static preventDamage(system: MurderMysterySystem) {
+        // 检查是否有阻止受伤组件
+        const preventDamageComponent = system.mapData.components?.preventDamage;
+        if (!preventDamageComponent) return;
+
+        // 变量准备
+        const entityTypes = preventDamageComponent.id;
+
+        // 阻止受伤
+        lib.gameSystem.subscribeEvent("playerUseMysteryPotionTest", minecraft.world.beforeEvents.entityHurt, event => {
+            if (entityTypes.includes(event.hurtEntity.typeId)) event.cancel = true;
+        });
     }
 
     // #endregion
@@ -3187,6 +3313,9 @@ class MurderMysteryPlayer {
 
     /** 是否在鬼屋门内。 */
     isInHauntedHouseDoor = false;
+
+    /** 事件冷却列表。触发了特定事件后可能会导致特定类型的事件冷却，在冷却期内可指定为无法再次触发事件。 */
+    readonly eventCooldown: Record<string, number> = {};
 
     // #endregion
 }

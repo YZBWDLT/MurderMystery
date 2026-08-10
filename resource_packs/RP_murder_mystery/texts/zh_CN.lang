@@ -78,7 +78,7 @@ subtitle.gameStart.innocent=§e努力存活下来！活着就是胜利！
 title.gameStart.detective=§b身份：侦探
 subtitle.gameStart.detective=§e找到杀手并杀死，为民除害！
 title.gameStart.murderer=§c身份：杀手
-subtitle.gameStart.murderer=§e杀死所有玩家！
+subtitle.gameStart.murderer=§e杀死所有玩家！让街道上尸横遍野！
 chat.teaming.innocent=§c§l严禁与杀手联手！
 chat.teaming.detective=§c§l严禁与杀手联手！
 chat.teaming.murderer=§c§l严禁与侦探/平民联手！
@@ -203,13 +203,22 @@ subtitle.archives.passageOpened=§a一个秘密通道开启了！
 ### Hypixel游乐园的门
 chat.hypixelWorld.doors.right=§a你选择了正确的门！但是请注意，下次门后等待着你的可能是重重危机……
 chat.hypixelWorld.doors.wrong=§c错误选项！
-textDisplay.hypixelWorld.line1=§e你可以选择进入
-textDisplay.hypixelWorld.line2=§e这些门其中之一
-textDisplay.hypixelWorld.line3=§e但要小心，它很可能是
-textDisplay.hypixelWorld.line4=§e一个陷阱！
+textDisplay.hypixelWorld.doors.line1=§e你可以选择进入
+textDisplay.hypixelWorld.doors.line2=§e这些门其中之一
+textDisplay.hypixelWorld.doors.line3=§e但要小心，它很可能是
+textDisplay.hypixelWorld.doors.line4=§e一个陷阱！
+
+### Hypixel游乐园的铁轨
+hypixelWorld.monorail=单轨列车
+hypixelWorld.rollerCoaster=过山车
+textDisplay.hypixelWorld.monorail=单轨列车 - %s§6块金锭
+textDisplay.hypixelWorld.rollerCoaster=过山车 - %s§6块金锭
 
 ### 陷阱
 textDisplay.trap=陷阱 - %s§6块金锭
+
+### Cooldown
+chat.cooldown=§c%s还有%s秒冷却时间！
 
 ### 设置
 interact.settings=地图设置...

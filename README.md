@@ -22,7 +22,8 @@
 
 ### 地图
 
-- 现在地图 Hypixel 游乐园支持进入鬼屋门了
+- 完全还原了 Hypixel 游乐园和复活节游乐园的功能，现在它们支持进入鬼屋门和使用单轨列车和过山车了
+- 现在地图总部可以开启云杉门了
 
 ### 特性更改&漏洞修复
 
@@ -34,3 +35,6 @@
 - 现在`onGameStart`事件响应支持触发多个事件
 - 新增了`intoHauntedHouseDoor`和`outOfHauntedHouseDoor`事件响应，代表进入和离开鬼屋门；同时，为密室杀手玩家添加了`isInHauntedHouseDoor`属性，以标记玩家是否进入了鬼屋门
 - 剥离`interaction`组件中的`setText`功能到`place`事件响应去，现在可以通过`place`事件响应来放置悬浮文本
+- 新增了`preventDamage`组件，用于防止实体受伤，用于矿车
+- 新增了`cooldown`事件响应，用于使玩家进入特定事件的冷却状态；同时为`condition`事件响应新增了`cooldownCompleted`参数，只有冷却结束后才能通过
+- 新增了`rideMinecart`事件响应，用于使玩家骑乘矿车

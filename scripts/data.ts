@@ -118,6 +118,8 @@ export interface MurderMysteryWaitHallDescription {
 
 // ===== 组件 =====
 
+// #region - 组件
+
 export interface MurderMysteryMapDataComponent {
     /** 时间组件，设定该地图使用的游戏内时间。 | 默认值：`6000` */
     readonly time?: number;
@@ -142,6 +144,9 @@ export interface MurderMysteryMapDataComponent {
      * @remarks 注意：由该组件触发的各事件响应不能获得操作的玩家。
      */
     readonly onGameStart?: MurderMysteryOnGameStartComponent;
+
+    /** 阻止特定类型实体受到伤害组件。当特定实体受伤的时候，阻止该伤害。 */
+    readonly preventDamage?: MurderMysteryPreventDamageComponent;
 }
 
 export interface MurderMysteryInteractionComponent {
@@ -207,11 +212,19 @@ export interface MurderMysteryOnGameStartComponent {
     trigger: string | string[];
 }
 
-// ===== 事件响应 =====
+export interface MurderMysteryPreventDamageComponent {
+    /** 阻止何种实体受到伤害。 */
+    id: string[];
+}
 
+// #endregion
+// #region - 事件响应
 export interface MurderMysteryEvents {
     /** 触发事件的条件。系统会首先判断该条件是否通过，仅当触发该事件时，所有的条件都通过时才能触发事件，否则无法触发事件。 */
     readonly condition?: MurderMysteryEventCondition;
+
+    /** 设置冷却。当进入冷却状态后，系统将开始对冷却进入倒计时。 */
+    readonly cooldown?: MurderMysteryCooldownEvent;
 
     /** 获取神秘药水事件响应，为玩家添加神秘药水。 */
     readonly getMysteryPotion?: MurderMysteryGetMysteryPotionEvent;
@@ -243,6 +256,9 @@ export interface MurderMysteryEvents {
     /** 传送玩家事件响应，将玩家传送到指定位置。 */
     readonly teleport?: MurderMysteryTeleportEvent;
 
+    /** 玩家乘坐矿车事件响应，令玩家乘坐矿车到达指定位置。 */
+    readonly rideMinecart?: MurderMysteryRideMinecartEvent;
+
     /** 事件触发成功后，如何通知触发事件的玩家。 */
     readonly notify?: lib.NotifyOptions;
 
@@ -261,6 +277,21 @@ export interface MurderMysteryEventCondition {
 
     /** 触发事件的玩家在特定高度的下方。仅当该事件有触发玩家且高度条件成立后通过。 */
     playerBelowHeight?: number;
+
+    /** 触发事件时冷却已完毕。 */
+    cooldownCompleted?: {
+        type: string;
+        /** 当前正在冷却的项目。可指定为键名。 */
+        itemName: string;
+    };
+}
+
+export interface MurderMysteryCooldownEvent {
+    /** 冷却类型。 */
+    type: string;
+
+    /** 冷却时间。单位：秒。 */
+    duration: number;
 }
 
 export interface MurderMysteryGetMysteryPotionEvent {
@@ -354,11 +385,27 @@ export interface MurderMysteryTriggerEvent {
     delay?: number;
 }
 
+export interface MurderMysteryRideMinecartEvent {
+    /** 矿车从何位置始发。 */
+    from: minecraft.Vector3;
+
+    /** 矿车到达何位置。 */
+    to: minecraft.Vector3;
+
+    /** 矿车的初始速度方向。 */
+    initVelocity: minecraft.Vector3;
+
+    /** 当矿车到站后，触发的事件。 */
+    onArrival: string;
+}
+// #endregion
+
 // #endregion
 // #region 地图数据
 
 /** 地图数据。 */
 export const maps: Record<string, MurderMysteryMapData> = {
+    // #region - 档案馆
     archives: {
         description: {
             id: "archives",
@@ -866,6 +913,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
+    // #endregion
+
+    // #region - 档案馆顶层 V1
     archivesTopFloorV1: {
         description: {
             id: "archivesTopFloorV1",
@@ -1251,6 +1301,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
+    // #endregion
+
+    // #region - 档案馆顶层
     archivesTopFloor: {
         description: {
             id: "archivesTopFloor",
@@ -1606,6 +1659,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
+    // #endregion
+
+    // #region - 牛脊农场
     cattleridgeFarm: {
         description: {
             id: "cattleridgeFarm",
@@ -1940,6 +1996,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
         components: {},
         events: {},
     },
+    // #endregion
+
+    // #region - 游轮
     cruiseShip: {
         description: {
             id: "cruiseShip",
@@ -2346,6 +2405,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
+
+    // #region - 暗景秋色
     darkfall: {
         description: {
             id: "darkFall",
@@ -2966,6 +3027,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
+    // #endregion
+
+    // #region - 复活节游乐园
     easterWorld: {
         description: {
             id: "easterWorld",
@@ -3326,6 +3390,19 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     "easterWorld:setText",
                 ],
             },
+            preventDamage: { id: ["minecraft:minecart"] },
+            interaction: [
+                { at: [{ x: -133, y: 26, z: 3140 }], trigger: "easterWorld:playerOnMonorail1", consume: 1 },
+                { at: [{ x: -76, y: 26, z: 3059 }], trigger: "easterWorld:playerOnMonorail2", consume: 1 },
+                {
+                    at: [
+                        { x: -82, y: 22, z: 3034 },
+                        { x: -81, y: 22, z: 3033 },
+                    ],
+                    trigger: "easterWorld:playerOnRollerCoaster",
+                    consume: 1,
+                },
+            ],
         },
         events: {
             "easterWorld:playerIntoLava": {
@@ -3423,27 +3500,81 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     {
                         type: "setText",
                         location: { x: -161, y: 22.9, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.line1" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line1" },
                     },
                     {
                         type: "setText",
                         location: { x: -161, y: 22.6, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.line2" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line2" },
                     },
                     {
                         type: "setText",
                         location: { x: -161, y: 22.3, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.line3" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line3" },
                     },
                     {
                         type: "setText",
                         location: { x: -161, y: 22.0, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.line4" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line4" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -133, y: 25.5, z: 3141 },
+                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -76, y: 25.5, z: 3058 },
+                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -81, y: 23, z: 3034 },
+                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster", with: [`1`] },
                     },
                 ],
             },
+            "easterWorld:playerOnMonorail1": {
+                condition: {
+                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                },
+                rideMinecart: {
+                    from: { x: -133, y: 25, z: 3140 },
+                    to: { x: -74, y: 25, z: 3059 },
+                    initVelocity: { x: 8, y: 0, z: 0 },
+                    onArrival: "easterWorld:setRailCooldown",
+                },
+            },
+            "easterWorld:playerOnMonorail2": {
+                condition: {
+                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                },
+                rideMinecart: {
+                    from: { x: -76, y: 25, z: 3059 },
+                    to: { x: -135, y: 25, z: 3140 },
+                    initVelocity: { x: -8, y: 0, z: 0 },
+                    onArrival: "easterWorld:setRailCooldown",
+                },
+            },
+            "easterWorld:playerOnRollerCoaster": {
+                condition: {
+                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.rollerCoaster" },
+                },
+                rideMinecart: {
+                    from: { x: -82, y: 22, z: 3032 },
+                    to: { x: -94, y: 22, z: 3032 },
+                    initVelocity: { x: 8, y: 0, z: 0 },
+                    onArrival: "easterWorld:setRailCooldown",
+                },
+            },
+            "easterWorld:setRailCooldown": {
+                cooldown: { type: "rail", duration: 10 },
+            },
         },
     },
+    // #endregion
+
+    // #region - 总部
     headQuarters: {
         description: {
             id: "headQuarters",
@@ -3795,7 +3926,13 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 875.5, y: 30.5, z: 3889.5 },
             ],
         },
+        components: {
+            interaction: [{ blocks: ["minecraft:spruce_door"] }],
+        },
     },
+    // #endregion
+
+    // #region - Hypixel 游乐园
     hypixelWorld: {
         description: {
             id: "hypixelWorld",
@@ -4157,6 +4294,19 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     "hypixelWorld:setText",
                 ],
             },
+            preventDamage: { id: ["minecraft:minecart"] },
+            interaction: [
+                { at: [{ x: -927, y: 51, z: 2919 }], trigger: "hypixelWorld:playerOnMonorail1", consume: 1 },
+                { at: [{ x: -870, y: 51, z: 2838 }], trigger: "hypixelWorld:playerOnMonorail2", consume: 1 },
+                {
+                    at: [
+                        { x: -875, y: 47, z: 2812 },
+                        { x: -876, y: 47, z: 2813 },
+                    ],
+                    trigger: "hypixelWorld:playerOnRollerCoaster",
+                    consume: 1,
+                },
+            ],
         },
         events: {
             "hypixelWorld:playerIntoLava": {
@@ -4254,27 +4404,81 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     {
                         type: "setText",
                         location: { x: -955, y: 47.9, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.line1" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line1" },
                     },
                     {
                         type: "setText",
                         location: { x: -955, y: 47.6, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.line2" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line2" },
                     },
                     {
                         type: "setText",
                         location: { x: -955, y: 47.3, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.line3" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line3" },
                     },
                     {
                         type: "setText",
                         location: { x: -955, y: 47.0, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.line4" },
+                        text: { translate: "textDisplay.hypixelWorld.doors.line4" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -927, y: 50.5, z: 2920 },
+                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -870, y: 50.5, z: 2837 },
+                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -875, y: 48, z: 2813 },
+                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster", with: [`1`] },
                     },
                 ],
             },
+            "hypixelWorld:playerOnMonorail1": {
+                condition: {
+                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                },
+                rideMinecart: {
+                    from: { x: -927, y: 50, z: 2919 },
+                    to: { x: -868, y: 50, z: 2838 },
+                    initVelocity: { x: 8, y: 0, z: 0 },
+                    onArrival: "hypixelWorld:setRailCooldown",
+                },
+            },
+            "hypixelWorld:playerOnMonorail2": {
+                condition: {
+                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                },
+                rideMinecart: {
+                    from: { x: -870, y: 50, z: 2838 },
+                    to: { x: -929, y: 50, z: 2919 },
+                    initVelocity: { x: -8, y: 0, z: 0 },
+                    onArrival: "hypixelWorld:setRailCooldown",
+                },
+            },
+            "hypixelWorld:playerOnRollerCoaster": {
+                condition: {
+                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.rollerCoaster" },
+                },
+                rideMinecart: {
+                    from: { x: -876, y: 47, z: 2811 },
+                    to: { x: -888, y: 47, z: 2811 },
+                    initVelocity: { x: 8, y: 0, z: 0 },
+                    onArrival: "hypixelWorld:setRailCooldown",
+                },
+            },
+            "hypixelWorld:setRailCooldown": {
+                cooldown: { type: "rail", duration: 10 },
+            },
         },
     },
+    // #endregion
+
+    // #region - 图书馆
     library: {
         description: {
             id: "library",
@@ -4692,6 +4896,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
+    // #endregion
+
+    // #region - 高坠塔
     towerFall: {
         description: {
             id: "towerFall",
@@ -5003,6 +5210,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
         },
     },
+    // #endregion
 };
 
 // #endregion
