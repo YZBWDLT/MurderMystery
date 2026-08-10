@@ -162,15 +162,6 @@ export interface MurderMysteryInteractionComponent {
 
     /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。事件的各种功能和需求见 {@link MurderMysteryEvents}。 */
     trigger?: string;
-
-    /** 设置交互文本。 */
-    setText?: {
-        /** 文本的内容。 */
-        text: minecraft.RawMessage;
-
-        /** 文本的位置。 */
-        location: minecraft.Vector3;
-    };
 }
 
 export interface MurderMysteryEnableMysteryPotionComponent {}
@@ -243,6 +234,7 @@ export interface MurderMysteryEvents {
         | MurderMysteryFillBlockEvent
         | MurderMysterySetStructureEvent
         | MurderMysterySetEntityEvent
+        | MurderMysterySetTextEvent
     )[];
 
     /** 处死玩家事件响应，以特定理由杀死玩家。 */
@@ -328,6 +320,17 @@ export interface MurderMysterySetEntityEvent {
 
     /** 生成实体的选项。 */
     options?: minecraft.SpawnEntityOptions;
+}
+
+export interface MurderMysterySetTextEvent {
+    /** 放置类型：放置悬浮文本。 */
+    type: "setText";
+
+    /** 生成何种文本。 */
+    text: minecraft.RawMessage;
+
+    /** 生成文本的位置。 */
+    location: minecraft.Vector3;
 }
 
 export interface MurderMysterySetPlayerDeadEvent {
@@ -2720,10 +2723,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion1",
                     stillCancelEvent: true,
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: 71, y: 38, z: 1946 },
-                    },
                 },
                 {
                     at: [
@@ -2733,10 +2732,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion2",
                     stillCancelEvent: true,
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: 98, y: 44, z: 1941 },
-                    },
                 },
                 {
                     at: [
@@ -2746,10 +2741,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion3",
                     stillCancelEvent: true,
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: 120, y: 40, z: 1913 },
-                    },
                 },
                 {
                     at: [
@@ -2759,10 +2750,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion4",
                     stillCancelEvent: true,
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: 130, y: 39, z: 1922 },
-                    },
                 },
                 {
                     at: [
@@ -2772,30 +2759,18 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     consume: 1,
                     trigger: "darkfall:getMysteryPotion5",
                     stillCancelEvent: true,
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: 121, y: 39, z: 1892 },
-                    },
                 },
                 {
                     at: [{ x: 106, y: 38, z: 1885 }],
                     consume: 2,
                     trigger: "darkfall:openTrap",
                     stillCancelEvent: true,
-                    setText: {
-                        text: { translate: "textDisplay.trap", with: [`2`] },
-                        location: { x: 106, y: 38, z: 1885 },
-                    },
                 },
                 {
                     at: [{ x: 106, y: 38, z: 1878 }],
                     consume: 2,
                     trigger: "darkfall:openTrap",
                     stillCancelEvent: true,
-                    setText: {
-                        text: { translate: "textDisplay.trap", with: [`2`] },
-                        location: { x: 106, y: 38, z: 1878 },
-                    },
                 },
             ],
             enableMysteryPotion: {},
@@ -2813,7 +2788,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     trigger: "darkfall:teleportToHouse",
                 },
             ],
-            onGameStart: { trigger: "darkfall:recover" },
+            onGameStart: { trigger: ["darkfall:recover", "darkfall:recoverTrap"] },
         },
         events: {
             "darkfall:getMysteryPotion1": {
@@ -2942,9 +2917,44 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         location: { x: 110, y: 36, z: 1884 },
                         options: { initialRotation: lib.JSUtils.number.random(0, 360) },
                     },
+                    // 设置神秘药水悬浮文本
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 71, y: 38, z: 1946 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 98, y: 44, z: 1941 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 120, y: 40, z: 1913 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 130, y: 39, z: 1922 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: 121, y: 39, z: 1892 },
+                    },
+                    // 设置陷阱悬浮文本
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.trap", with: [`2`] },
+                        location: { x: 106, y: 38, z: 1885 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.trap", with: [`2`] },
+                        location: { x: 106, y: 38, z: 1878 },
+                    },
                 ],
-                // 恢复陷阱
-                trigger: { id: "darkfall:recoverTrap" },
             },
             "darkfall:teleportToCave": {
                 teleport: { location: { x: 71, y: 37, z: 1957 }, facingLocation: { x: 71, y: 37, z: 1946 } },
@@ -2965,7 +2975,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 facingLocation: { x: -96, y: 18, z: 3163 },
             },
             range: {
-                from: { x: -171, y: 10, z: 3193 }, // -171 10 3193
+                from: { x: -171, y: 0, z: 3193 }, // -171 10 3193
                 to: { x: -22, y: 64, z: 3018 }, // -22 64 3018
             },
             spawnPoints: [
@@ -3291,21 +3301,30 @@ export const maps: Record<string, MurderMysteryMapData> = {
             playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "easterWorld:playerIntoLava" }],
             playerInArea: [
                 {
-                    area: { xMin: -166, xMax: -165, yMin: 21, yMax: 22, zMin: 3104, zMax: 3105 },
+                    area: { xMin: -166, xMax: -165, yMin: 20, yMax: 22, zMin: 3103, zMax: 3105 },
                     trigger: "easterWorld:intoHauntedHouseDoor1",
                 },
                 {
-                    area: { xMin: -166, xMax: -165, yMin: 21, yMax: 22, zMin: 3101, zMax: 3102 },
-                    trigger: "easterWorld:intoHauntedHouseDoor1",
+                    area: { xMin: -166, xMax: -165, yMin: 20, yMax: 22, zMin: 3100, zMax: 3102 },
+                    trigger: "easterWorld:intoHauntedHouseDoor2",
                 },
                 {
-                    area: { xMin: -166, xMax: -165, yMin: 21, yMax: 22, zMin: 3098, zMax: 3099 },
-                    trigger: "easterWorld:intoHauntedHouseDoor1",
+                    area: { xMin: -166, xMax: -165, yMin: 20, yMax: 22, zMin: 3097, zMax: 3099 },
+                    trigger: "easterWorld:intoHauntedHouseDoor3",
                 },
-                { area: { yMax: 0 }, trigger: "easterWorld:playerIntoVoid" },
+                {
+                    area: { xMin: -164, xMax: -162, yMin: 21, yMax: 25, zMin: 3095, zMax: 3106 },
+                    trigger: "easterWorld:outOfHauntedHouseDoor",
+                },
+                { area: { yMax: 10 }, trigger: "easterWorld:playerIntoVoid" },
             ],
             onGameStart: {
-                trigger: ["easterWorld:recoverDoor1", "easterWorld:recoverDoor2", "easterWorld:recoverDoor3"],
+                trigger: [
+                    "easterWorld:recoverDoor1",
+                    "easterWorld:recoverDoor2",
+                    "easterWorld:recoverDoor3",
+                    "easterWorld:setText",
+                ],
             },
         },
         events: {
@@ -3313,6 +3332,15 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
             },
             "easterWorld:intoHauntedHouseDoor1": {
+                condition: {
+                    isBlock: [
+                        {
+                            id: "minecraft:wooden_door",
+                            location: { x: -165, y: 21, z: 3104 },
+                            states: { open_bit: true },
+                        },
+                    ],
+                },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -165, y: 21, z: 3104 },
                     lavaCaveGlassLocation: { x: -166, y: 20, z: 3104 },
@@ -3322,6 +3350,15 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 trigger: { id: "easterWorld:recoverDoor1", delay: 160 },
             },
             "easterWorld:intoHauntedHouseDoor2": {
+                condition: {
+                    isBlock: [
+                        {
+                            id: "minecraft:wooden_door",
+                            location: { x: -165, y: 21, z: 3101 },
+                            states: { open_bit: true },
+                        },
+                    ],
+                },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -165, y: 21, z: 3101 },
                     lavaCaveGlassLocation: { x: -166, y: 20, z: 3101 },
@@ -3331,6 +3368,15 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 trigger: { id: "easterWorld:recoverDoor2", delay: 160 },
             },
             "easterWorld:intoHauntedHouseDoor3": {
+                condition: {
+                    isBlock: [
+                        {
+                            id: "minecraft:wooden_door",
+                            location: { x: -165, y: 21, z: 3098 },
+                            states: { open_bit: true },
+                        },
+                    ],
+                },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -165, y: 21, z: 3098 },
                     lavaCaveGlassLocation: { x: -166, y: 20, z: 3098 },
@@ -3338,6 +3384,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidBarrierLocation: { from: { x: -165, y: 14, z: 3098 }, to: { x: -165, y: 16, z: 3098 } },
                 },
                 trigger: { id: "easterWorld:recoverDoor3", delay: 160 },
+            },
+            "easterWorld:outOfHauntedHouseDoor": {
+                outOfHauntedHouseDoor: {},
             },
             "easterWorld:recoverDoor1": {
                 place: [
@@ -3368,6 +3417,30 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
             "easterWorld:playerIntoVoid": {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Void },
+            },
+            "easterWorld:setText": {
+                place: [
+                    {
+                        type: "setText",
+                        location: { x: -161, y: 22.9, z: 3101 },
+                        text: { translate: "textDisplay.hypixelWorld.line1" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -161, y: 22.6, z: 3101 },
+                        text: { translate: "textDisplay.hypixelWorld.line2" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -161, y: 22.3, z: 3101 },
+                        text: { translate: "textDisplay.hypixelWorld.line3" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -161, y: 22.0, z: 3101 },
+                        text: { translate: "textDisplay.hypixelWorld.line4" },
+                    },
+                ],
             },
         },
     },
@@ -4077,7 +4150,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { area: { yMax: 20 }, trigger: "hypixelWorld:playerIntoVoid" },
             ],
             onGameStart: {
-                trigger: ["hypixelWorld:recoverDoor1", "hypixelWorld:recoverDoor2", "hypixelWorld:recoverDoor3"],
+                trigger: [
+                    "hypixelWorld:recoverDoor1",
+                    "hypixelWorld:recoverDoor2",
+                    "hypixelWorld:recoverDoor3",
+                    "hypixelWorld:setText",
+                ],
             },
         },
         events: {
@@ -4100,7 +4178,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -960, y: 38, z: 2883 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2883 }, to: { x: -959, y: 41, z: 2883 } },
                 },
-                trigger: { id: "hypixelWorld:recoverDoor1", delay: 180 },
+                trigger: { id: "hypixelWorld:recoverDoor1", delay: 160 },
             },
             "hypixelWorld:intoHauntedHouseDoor2": {
                 condition: {
@@ -4118,7 +4196,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -960, y: 38, z: 2880 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2880 }, to: { x: -959, y: 41, z: 2880 } },
                 },
-                trigger: { id: "hypixelWorld:recoverDoor2", delay: 180 },
+                trigger: { id: "hypixelWorld:recoverDoor2", delay: 160 },
             },
             "hypixelWorld:intoHauntedHouseDoor3": {
                 condition: {
@@ -4136,7 +4214,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -960, y: 38, z: 2877 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2877 }, to: { x: -959, y: 41, z: 2877 } },
                 },
-                trigger: { id: "hypixelWorld:recoverDoor3", delay: 180 },
+                trigger: { id: "hypixelWorld:recoverDoor3", delay: 160 },
             },
             "hypixelWorld:outOfHauntedHouseDoor": {
                 outOfHauntedHouseDoor: {},
@@ -4170,6 +4248,30 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
             "hypixelWorld:playerIntoVoid": {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Void },
+            },
+            "hypixelWorld:setText": {
+                place: [
+                    {
+                        type: "setText",
+                        location: { x: -955, y: 47.9, z: 2880 },
+                        text: { translate: "textDisplay.hypixelWorld.line1" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -955, y: 47.6, z: 2880 },
+                        text: { translate: "textDisplay.hypixelWorld.line2" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -955, y: 47.3, z: 2880 },
+                        text: { translate: "textDisplay.hypixelWorld.line3" },
+                    },
+                    {
+                        type: "setText",
+                        location: { x: -955, y: 47.0, z: 2880 },
+                        text: { translate: "textDisplay.hypixelWorld.line4" },
+                    },
+                ],
             },
         },
     },
@@ -4477,46 +4579,26 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     at: [{ x: -884, y: 102, z: 1923 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion1",
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: -884, y: 103, z: 1923 },
-                    },
                 },
                 {
                     at: [{ x: -907, y: 102, z: 1909 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion2",
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: -907, y: 103, z: 1909 },
-                    },
                 },
                 {
                     at: [{ x: -927, y: 102, z: 1935 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion3",
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: -927, y: 103, z: 1935 },
-                    },
                 },
                 {
                     at: [{ x: -853, y: 102, z: 1953 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion4",
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: -853, y: 103, z: 1953 },
-                    },
                 },
                 {
                     at: [{ x: -884, y: 111, z: 1966 }],
                     consume: 1,
                     trigger: "library:getMysteryPotion5",
-                    setText: {
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
-                        location: { x: -884, y: 112, z: 1966 },
-                    },
                 },
             ],
             enableMysteryPotion: {
@@ -4553,6 +4635,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
             "library:recover": {
                 place: [
+                    // 恢复神秘药水酿造台和栅栏门
                     {
                         type: "setStructure",
                         structure: "murder_mystery:library/mystery_potion",
@@ -4578,6 +4661,32 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         structure: "murder_mystery:library/mystery_potion",
                         location: { x: -885, y: 111, z: 1966 },
                         options: { rotation: minecraft.StructureRotation.Rotate90 },
+                    },
+                    // 设置神秘药水悬浮文本
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -884, y: 103, z: 1923 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -907, y: 103, z: 1909 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -927, y: 103, z: 1935 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -853, y: 103, z: 1953 },
+                    },
+                    {
+                        type: "setText",
+                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        location: { x: -884, y: 112, z: 1966 },
                     },
                 ],
             },

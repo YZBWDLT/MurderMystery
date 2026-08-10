@@ -203,6 +203,10 @@ subtitle.archives.passageOpened=§aA secret passage has been opened!
 ### Doors in Hypixel World
 chat.hypixelWorld.doors.right=§aYou chose the right door! But beware—next time, grave dangers may be waiting behind it...
 chat.hypixelWorld.doors.wrong=§cWrong door!
+textDisplay.hypixelWorld.line1=§eYou can choose to enter
+textDisplay.hypixelWorld.line2=§eone of these doors
+textDisplay.hypixelWorld.line3=§eBut be careful, it might
+textDisplay.hypixelWorld.line4=§ebe a TRAP!
 
 ### Trap
 textDisplay.trap=Trap - %s§6 Golds

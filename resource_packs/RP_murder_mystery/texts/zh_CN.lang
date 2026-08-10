@@ -203,6 +203,10 @@ subtitle.archives.passageOpened=§a一个秘密通道开启了！
 ### Hypixel游乐园的门
 chat.hypixelWorld.doors.right=§a你选择了正确的门！但是请注意，下次门后等待着你的可能是重重危机……
 chat.hypixelWorld.doors.wrong=§c错误选项！
+textDisplay.hypixelWorld.line1=§e你可以选择进入
+textDisplay.hypixelWorld.line2=§e这些门其中之一
+textDisplay.hypixelWorld.line3=§e但要小心，它很可能是
+textDisplay.hypixelWorld.line4=§e一个陷阱！
 
 ### 陷阱
 textDisplay.trap=陷阱 - %s§6块金锭

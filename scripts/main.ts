@@ -790,7 +790,8 @@ class MurderMysteryEventManager {
                 if (data.type === "setBlock") result = this.setBlock(data);
                 else if (data.type === "fillBlock") result = this.fillBlock(data);
                 else if (data.type === "setStructure") result = this.setStructure(data);
-                else result = this.setEntity(data);
+                else if (data.type === "setEntity") result = this.setEntity(data);
+                else result = this.setText(data);
 
                 if (!result) return true;
             });
@@ -1054,6 +1055,17 @@ class MurderMysteryEventManager {
     private setEntity(setEntityEvent: gameData.MurderMysterySetEntityEvent): boolean {
         const { id, location, options } = setEntityEvent;
         lib.EntityUtils.add(id, location, "overworld", options);
+        return true;
+    }
+
+    /** 在特定位置试图填充方块。
+     * @returns 返回是否成功填充了方块。
+     */
+    private setText(setTextEvent: gameData.MurderMysterySetTextEvent): boolean {
+        const { text, location } = setTextEvent;
+        minecraft.world.primitiveShapesManager.addText(
+            new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text)
+        );
         return true;
     }
 
@@ -1613,18 +1625,7 @@ class MurderMysteryComponents {
      * @description 不会阻止创造模式玩家和方块交互。
      */
     static interaction(system: MurderMysterySystem) {
-        // 游戏开始后和结束后，添加文本
         const interactionComponent = system.mapData.components?.interaction;
-        if (system.gameStage === GameStage.GamingStage && interactionComponent) {
-            interactionComponent.forEach(component => {
-                const setText = component.setText;
-                if (!setText) return;
-                // 添加文本
-                const { location, text } = setText;
-                const textDisplay = new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text);
-                minecraft.world.primitiveShapesManager.addText(textDisplay);
-            });
-        }
 
         // 检查玩家交互
         lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
