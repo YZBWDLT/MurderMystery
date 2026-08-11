@@ -3379,15 +3379,15 @@ export const maps: Record<string, MurderMysteryMapData> = {
             playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "easterWorld:playerIntoLava" }],
             playerInArea: [
                 {
-                    area: { xMin: -166, xMax: -165, yMin: 20, yMax: 22, zMin: 3103, zMax: 3105 },
+                    area: { xMin: -166, xMax: -165.3, yMin: 20, yMax: 22, zMin: 3103, zMax: 3105 },
                     trigger: "easterWorld:intoHauntedHouseDoor1",
                 },
                 {
-                    area: { xMin: -166, xMax: -165, yMin: 20, yMax: 22, zMin: 3100, zMax: 3102 },
+                    area: { xMin: -166, xMax: -165.3, yMin: 20, yMax: 22, zMin: 3100, zMax: 3102 },
                     trigger: "easterWorld:intoHauntedHouseDoor2",
                 },
                 {
-                    area: { xMin: -166, xMax: -165, yMin: 20, yMax: 22, zMin: 3097, zMax: 3099 },
+                    area: { xMin: -166, xMax: -165.3, yMin: 20, yMax: 22, zMin: 3097, zMax: 3099 },
                     trigger: "easterWorld:intoHauntedHouseDoor3",
                 },
                 {
@@ -4293,15 +4293,15 @@ export const maps: Record<string, MurderMysteryMapData> = {
             playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "hypixelWorld:playerIntoLava" }],
             playerInArea: [
                 {
-                    area: { xMin: -960, xMax: -959, yMin: 45, yMax: 47, zMin: 2882, zMax: 2884 },
+                    area: { xMin: -960, xMax: -959.3, yMin: 45, yMax: 47, zMin: 2882, zMax: 2884 },
                     trigger: "hypixelWorld:intoHauntedHouseDoor1",
                 },
                 {
-                    area: { xMin: -960, xMax: -959, yMin: 45, yMax: 47, zMin: 2879, zMax: 2881 },
+                    area: { xMin: -960, xMax: -959.3, yMin: 45, yMax: 47, zMin: 2879, zMax: 2881 },
                     trigger: "hypixelWorld:intoHauntedHouseDoor2",
                 },
                 {
-                    area: { xMin: -960, xMax: -959, yMin: 45, yMax: 47, zMin: 2876, zMax: 2878 },
+                    area: { xMin: -960, xMax: -959.3, yMin: 45, yMax: 47, zMin: 2876, zMax: 2878 },
                     trigger: "hypixelWorld:intoHauntedHouseDoor3",
                 },
                 {
