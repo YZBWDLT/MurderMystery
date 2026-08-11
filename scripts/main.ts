@@ -538,6 +538,7 @@ class MurderMysterySystem {
      * @description 会传送玩家到等待大厅，并将玩家的重生点设置在这里。
      * @description 会将玩家的游戏模式设为冒险模式。
      * @description 会恢复玩家的命名牌。
+     * @description 会恢复玩家的输入权限。
      * @description 会移除玩家的状态效果。
      */
     initPlayer(player: minecraft.Entity) {
@@ -550,6 +551,8 @@ class MurderMysterySystem {
             player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getDefault() });
             player.setGameMode(minecraft.GameMode.Adventure);
             player.nameTag = player.name;
+            player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
+            player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
         }
         player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
     }
@@ -3242,12 +3245,10 @@ class MurderMysteryPlayer {
                 initialRotation: this.player.getRotation().y,
             });
 
-        // 设置失明
-        this.player.addEffect("minecraft:blindness", 60);
-
-        // 对玩家显示死因，并设置为旁观
         if (isPlayer(this.player)) {
+            // 设置为旁观
             this.player.setGameMode(minecraft.GameMode.Spectator);
+            // 对玩家显示死因
             lib.PlayerUtils.notify(this.player, {
                 title: { translate: "title.youDied" },
                 subtitle: { translate: `deathMessage.${deathType}` },
@@ -3260,6 +3261,11 @@ class MurderMysteryPlayer {
                 soundDelay: 3,
             });
             this.player.sendMessage({ translate: "chat.spectatorTeleport.tip" });
+            // 恢复玩家的输入权限
+            this.player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
+            this.player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
+            // 设置失明
+            this.player.addEffect("minecraft:blindness", 60);
         } else {
             // 传送假玩家到出生点
             minecraft.system.run(() => this.player.teleport(this.system.mapData.description.waitHall.location));
