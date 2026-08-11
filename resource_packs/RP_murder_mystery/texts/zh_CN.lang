@@ -40,6 +40,7 @@ item.murder_mystery:settings=设置
 ## ===== 名词翻译 =====
 
 ### 地图名
+map.aquarium=水族馆
 map.archives=档案馆
 map.archivesTopFloor=档案馆顶层
 map.archivesTopFloorV1=档案馆顶层 V1
@@ -53,6 +54,7 @@ map.library=图书馆
 map.towerFall=高坠塔
 map.transportV1=运输塔V1
 map.transportV2=运输塔V2
+map.widowsDen=寡妇的老窝
 
 ### 模式名
 mode.classic=经典

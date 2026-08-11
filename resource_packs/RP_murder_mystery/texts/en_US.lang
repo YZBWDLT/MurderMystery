@@ -40,6 +40,7 @@ item.murder_mystery:settings=Settings
 ## ===== Noun Translations =====
 
 ### Map name
+map.aquarium=Aquarium
 map.archives=Archives
 map.archivesTopFloor=Archives Top Floor
 map.archivesTopFloorV1=Archives Top Floor V1
@@ -53,6 +54,7 @@ map.library=Library
 map.towerFall=Tower Fall
 map.transportV1=Transport V1
 map.transportV2=Transport V2
+map.widowsDen=Widow's Den
 
 ### Mode name
 mode.classic=Classic
