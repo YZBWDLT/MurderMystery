@@ -553,6 +553,9 @@ class MurderMysterySystem {
             player.nameTag = player.name;
             player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
             player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
+
+            // 强制关闭所有 UI
+            lib.UIUtils.close(player);
         }
         player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
     }
