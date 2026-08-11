@@ -219,11 +219,19 @@ textDisplay.hypixelWorld.rollerCoaster=过山车 - %s§6块金锭
 ### 陷阱
 textDisplay.trap=陷阱 - %s§6块金锭
 
-### Cooldown
+### 冷却
 chat.cooldown=§c%s还有%s秒冷却时间！
 
-### 设置
+### 报错
+chat.error.noValidMaps=§c警告：未找到有效地图。请联系管理员检查启用地图设置，并至少打开一张地图。为确保游戏正常运行，目前已随机开启一张新地图。
+chat.error.areaToLarge=§c警告：无效的地图，该地图区域过大，无法完成常加载区域初始化。请联系管理员禁用地图 %s。为确保游戏正常运行，目前已随机开启一张新地图。
+
+## ===== 设置 UI =====
+
+### 设置物品按钮
 interact.settings=地图设置...
+
+### 主设置 UI
 ui.settings.main.title=设置
 ui.settings.main.playerSettings=§l玩家设置
 ui.settings.main.about=关于我们
@@ -236,21 +244,83 @@ ui.settings.main.gaming=游戏时...
 ui.settings.main.goldSpawn=金锭生成...
 ui.settings.main.murdererSword=杀手刀剑...
 ui.settings.main.miscellaneous=杂项...
+
+### 关于我们 UI
 ui.settings.about.title=关于我们
 ui.settings.about.author=§l作者
 ui.settings.about.version=§l版本
 ui.settings.about.tester=§l测试员
 ui.settings.about.specialThanks=§l特别感谢
+
+### 更新日志 UI
 ui.settings.updateLog.title=更新日志
 ui.settings.updateLog.line1=本段使用中文编写，若您需要请使用翻译软件进行翻译。
+
+### 选择地图 UI
 ui.settings.selectMap.title=选择地图
-ui.settings.enableMap.title=启用地图
+
+### 启用地图 UI
+ui.settings.mapEnabled.title=启用地图
+ui.settings.mapEnabled.description=控制系统可以使用哪些地图。
+ui.settings.mapEnabled.disabledAllMaps=§c未应用更改。你不能禁用所有地图！
+
+### 等待设置 UI
+ui.settings.waiting.title=等待设置
+ui.settings.waiting.description=控制地图在等待期间的行为。
+ui.settings.waiting.minPlayerCount.title=最小玩家人数
+ui.settings.waiting.minPlayerCount.description=要开始游戏至少需要多少名玩家。
+ui.settings.waiting.maxPlayerCount.title=最大玩家人数
+ui.settings.waiting.maxPlayerCount.description=一局游戏最多允许多少名玩家。
+ui.settings.waiting.startCountdown.title=游戏倒计时时长（秒）
+ui.settings.waiting.startCountdown.description=玩家人数足够后，游戏开始倒计时。
+
+### 游戏设置 UI
+ui.settings.gaming.title=游戏设置
+ui.settings.gaming.description=控制地图在游戏期间的行为。
+ui.settings.gaming.timePerGame.title=游戏时长（秒）
+ui.settings.gaming.timePerGame.description=一局的游戏时长。
+ui.settings.gaming.getSpecialItemDelay.title=获取道具时长（秒）
+ui.settings.gaming.getSpecialItemDelay.description=在游戏开始多久后给予杀手和侦探物品。
+ui.settings.gaming.pickupBowMethod.title=弓拾取形式
+ui.settings.gaming.pickupBowMethod.description=平民如何拾取弓。
+ui.settings.gaming.pickupBowMethod.rightClick=右键拾取
+ui.settings.gaming.pickupBowMethod.nearby=接近拾取
+ui.settings.gaming.showRoleInSpectatorTeleportUI.title=旁观显示身份
+ui.settings.gaming.showRoleInSpectatorTeleportUI.description=旁观模式的传送列表中，是否显示身份。
+ui.settings.gaming.applyNightVision.title=启用夜视效果
+ui.settings.gaming.applyNightVision.description=是否对所有玩家施加夜视状态效果。
+
+### 金锭生成设置 UI
+ui.settings.goldSpawn.title=金锭生成设置
+ui.settings.goldSpawn.description=控制如何生成金锭。
+ui.settings.goldSpawn.spawnChance.title=生成概率（%%）
+ui.settings.goldSpawn.spawnChance.description=待生成金锭的金点中，有多少概率能够实际生成。
+ui.settings.goldSpawn.spawnInterval.title=生成间隔（秒）
+ui.settings.goldSpawn.spawnInterval.description=对于每位玩家，金锭的平均生成间隔。
+ui.settings.goldSpawn.spawnRadius.title=生成半径
+ui.settings.goldSpawn.spawnRadius.description=在玩家附近多少格的金点会尝试生成。
+
+### 杀手刀剑设置 UI
+ui.settings.murdererSword.title=杀手刀剑设置
+ui.settings.murdererSword.description=控制杀手的刀的表现。
+ui.settings.murdererSword.knifeCollideArrowDistance.title=刀箭相碰距离（x0.1格）
+ui.settings.murdererSword.knifeCollideArrowDistance.description=杀手飞刀距离箭多近时视为相碰。
+ui.settings.murdererSword.knifeSpeed.title=飞刀速度
+ui.settings.murdererSword.knifeSpeed.description=杀手飞刀投掷出去的速度。
+ui.settings.murdererSword.knifeThrowTime.title=飞刀蓄力时间（x0.05秒）
+ui.settings.murdererSword.knifeThrowTime.description=杀手飞刀需要蓄力多久才能投掷出去。
+
+### 杂项设置 UI
 ui.settings.miscellaneous.title=杂项设置
-ui.settings.miscellaneous.description=杂项设置，控制游戏中一些其他内容的设置项。
+ui.settings.miscellaneous.description=控制游戏中一些其他内容的设置项。
 ui.settings.miscellaneous.infoboardLastLine.title=信息板最后一行
 ui.settings.miscellaneous.infoboardLastLine.description=信息板最后一行的内容，使用黄色字体。
+
 ui.settings.defaultSettings.title=恢复默认设置
+
 ui.settings.confirm=确认
+
+chat.settings.applyNextGame=这些设置将在下一局应用
 
 ## ===== 信息板消息 =====
 

@@ -222,8 +222,16 @@ textDisplay.trap=Trap - %s§6 Golds
 ### Cooldown
 chat.cooldown=§cThe %s has %s seconds to cool down!
 
-### Settings
+### Errors
+chat.error.noValidMaps=§c警告：未找到有效地图。请联系管理员检查启用地图设置，并至少打开一张地图。为确保游戏正常运行，目前已随机开启一张新地图。
+chat.error.areaToLarge=§c警告：无效的地图，该地图区域过大，无法完成常加载区域初始化。请联系管理员禁用地图 %s。为确保游戏正常运行，目前已随机开启一张新地图。
+
+## ===== Settings UI =====
+
+### Settings Item Button
 interact.settings=Map Settings...
+
+### Main Settings UI
 ui.settings.main.title=Settings
 ui.settings.main.playerSettings=§lPlayer Settings
 ui.settings.main.about=About Us
@@ -236,21 +244,83 @@ ui.settings.main.gaming=Gaming...
 ui.settings.main.goldSpawn=Gold Spawn...
 ui.settings.main.murdererSword=Murderer Sword...
 ui.settings.main.miscellaneous=Miscellaneous...
+
+### About Us UI
 ui.settings.about.title=About Us
 ui.settings.about.author=§lAuthor
 ui.settings.about.version=§lVersion
 ui.settings.about.tester=§lTesters
 ui.settings.about.specialThanks=§lSpecial Thanks
+
+### Update Log UI
 ui.settings.updateLog.title=Update Log
 ui.settings.updateLog.line1=This paragraph is written in Chinese. Please use translation software if in need.
+
+### Select Map UI
 ui.settings.selectMap.title=Select Map
-ui.settings.enableMap.title=Enable Map
+
+### Enable Map UI
+ui.settings.mapEnabled.title=Enable Map
+ui.settings.mapEnabled.description=Controls how many maps the system can use.
+ui.settings.mapEnabled.disabledAllMaps=§cNo changes were applied. You can't disable all maps!
+
+### Waiting Settings UI
+ui.settings.waiting.title=Waiting Settings
+ui.settings.waiting.description=Controls how the map behaves in waiting stage.
+ui.settings.waiting.minPlayerCount.title=Minimum Number of Players
+ui.settings.waiting.minPlayerCount.description=The minimum number of players required to start the game.
+ui.settings.waiting.maxPlayerCount.title=Maximum Number of Players
+ui.settings.waiting.maxPlayerCount.description=The maximum number of players allowed in a game.
+ui.settings.waiting.startCountdown.title=Game Countdown Duration (s)
+ui.settings.waiting.startCountdown.description=Once enough players are present, the game countdown begins.
+
+### Gaming Settings UI
+ui.settings.gaming.title=Gaming Settings
+ui.settings.gaming.description=Controls how the map behaves in gaming stage.
+ui.settings.gaming.timePerGame.title=Game Duration (s)
+ui.settings.gaming.timePerGame.description=Duration of a single game round.
+ui.settings.gaming.getSpecialItemDelay.title=Get Special Item Delay (s)
+ui.settings.gaming.getSpecialItemDelay.description=How long after the game starts before the Murderer and Detective receive their items.
+ui.settings.gaming.pickupBowMethod.title=Bow Pickup Method
+ui.settings.gaming.pickupBowMethod.description=How Innocents can pick up the bow.
+ui.settings.gaming.pickupBowMethod.rightClick=Right-click to pick up
+ui.settings.gaming.pickupBowMethod.nearby=Nearby to pick up
+ui.settings.gaming.showRoleInSpectatorTeleportUI.title=Show Role for Spectators
+ui.settings.gaming.showRoleInSpectatorTeleportUI.description=Whether to display the role in the spectator mode teleport list.
+ui.settings.gaming.applyNightVision.title=Enable Night Vision Effect
+ui.settings.gaming.applyNightVision.description=Whether to apply the night vision status effect to all players.
+
+### Gold Spawn Settings UI
+ui.settings.goldSpawn.title=Gold Spawn Settings
+ui.settings.goldSpawn.description=Controls how the golds spawn.
+ui.settings.goldSpawn.spawnChance.title=Spawn Chance (%%)
+ui.settings.goldSpawn.spawnChance.description=How much probability can be actually generated among the gold points to be generated.
+ui.settings.goldSpawn.spawnInterval.title=Spawn Interval (s)
+ui.settings.goldSpawn.spawnInterval.description=For each player, the average generation interval of gold ingots.
+ui.settings.goldSpawn.spawnRadius.title=Spawn Radius
+ui.settings.goldSpawn.spawnRadius.description=Within how many blocks of a player will gold points attempt to spawn.
+
+### Murderer Sword Settings UI
+ui.settings.murdererSword.title=Murderer Sword Settings
+ui.settings.murdererSword.description=Controls Murderer's sword.
+ui.settings.murdererSword.knifeCollideArrowDistance.title=Collision Distance Between Knife And Arrow (x0.1 Blocks)
+ui.settings.murdererSword.knifeCollideArrowDistance.description=How close the Murderer's Thrown Knife is to the arrow is regarded as a collision. (x0.1 blocks)
+ui.settings.murdererSword.knifeSpeed.title=Speed of Thrown Knife
+ui.settings.murdererSword.knifeSpeed.description=Determine the speed of Murderer's Thrown Knife.
+ui.settings.murdererSword.knifeThrowTime.title=Draw Time of Thrown Knife (x0.05 seconds)
+ui.settings.murdererSword.knifeThrowTime.description=How long does it take to throw the Murderer's Thrown Knife in ticks.
+
+### Miscellaneous Settings UI
 ui.settings.miscellaneous.title=Miscellaneous Settings
-ui.settings.miscellaneous.description=Miscellaneous settings, control other things in game.
+ui.settings.miscellaneous.description=Control other things in game.
 ui.settings.miscellaneous.infoboardLastLine.title=Last Line of Infoboard
 ui.settings.miscellaneous.infoboardLastLine.description=The content of last line of infoboard, with the color of yellow.
+
 ui.settings.defaultSettings.title=Change to Default
+
 ui.settings.confirm=Confirm
+
+chat.settings.applyNextGame=These settings will apply in next game
 
 ## ===== Infoboard Message =====
 

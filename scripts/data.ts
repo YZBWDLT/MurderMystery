@@ -95,7 +95,7 @@ export interface MurderMysteryMapDataDescription {
     /** 地图等待大厅信息。 */
     readonly waitHall: MurderMysteryWaitHallDescription;
 
-    /** 地图范围。地图范围将会决定读取什么范围内的金锭点和重生点，并限制旁观模式玩家的活动范围。 */
+    /** 地图范围。地图范围将会决定创建多大的常加载区域，并限制旁观模式玩家的活动范围。 */
     readonly range: {
         from: minecraft.Vector3;
         to: minecraft.Vector3;
@@ -106,6 +106,9 @@ export interface MurderMysteryMapDataDescription {
 
     /** 玩家出生点位。这同时也会影响超出的旁观者、或侦探出图后掉落的弓可能出现的位置等情况。每张地图都拥有 24 个出生点。 */
     readonly spawnPoints: minecraft.Vector3[];
+
+    /** 默认状态下，这张地图是否启用。 | 默认值：`true` */
+    readonly enabledByDefault?: boolean;
 }
 
 export interface MurderMysteryWaitHallDescription {
@@ -1286,6 +1289,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 865.5, y: 99.5, z: 99.5 },
                 { x: 866.5, y: 100.5, z: 105.5 },
             ],
+            enabledByDefault: false,
         },
         components: {
             playerInArea: [
@@ -5618,6 +5622,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1221.5, y: 55.5, z: -3120.5 },
                 { x: 1218.5, y: 55.5, z: -3118.5 },
             ],
+            enabledByDefault: false,
         },
         components: {
             time: 18000,

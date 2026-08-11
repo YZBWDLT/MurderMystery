@@ -279,6 +279,18 @@ export class TickingAreaUtils {
             return false;
         }
     }
+
+    /** 移除全部常加载区域。
+     * @returns 返回是否成功移除常加载区域。
+     */
+    static removeAll() {
+        try {
+            minecraft.world.tickingAreaManager.removeAllTickingAreas();
+            return true;
+        } catch {
+            return false;
+        }
+    }
 }
 
 // #endregion
@@ -2319,11 +2331,14 @@ export class JSUtils {
         }
     }
 
-    /** 判断传入的对象是否为空对象
-     * @param {object} obj
-     */
+    /** 判断传入的对象是否为空对象。 */
     static isEmptyObject(obj: object) {
         return Object.keys(obj).length === 0 && obj.constructor === Object;
+    }
+
+    /** 判断传入的对象是否为纯对象，而非数组、`null`等形式。 */
+    static isPlainObject(value: any): value is object {
+        return value !== null && typeof value === "object" && !Array.isArray(value);
     }
 }
 
