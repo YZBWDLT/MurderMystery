@@ -1605,6 +1605,7 @@ class MurderMysterySettings {
             "§7§l特性更改&漏洞修复",
             "§7- 修复了默认会启用所有地图的问题",
             "§7- #49 现在游戏结束后玩家不再能死亡，导致游戏产生进一步的误判",
+            "§7- 开放了两张游乐园地图的过山车支线",
         ];
         const textComponent: lib.FormLabelComponent[] = texts.map(text => ({ type: "label", text: text }));
         lib.UIUtils.createAction(player, {

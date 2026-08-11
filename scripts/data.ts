@@ -3416,6 +3416,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     trigger: "easterWorld:playerOnRollerCoaster",
                     consume: 1,
                 },
+                // 过山车支线
+                { at: [{ x: -63, y: 29, z: 3031 }] },
             ],
         },
         events: {
@@ -4330,6 +4332,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     trigger: "hypixelWorld:playerOnRollerCoaster",
                     consume: 1,
                 },
+                // 过山车支线
+                { at: [{ x: -857, y: 54, z: 2810 }] },
             ],
         },
         events: {
