@@ -3370,27 +3370,27 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     // 设置神秘药水悬浮文本
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: 71, y: 38, z: 1946 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: 98, y: 44, z: 1941 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: 120, y: 40, z: 1913 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: 130, y: 39, z: 1922 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: 121, y: 39, z: 1892 },
                     },
                     // 设置陷阱悬浮文本
@@ -3916,17 +3916,17 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     {
                         type: "setText",
                         location: { x: -133, y: 25.5, z: 3141 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                        text: { translate: "textDisplay.hypixelWorld.monorail" },
                     },
                     {
                         type: "setText",
                         location: { x: -76, y: 25.5, z: 3058 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                        text: { translate: "textDisplay.hypixelWorld.monorail" },
                     },
                     {
                         type: "setText",
                         location: { x: -81, y: 23, z: 3034 },
-                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster", with: [`1`] },
+                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster" },
                     },
                 ],
             },
@@ -4832,17 +4832,17 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     {
                         type: "setText",
                         location: { x: -927, y: 50.5, z: 2920 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                        text: { translate: "textDisplay.hypixelWorld.monorail" },
                     },
                     {
                         type: "setText",
                         location: { x: -870, y: 50.5, z: 2837 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail", with: [`1`] },
+                        text: { translate: "textDisplay.hypixelWorld.monorail" },
                     },
                     {
                         type: "setText",
                         location: { x: -875, y: 48, z: 2813 },
-                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster", with: [`1`] },
+                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster" },
                     },
                 ],
             },
@@ -5277,27 +5277,27 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     // 设置神秘药水悬浮文本
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: -884, y: 103, z: 1923 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: -907, y: 103, z: 1909 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: -927, y: 103, z: 1935 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: -853, y: 103, z: 1953 },
                     },
                     {
                         type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion", with: [`1`] },
+                        text: { translate: "textDisplay.mysteryPotion" },
                         location: { x: -884, y: 112, z: 1966 },
                     },
                 ],

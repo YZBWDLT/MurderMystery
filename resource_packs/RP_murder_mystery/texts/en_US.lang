@@ -78,14 +78,14 @@ chat.beforeGameStart.countdown=§eThe game starts in §r%s§e seconds!
 
 ### Game started
 title.gameStart.innocent=§aROLE: INNOCENT
-subtitle.gameStart.innocent=§eStay alive as long as posible!
+subtitle.gameStart.innocent=§eStay alive as long as possible!
 title.gameStart.detective=§bROLE: DETECTIVE
 subtitle.gameStart.detective=§eFind and kill the murderer!
 title.gameStart.murderer=§cROLE: MURDERER
 subtitle.gameStart.murderer=§eKill all players!
 chat.teaming.innocent=§c§lTeaming with the Murderer is not allowed!
 chat.teaming.detective=§c§lTeaming with the Murderer is not allowed!
-chat.teaming.murderer=§c§lTeaming with the Detective/Innocent is not allowed!
+chat.teaming.murderer=§c§lTeaming with the Detective/Innocents is not allowed!
 
 ### Murderer get sword
 chat.murderWillGetSword.murderer=§eYou get your sword in §c%s§e seconds!
@@ -94,14 +94,14 @@ chat.murderWillGetSword.detective=§eThe Murderer gets their sword in §c%s§e s
 chat.murderGetSword.murderer=§eYou have received your sword!
 chat.murderGetSword.innocent=§eThe Murderer has received their sword!
 chat.murderGetSword.detective=§eThe Murderer has received their sword!
-subtitle.murderGetSword.murder=§6Right Cilck §eto throw your sword!
+subtitle.murderGetSword.murder=§6Right Click §eto throw your sword!
 
 ### Murderer killed player
 chat.youDied=§cYOU DIED! §e%s
 title.youDied=§cYOU DIED!
-deathMessage.murdererStab=§eA Murderer stabbed you!
-deathMessage.murdererShot=§eA Murderer shot you!
-deathMessage.murdererKnife=§eA Murderer threw his Knife at you!
+deathMessage.murdererStab=§eThe Murderer stabbed you!
+deathMessage.murdererShot=§eThe Murderer shot you!
+deathMessage.murdererKnife=§eThe Murderer threw his Knife at you!
 deathMessage.shotSelf=§eYou managed to shoot yourself!
 deathMessage.player=§eA player killed you!
 deathMessage.manslaughter=§eYou killed an Innocent player!
@@ -179,7 +179,7 @@ subtitle.mysteryPotion.slowness=§c10S OF SLOWNESS
 subtitle.mysteryPotion.speed=§a20S OF SPEED
 subtitle.mysteryPotion.invisibility=§a14S OF INVISIBILITY
 subtitle.mysteryPotion.resistance=§a20S OF INVINCIBILITY
-textDisplay.mysteryPotion=Mystery Potion - %s§6 Gold
+textDisplay.mysteryPotion=Mystery Potion - 1§6 Gold
 
 ### Spectator Leave Gaming Area
 subtitle.spectatorOutOfBorder=§cYou ran too far!
@@ -191,7 +191,7 @@ chat.gameWillOver=§eInnocents will win in §c60§e seconds!
 ui.spectatorTeleport.title=Teleport To ...
 ui.spectatorTeleport.line1=Select which player to teleport to. §cNote: You are a spectator now. DO NOT claim the role of alive players in chat!
 ui.spectatorTeleport.playerName=%s (%s§r)
-chat.spectatorTeleport.tip=§cHead up to teleport to alive players!
+chat.spectatorTeleport.tip=§cHead up to teleport to player alive!
 chat.spectatorTeleport.playerIsInvalid=§cYou can't teleport to an invalid player!
 chat.spectatorTeleport.teleported=§aHas been teleported to §6%s§a's location
 
@@ -215,8 +215,8 @@ textDisplay.hypixelWorld.doors.line4=§ebe a TRAP!
 ### Rail in Hypixel World
 hypixelWorld.monorail=Monorail
 hypixelWorld.rollerCoaster=Roller Coaster
-textDisplay.hypixelWorld.monorail=Monorail - %s§6 Golds
-textDisplay.hypixelWorld.rollerCoaster=Roller Coaster - %s§6 Golds
+textDisplay.hypixelWorld.monorail=Monorail - 1§6 Gold
+textDisplay.hypixelWorld.rollerCoaster=Roller Coaster - 1§6 Gold
 
 ### Trap
 textDisplay.trap=Trap - %s§6 Golds
@@ -225,8 +225,8 @@ textDisplay.trap=Trap - %s§6 Golds
 chat.cooldown=§cThe %s has %s seconds to cool down!
 
 ### Errors
-chat.error.noValidMaps=§c警告：未找到有效地图。请联系管理员检查启用地图设置，并至少打开一张地图。为确保游戏正常运行，目前已随机开启一张新地图。
-chat.error.areaToLarge=§c警告：无效的地图，该地图区域过大，无法完成常加载区域初始化。请联系管理员禁用地图 %s。为确保游戏正常运行，目前已随机开启一张新地图。
+chat.error.noValidMaps=§cWarning: No valid maps found. Please contact an admin to check the enabled map settings and enable at least one map. To ensure the game runs properly, a new map has been randomly enabled.
+chat.error.areaToLarge=§cWarning: Invalid map – the area is too large to initialize a tickingarea. Please contact an admin to disable map %s. To ensure the game runs properly, a new map has been randomly enabled.
 
 ## ===== Settings UI =====
 
@@ -296,7 +296,7 @@ ui.settings.gaming.applyNightVision.description=Whether to apply the night visio
 ui.settings.goldSpawn.title=Gold Spawn Settings
 ui.settings.goldSpawn.description=Controls how the golds spawn.
 ui.settings.goldSpawn.spawnChance.title=Spawn Chance (%%)
-ui.settings.goldSpawn.spawnChance.description=How much probability can be actually generated among the gold points to be generated.
+ui.settings.goldSpawn.spawnChance.description=Among the Gold Points waiting to spawn gold ingots, what percentage will actually spawn.
 ui.settings.goldSpawn.spawnInterval.title=Spawn Interval (s)
 ui.settings.goldSpawn.spawnInterval.description=For each player, the average generation interval of gold ingots.
 ui.settings.goldSpawn.spawnRadius.title=Spawn Radius

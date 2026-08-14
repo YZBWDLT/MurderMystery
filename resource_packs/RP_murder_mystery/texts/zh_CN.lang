@@ -179,7 +179,7 @@ subtitle.mysteryPotion.slowness=§c10秒缓慢效果
 subtitle.mysteryPotion.speed=§a20秒速度效果
 subtitle.mysteryPotion.invisibility=§a14秒隐身效果
 subtitle.mysteryPotion.resistance=§a20秒无敌效果
-textDisplay.mysteryPotion=神秘药水 - %s§6块金锭
+textDisplay.mysteryPotion=神秘药水 - 1§6块金锭
 
 ### 旁观者离开游戏区域
 subtitle.spectatorOutOfBorder=§c你跑得太远了！
@@ -215,8 +215,8 @@ textDisplay.hypixelWorld.doors.line4=§e一个陷阱！
 ### Hypixel游乐园的铁轨
 hypixelWorld.monorail=单轨列车
 hypixelWorld.rollerCoaster=过山车
-textDisplay.hypixelWorld.monorail=单轨列车 - %s§6块金锭
-textDisplay.hypixelWorld.rollerCoaster=过山车 - %s§6块金锭
+textDisplay.hypixelWorld.monorail=单轨列车 - 1§6块金锭
+textDisplay.hypixelWorld.rollerCoaster=过山车 - 1§6块金锭
 
 ### 陷阱
 textDisplay.trap=陷阱 - %s§6块金锭
