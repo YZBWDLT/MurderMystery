@@ -486,8 +486,7 @@ class MurderMysterySystem {
             if (index === 0) {
                 this.addPlayer({ player, role: MurderMysteryPlayerRole.Murderer });
             } else if (index === 1) this.addPlayer({ player, role: MurderMysteryPlayerRole.Detective });
-            else if (index >= 2 && index < maxPlayerCount)
-                this.addPlayer({ player, role: MurderMysteryPlayerRole.Innocent });
+            else if (index >= 2 && index < maxPlayerCount) this.addPlayer({ player, role: MurderMysteryPlayerRole.Innocent });
             else this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
 
             // 传送玩家并设置重生点
@@ -617,10 +616,7 @@ class MurderMysterySystem {
      */
     gameOverTest(reason: MurderMysteryGameOverReason, probableHero?: MurderMysteryPlayer) {
         // 如果杀手数量不为 0（平民侦探获胜），并且存活玩家不全为杀手（杀手获胜），则游戏不会结束
-        if (
-            this.alivePlayers.murderer.length !== 0 &&
-            this.alivePlayers.murderer.length !== this.alivePlayers.allPlayers.length
-        )
+        if (this.alivePlayers.murderer.length !== 0 && this.alivePlayers.murderer.length !== this.alivePlayers.allPlayers.length)
             return;
         // 如果英雄不存在，对系统返回无英雄的情况
         if (!probableHero) return this.enterGameOverStage(reason);
@@ -930,11 +926,7 @@ class MurderMysteryEventManager {
 
         // 如果已有人在使用（附近有药水动画时），提示玩家后终止运行
         const animationLocation = getMysteryPotionEvent.animationLocation;
-        const nearbyAnimationEntities = lib.EntityUtils.getNearby(
-            "murder_mystery:mystery_potion",
-            animationLocation,
-            2
-        );
+        const nearbyAnimationEntities = lib.EntityUtils.getNearby("murder_mystery:mystery_potion", animationLocation, 2);
         if (nearbyAnimationEntities.length !== 0) {
             lib.PlayerUtils.notify(player, {
                 message: { translate: "chat.mysteryPotion.occupied" },
@@ -1116,9 +1108,7 @@ class MurderMysteryEventManager {
      */
     private setText(setTextEvent: gameData.MurderMysterySetTextEvent): boolean {
         const { text, location } = setTextEvent;
-        minecraft.world.primitiveShapesManager.addText(
-            new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text)
-        );
+        minecraft.world.primitiveShapesManager.addText(new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text));
         return true;
     }
 
@@ -1128,10 +1118,7 @@ class MurderMysteryEventManager {
     /** 设置玩家为死亡状态。
      * @returns 返回是否成功处死了玩家。
      */
-    setPlayerDead(
-        setPlayerDeadEvent: gameData.MurderMysterySetPlayerDeadEvent,
-        playerData: MurderMysteryPlayer
-    ): boolean {
+    setPlayerDead(setPlayerDeadEvent: gameData.MurderMysterySetPlayerDeadEvent, playerData: MurderMysteryPlayer): boolean {
         const result = playerData.setDead(setPlayerDeadEvent.deathType);
         return result;
     }
@@ -1156,8 +1143,7 @@ class MurderMysteryEventManager {
         playerData: MurderMysteryPlayer
     ): boolean {
         // ===== 变量准备 =====
-        const { doorLocation, voidGlassLocation, lavaCaveGlassLocation, voidBarrierLocation } =
-            intoHauntedHouseDoorEvent;
+        const { doorLocation, voidGlassLocation, lavaCaveGlassLocation, voidBarrierLocation } = intoHauntedHouseDoorEvent;
         const player = playerData.player;
 
         // ===== 条件判断 =====
@@ -1228,10 +1214,7 @@ class MurderMysteryEventManager {
 
     // #endregion
     // #region - 玩家乘坐矿车
-    private rideMinecart(
-        rideMinecartEvent: gameData.MurderMysteryRideMinecartEvent,
-        playerData: MurderMysteryPlayer
-    ): boolean {
+    private rideMinecart(rideMinecartEvent: gameData.MurderMysteryRideMinecartEvent, playerData: MurderMysteryPlayer): boolean {
         // ===== 变量准备&条件检查 =====
         const { from, to, initVelocity, onArrival } = rideMinecartEvent;
         const player = playerData.player;
@@ -1541,11 +1524,7 @@ class MurderMysterySettings {
         // ===== 显示设置界面 =====
         lib.UIUtils.createAction(player, {
             type: "action",
-            components: [
-                { type: "header", text: { translate: "ui.settings.main.title" } },
-                ...playerSettings,
-                ...operatorSettings,
-            ],
+            components: [{ type: "header", text: { translate: "ui.settings.main.title" } }, ...playerSettings, ...operatorSettings],
         });
     }
 
@@ -1806,8 +1785,7 @@ class MurderMysterySettings {
             ],
             () => {
                 // 如果要设置的游戏时间小于当前剩余的游戏时间，则直接改为待设置的游戏时间
-                if (system.settings.gaming.timePerGame < system.timeLeft)
-                    system.timeLeft = system.settings.gaming.timePerGame;
+                if (system.settings.gaming.timePerGame < system.timeLeft) system.timeLeft = system.settings.gaming.timePerGame;
                 // 重新注册弓箭检测组件
                 MurderMysteryComponents.playerPickupBowTest(system);
                 // 若启用夜视，则立刻应用组件，否则立刻移除夜视效果
@@ -1978,9 +1956,7 @@ class MurderMysteryComponents {
                 case GameStage.LoadStage:
                 case GameStage.WaitingStage:
                     const texts = system.getBeforeGameInfoboard();
-                    lib.PlayerUtils.getAll().forEach(player =>
-                        player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts))
-                    );
+                    lib.PlayerUtils.getAll().forEach(player => player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts)));
                     break;
                 case GameStage.GamingStage:
                 case GameStage.GameOverStage:
@@ -2064,12 +2040,7 @@ class MurderMysteryComponents {
                 return;
             }
 
-            const {
-                consume = 0,
-                notifyPlayerWhenGoldNotEnough = true,
-                stillCancelEvent = false,
-                trigger = "",
-            } = matchedInteraction;
+            const { consume = 0, notifyPlayerWhenGoldNotEnough = true, stillCancelEvent = false, trigger = "" } = matchedInteraction;
 
             // 如果玩家没有足够的金锭，则取消事件并终止运行
             const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
@@ -2101,8 +2072,7 @@ class MurderMysteryComponents {
      */
     static settings(system: MurderMysterySystem) {
         lib.gameSystem.subscribeEvent("settings", minecraft.world.afterEvents.itemUse, event => {
-            if (event.itemStack.typeId === "murder_mystery:settings")
-                MurderMysterySettings.showMainSettingsUI(system, event.source);
+            if (event.itemStack.typeId === "murder_mystery:settings") MurderMysterySettings.showMainSettingsUI(system, event.source);
         });
     }
 
@@ -2322,8 +2292,7 @@ class MurderMysteryComponents {
             // 2. 确定生成时机后，判断对哪个玩家生成
             system.globalGoldSpawnTimes++;
             const index = system.globalGoldSpawnTimes % alivePlayersCount;
-            const playerData =
-                system.alivePlayers.allPlayers[index] ?? (system.alivePlayers.allPlayers[0] as MurderMysteryPlayer);
+            const playerData = system.alivePlayers.allPlayers[index] ?? (system.alivePlayers.allPlayers[0] as MurderMysteryPlayer);
             // 3. 查找距离该玩家平面距离（xz）最近的可生成金点，并在选中的金点位置生成金锭
             goldPoints
                 .filter((goldPoint, index) => {
@@ -2436,8 +2405,7 @@ class MurderMysteryComponents {
                     if (attackerData.role === MurderMysteryPlayerRole.Murderer)
                         victimData.setDead(gameData.MurderMysteryDeathType.MurdererShot, attackerData);
                     // 被自己杀死，则记录为自杀
-                    else if (attacker.id === victim.id)
-                        victimData.setDead(gameData.MurderMysteryDeathType.ShotSelf, attackerData);
+                    else if (attacker.id === victim.id) victimData.setDead(gameData.MurderMysteryDeathType.ShotSelf, attackerData);
                     // 被其他人杀死，则记录为其他玩家射杀，并将射杀之人处死
                     else {
                         victimData.setDead(gameData.MurderMysteryDeathType.Player, attackerData);
@@ -2463,9 +2431,7 @@ class MurderMysteryComponents {
         lib.gameSystem.unsubscribeEvent("playerGetBowTestRightClick");
 
         const pickupBowMethod = system.settings.gaming.pickupBowMethod;
-        const isAliveInnocentData = (
-            playerData: MurderMysteryPlayer | undefined
-        ): playerData is MurderMysteryPlayer => {
+        const isAliveInnocentData = (playerData: MurderMysteryPlayer | undefined): playerData is MurderMysteryPlayer => {
             if (!playerData) return false;
             if (playerData.role !== MurderMysteryPlayerRole.Innocent) return false;
             if (playerData.isDead) return false;
@@ -2565,10 +2531,7 @@ class MurderMysteryComponents {
             minecraft.system.run(() => {
                 // 如果退出玩家是存活的侦探，掉落弓
                 if (playerData.role === MurderMysteryPlayerRole.Detective && !playerData.isDead) {
-                    playerData.dropBow(
-                        false,
-                        lib.Vector3Utils.getClosest(location, system.mapData.description.spawnPoints)
-                    );
+                    playerData.dropBow(false, lib.Vector3Utils.getClosest(location, system.mapData.description.spawnPoints));
                     system.alivePlayers.innocent.forEach(innocent => {
                         if (!isPlayer(innocent.player)) return;
                         innocent.player.sendMessage({ translate: "chat.detectiveQuit" });
@@ -2580,10 +2543,7 @@ class MurderMysteryComponents {
                 // 如果退出玩家是杀手：
                 if (playerData.role === MurderMysteryPlayerRole.Murderer) {
                     // 如果已给刀，或者未给刀但只剩下侦探时，则游戏结束
-                    if (
-                        system.getSpecialItem ||
-                        system.alivePlayers.detective.length === system.alivePlayers.allPlayers.length
-                    ) {
+                    if (system.getSpecialItem || system.alivePlayers.detective.length === system.alivePlayers.allPlayers.length) {
                         system.gameOverTest(MurderMysteryGameOverReason.MurdererQuit);
                         return;
                     }
@@ -2665,17 +2625,13 @@ class MurderMysteryComponents {
      * @description 将玩家射出的箭标记为非玩家的箭，并标记为已击中。
      */
     static preventPlayerPickupArrow() {
-        lib.gameSystem.subscribeEvent(
-            "preventPlayerPickupArrow",
-            minecraft.world.afterEvents.projectileHitBlock,
-            event => {
-                const arrow = event.projectile;
-                if (!arrow.isValid) return;
-                if (arrow.typeId !== "minecraft:arrow") return;
-                arrow.triggerEvent("murder_mystery:remove_player_arrow");
-                arrow.setDynamicProperty("hit", true);
-            }
-        );
+        lib.gameSystem.subscribeEvent("preventPlayerPickupArrow", minecraft.world.afterEvents.projectileHitBlock, event => {
+            const arrow = event.projectile;
+            if (!arrow.isValid) return;
+            if (arrow.typeId !== "minecraft:arrow") return;
+            arrow.triggerEvent("murder_mystery:remove_player_arrow");
+            arrow.setDynamicProperty("hit", true);
+        });
     }
 
     /** 杀手飞刀。
@@ -2706,17 +2662,13 @@ class MurderMysteryComponents {
                     pitch += 0.1;
                 }
                 // 如果杀手再度交互则阻止扔刀
-                lib.gameSystem.subscribeEvent(
-                    "murdererKnifeStopThrowingByUsingAgain",
-                    minecraft.world.afterEvents.itemUse,
-                    event => {
-                        // 如果交互的不是刀，或者交互的不是这名玩家，则终止
-                        if (event.itemStack.typeId !== "minecraft:iron_sword") return;
-                        if (event.source.id !== murderer.id) return;
-                        // 取消蓄力
-                        stopThrowingKnifeTest(murderer, murdererData);
-                    }
-                );
+                lib.gameSystem.subscribeEvent("murdererKnifeStopThrowingByUsingAgain", minecraft.world.afterEvents.itemUse, event => {
+                    // 如果交互的不是刀，或者交互的不是这名玩家，则终止
+                    if (event.itemStack.typeId !== "minecraft:iron_sword") return;
+                    if (event.source.id !== murderer.id) return;
+                    // 取消蓄力
+                    stopThrowingKnifeTest(murderer, murdererData);
+                });
                 // 如果杀手切换手持则阻止扔刀
                 lib.gameSystem.subscribeEvent(
                     "murdererKnifeStopThrowingByChangingHand",
@@ -2771,81 +2723,73 @@ class MurderMysteryComponents {
 
         /** 检查杀手的刀是否击中了玩家，如果击中玩家则淘汰之。在投出刀后进行检查。 */
         function knifeHitPlayerTest(murderer: minecraft.Player, murdererData: MurderMysteryPlayer) {
-            lib.gameSystem.subscribeEvent(
-                "murdererKnifeHitPlayerTest",
-                minecraft.world.afterEvents.projectileHitEntity,
-                event => {
-                    // 如果这把刀不是来源于给定杀手的，保留检测，只终止运行。
-                    if (!isFromMurderer(event.projectile, murderer, event.source)) return;
-                    // 移除刀
-                    if (event.projectile.isValid) event.projectile.remove();
-                    // 现在，击中的一定是给定杀手的刀。接下来结束运行后必须取消全部投刀后事件。
+            lib.gameSystem.subscribeEvent("murdererKnifeHitPlayerTest", minecraft.world.afterEvents.projectileHitEntity, event => {
+                // 如果这把刀不是来源于给定杀手的，保留检测，只终止运行。
+                if (!isFromMurderer(event.projectile, murderer, event.source)) return;
+                // 移除刀
+                if (event.projectile.isValid) event.projectile.remove();
+                // 现在，击中的一定是给定杀手的刀。接下来结束运行后必须取消全部投刀后事件。
 
-                    // 检查被击中实体是否为密室杀手玩家，不是则终止运行
-                    const player = event.getEntityHit().entity;
-                    if (!player) {
-                        cancelEvents();
-                        return;
-                    }
-                    const playerData = system.getPlayer(player);
-                    if (!playerData) {
-                        cancelEvents();
-                        return;
-                    }
-                    // 如果是击中了侦探或平民，则直接处死
-                    switch (playerData.role) {
-                        case MurderMysteryPlayerRole.Innocent:
-                        case MurderMysteryPlayerRole.Detective:
-                            playerData.setDead(gameData.MurderMysteryDeathType.MurdererKnife, murdererData);
-                            const distance = lib.Vector3Utils.distance(murderer.location, player.location);
-                            murderer.sendMessage({ translate: "chat.knifeKilledPlayer", with: [distance.toFixed(2)] });
-                            break;
-                        case MurderMysteryPlayerRole.Murderer:
-                            break;
-                        case MurderMysteryPlayerRole.Spectator:
-                            break;
-                    }
+                // 检查被击中实体是否为密室杀手玩家，不是则终止运行
+                const player = event.getEntityHit().entity;
+                if (!player) {
                     cancelEvents();
+                    return;
                 }
-            );
+                const playerData = system.getPlayer(player);
+                if (!playerData) {
+                    cancelEvents();
+                    return;
+                }
+                // 如果是击中了侦探或平民，则直接处死
+                switch (playerData.role) {
+                    case MurderMysteryPlayerRole.Innocent:
+                    case MurderMysteryPlayerRole.Detective:
+                        playerData.setDead(gameData.MurderMysteryDeathType.MurdererKnife, murdererData);
+                        const distance = lib.Vector3Utils.distance(murderer.location, player.location);
+                        murderer.sendMessage({ translate: "chat.knifeKilledPlayer", with: [distance.toFixed(2)] });
+                        break;
+                    case MurderMysteryPlayerRole.Murderer:
+                        break;
+                    case MurderMysteryPlayerRole.Spectator:
+                        break;
+                }
+                cancelEvents();
+            });
         }
 
         /** 检查杀手的刀是否击中了方块。在投出刀后进行检查。 */
         function knifeHitBlockTest(murderer: minecraft.Player) {
-            lib.gameSystem.subscribeEvent(
-                "murdererKnifeHitBlockTest",
-                minecraft.world.afterEvents.projectileHitBlock,
-                event => {
-                    // 如果这把刀不是来源于给定杀手的，保留检测，只终止运行。
-                    if (!isFromMurderer(event.projectile, murderer, event.source)) return;
-                    // 现在，击中的一定是给定杀手的刀。接下来结束运行后需要视情况取消全部投刀后事件。
+            lib.gameSystem.subscribeEvent("murdererKnifeHitBlockTest", minecraft.world.afterEvents.projectileHitBlock, event => {
+                // 如果这把刀不是来源于给定杀手的，保留检测，只终止运行。
+                if (!isFromMurderer(event.projectile, murderer, event.source)) return;
+                // 现在，击中的一定是给定杀手的刀。接下来结束运行后需要视情况取消全部投刀后事件。
 
-                    // 如果击中的方块是玻璃板，则留下裂纹，然后任其穿过，只终止运行
-                    const block = event.getBlockHit().block;
-                    if (block.typeId.includes("glass_pane")) {
-                        const location = lib.Vector3Utils.add(block.location, 0.5, 0, 0.5);
-                        // 对附近的玩家播放破碎音效
-                        lib.PlayerUtils.getNearby(location, 15).forEach(player => player.playSound("random.glass"));
-                        // 如果东西向有方块连接，则还产生裂纹，旋转 90°
-                        if (block.east()?.typeId !== "minecraft:air" && block.west()?.typeId !== "minecraft:air") {
-                            lib.EntityUtils.add("murder_mystery:glass_pane_crack", location, block.dimension, {
-                                initialRotation: 90,
-                            });
-                        }
-                        // 如果南北向有方块连接，则还产生裂纹，不旋转
-                        if (block.south()?.typeId !== "minecraft:air" && block.north()?.typeId !== "minecraft:air") {
-                            lib.EntityUtils.add("murder_mystery:glass_pane_crack", location);
-                        }
-                        return;
+                // 如果击中的方块是玻璃板，则留下裂纹，然后任其穿过，只终止运行
+                const block = event.getBlockHit().block;
+                if (block.typeId.includes("glass_pane")) {
+                    const location = lib.Vector3Utils.add(block.location, 0.5, 0, 0.5);
+                    // 对附近的玩家播放破碎音效
+                    lib.PlayerUtils.getNearby(location, 15).forEach(player => player.playSound("random.glass"));
+                    // 如果东西向有方块连接，则还产生裂纹，旋转 90°
+                    if (block.east()?.typeId !== "minecraft:air" && block.west()?.typeId !== "minecraft:air") {
+                        lib.EntityUtils.add("murder_mystery:glass_pane_crack", location, block.dimension, {
+                            initialRotation: 90,
+                        });
                     }
-                    // 如果击中的方块是屏障，则只任其穿过，终止运行
-                    if (block.typeId === "minecraft:barrier") return;
-                    // 否则，击中其他方块，销毁实体，结束事件检查后终止运行
-                    event.projectile.remove();
-                    // event.projectile.triggerEvent("murder_mystery:stick_in_ground"); // 插在地上
-                    cancelEvents();
+                    // 如果南北向有方块连接，则还产生裂纹，不旋转
+                    if (block.south()?.typeId !== "minecraft:air" && block.north()?.typeId !== "minecraft:air") {
+                        lib.EntityUtils.add("murder_mystery:glass_pane_crack", location);
+                    }
+                    return;
                 }
-            );
+                // 如果击中的方块是屏障，则只任其穿过，终止运行
+                if (block.typeId === "minecraft:barrier") return;
+                // 否则，击中其他方块，销毁实体，结束事件检查后终止运行
+                event.projectile.remove();
+                // event.projectile.triggerEvent("murder_mystery:stick_in_ground"); // 插在地上
+                cancelEvents();
+            });
         }
 
         const { from, to } = system.mapData.description.range;
@@ -2884,9 +2828,7 @@ class MurderMysteryComponents {
                 // 如果和其他箭相碰，则直接销毁刀和箭，播放粒子和音效，结束事件检查后终止运行
                 arrowNearby.remove();
                 knife.remove();
-                lib.PlayerUtils.getNearby(location, 10).forEach(player =>
-                    player.playSound("random.break", { pitch: 2 })
-                );
+                lib.PlayerUtils.getNearby(location, 10).forEach(player => player.playSound("random.break", { pitch: 2 }));
                 dimension.spawnParticle("murder_mystery:knife_arrow_collide", location);
                 cancelEvents();
             });
@@ -3039,15 +2981,11 @@ class MurderMysteryComponents {
         const eventManager = system.eventManager;
 
         // 喝下神秘药水
-        lib.gameSystem.subscribeEvent(
-            "playerUseMysteryPotionTest",
-            minecraft.world.afterEvents.itemCompleteUse,
-            event => {
-                const playerData = system.getPlayer(event.source);
-                if (!playerData) return;
-                eventManager.drinkMysteryPotion(playerData, event.itemStack.typeId);
-            }
-        );
+        lib.gameSystem.subscribeEvent("playerUseMysteryPotionTest", minecraft.world.afterEvents.itemCompleteUse, event => {
+            const playerData = system.getPlayer(event.source);
+            if (!playerData) return;
+            eventManager.drinkMysteryPotion(playerData, event.itemStack.typeId);
+        });
     }
 
     /** 玩家进入特定区域组件。
@@ -3219,10 +3157,7 @@ class MurderMysteryPlayer {
     /** 设置玩家为已死亡，并对玩家播放死因。如果是侦探死亡，则全体公告。如果触发特定条件，会导致游戏结束。
      * @returns 返回是否成功将该玩家设定为死亡。
      */
-    setDead(
-        deathType: gameData.MurderMysteryDeathType = gameData.MurderMysteryDeathType.Other,
-        killer?: MurderMysteryPlayer
-    ) {
+    setDead(deathType: gameData.MurderMysteryDeathType = gameData.MurderMysteryDeathType.Other, killer?: MurderMysteryPlayer) {
         // 如果游戏已结束，直接终止
         if (this.system.gameStage !== GameStage.GamingStage) return false;
 
@@ -3384,15 +3319,10 @@ class MurderMysteryPlayer {
     /** 获取弓箭。如果是侦探则重置冷却时间。 */
     getBow() {
         // 新增箭并移除金锭，并提示玩家
-        lib.ItemUtils.inventory.set(
-            this.player,
-            this.role === MurderMysteryPlayerRole.Murderer ? 2 : 1,
-            "minecraft:bow",
-            {
-                unbreakable: true,
-                itemLock: minecraft.ItemLockMode.slot,
-            }
-        );
+        lib.ItemUtils.inventory.set(this.player, this.role === MurderMysteryPlayerRole.Murderer ? 2 : 1, "minecraft:bow", {
+            unbreakable: true,
+            itemLock: minecraft.ItemLockMode.slot,
+        });
         lib.ItemUtils.inventory.addSlot(this.player, 3, 1, "minecraft:arrow", {
             itemLock: minecraft.ItemLockMode.slot,
         });
@@ -3419,9 +3349,7 @@ class MurderMysteryPlayer {
             if (isPlayer(player)) player.sendMessage({ translate: "chat.bowPicked" });
         });
         // 为所有平民禁用定位器
-        [...this.system.alivePlayers.innocent, ...this.system.alivePlayers.detective].forEach(innocent =>
-            innocent.removeLocator()
-        );
+        [...this.system.alivePlayers.innocent, ...this.system.alivePlayers.detective].forEach(innocent => innocent.removeLocator());
         // 移除弓实体
         bowEntity.remove();
     }
@@ -3488,10 +3416,9 @@ class MurderMysteryPlayer {
         const knife = lib.EntityUtils.add("murder_mystery:iron_sword", this.player.getHeadLocation());
         const projectileComp = knife.getComponent("projectile") as minecraft.EntityProjectileComponent;
         projectileComp.owner = this.player;
-        projectileComp.shoot(
-            lib.Vector3Utils.scale(this.player.getViewDirection(), this.system.settings.murdererSword.knifeSpeed),
-            { uncertainty: 0 }
-        );
+        projectileComp.shoot(lib.Vector3Utils.scale(this.player.getViewDirection(), this.system.settings.murdererSword.knifeSpeed), {
+            uncertainty: 0,
+        });
         // 播放飞刀音效
         if (isPlayer(this.player)) this.player.playSound("mob.enderdragon.flap");
         // 令杀手进入冷却

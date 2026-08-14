@@ -3782,12 +3782,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { area: { yMax: 10 }, trigger: "easterWorld:playerIntoVoid" },
             ],
             onGameStart: {
-                trigger: [
-                    "easterWorld:recoverDoor1",
-                    "easterWorld:recoverDoor2",
-                    "easterWorld:recoverDoor3",
-                    "easterWorld:setText",
-                ],
+                trigger: ["easterWorld:recoverDoor1", "easterWorld:recoverDoor2", "easterWorld:recoverDoor3", "easterWorld:setText"],
             },
             preventDamage: { id: ["minecraft:minecart"] },
             interaction: [

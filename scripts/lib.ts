@@ -29,10 +29,7 @@ class GameSystem {
     private readonly gameDelay: Record<string, number> = {};
 
     /** 所有事件对应的 EventSignal 和 gameEventCallback 函数。 */
-    private readonly gameEvent: Record<
-        string,
-        { gameEventSignal: GameEventSignal; gameEventCallback: (callback: any) => void }
-    > = {};
+    private readonly gameEvent: Record<string, { gameEventSignal: GameEventSignal; gameEventCallback: (callback: any) => void }> = {};
 
     /** 是否显示调试信息，若显示则在注册时间线或事件时显示。 */
     showDebugMessage = false;
@@ -145,9 +142,7 @@ class GameSystem {
             if (shouldExist === false) this.unsubscribeEvent(id);
         };
         /** 游戏返回的回调函数，用于unsubscribe */
-        const eventCallback = options
-            ? event.subscribe(subscribeCallback, options)
-            : event.subscribe(subscribeCallback);
+        const eventCallback = options ? event.subscribe(subscribeCallback, options) : event.subscribe(subscribeCallback);
         this.gameEvent[id] = { gameEventSignal: event, gameEventCallback: eventCallback };
         if (this.showDebugMessage) minecraft.world.sendMessage(`§a+ 事件 ${id}`);
 
@@ -205,13 +200,7 @@ export class StructureUtils {
         to: minecraft.Vector3,
         options?: minecraft.StructureCreateOptions
     ) {
-        return minecraft.world.structureManager.createFromWorld(
-            structureId,
-            DimensionUtils.getDefault(dimension),
-            from,
-            to,
-            options
-        );
+        return minecraft.world.structureManager.createFromWorld(structureId, DimensionUtils.getDefault(dimension), from, to, options);
     }
 
     /** 获取特定 ID 的结构。
@@ -377,11 +366,7 @@ class ScoreboardPlayerUtils {
     /** 为特定的追踪对象添加分数。
      * @returns 如果指定的记分项不存在，则返回 undefined。
      */
-    static add(
-        objectiveId: string,
-        participant: minecraft.Entity | minecraft.ScoreboardIdentity | string,
-        score: number
-    ) {
+    static add(objectiveId: string, participant: minecraft.Entity | minecraft.ScoreboardIdentity | string, score: number) {
         const objective = ScoreboardObjectiveUtils.get(objectiveId);
         if (!objective) return;
         return objective.addScore(participant, score);
@@ -391,11 +376,7 @@ class ScoreboardPlayerUtils {
      * @param score 设置为 boolean 时，false = 0 分，true = 1 分。
      * @returns 如果指定的记分项不存在，则返回 undefined。
      */
-    static set(
-        objectiveId: string,
-        participant: minecraft.Entity | minecraft.ScoreboardIdentity | string,
-        score: number | boolean
-    ) {
+    static set(objectiveId: string, participant: minecraft.Entity | minecraft.ScoreboardIdentity | string, score: number | boolean) {
         const objective = ScoreboardObjectiveUtils.get(objectiveId);
         if (!objective) return;
         if (typeof score === "boolean") score = score ? 1 : 0;
@@ -568,10 +549,7 @@ export class DimensionUtils {
         const subVolumes: minecraft.BlockVolume[] = [];
         for (let i = 0; i < subVolumeAmount; i++) {
             const thisVolumeLongestAxisMin = longestAxisInfo.min + subVolumeHeight * i;
-            const thisVolumeLongestAxisMax = Math.min(
-                longestAxisInfo.min + subVolumeHeight * (i + 1) - 1,
-                longestAxisInfo.max
-            );
+            const thisVolumeLongestAxisMax = Math.min(longestAxisInfo.min + subVolumeHeight * (i + 1) - 1, longestAxisInfo.max);
 
             const thisVolumeFrom: minecraft.Vector3 = { ...volume.from };
             thisVolumeFrom[longestAxis] = thisVolumeLongestAxisMin;
@@ -667,11 +645,7 @@ export class BlockUtils {
     }
 
     /** 在两个坐标间填充方块。 */
-    static fill(
-        blockData: BlockFillData,
-        options?: minecraft.BlockFillOptions,
-        dimension?: string | minecraft.Dimension
-    ) {
+    static fill(blockData: BlockFillData, options?: minecraft.BlockFillOptions, dimension?: string | minecraft.Dimension) {
         const volumes: minecraft.ListBlockVolume[] = [];
         const { from, to, id, states } = blockData;
         DimensionUtils.divideVolume(new minecraft.BlockVolume(from, to)).forEach(volume =>
@@ -696,11 +670,7 @@ export class BlockUtils {
     }
 
     /** 在两个坐标间以镂空的形式填充方块。 */
-    static fillHollow(
-        blockData: BlockFillData,
-        options?: minecraft.BlockFillOptions,
-        dimension?: string | minecraft.Dimension
-    ) {
+    static fillHollow(blockData: BlockFillData, options?: minecraft.BlockFillOptions, dimension?: string | minecraft.Dimension) {
         const { from, to, id, states } = blockData;
         const volumeInfo = DimensionUtils.hollowVolume(new minecraft.BlockVolume(from, to));
         // 内部镂空
@@ -735,9 +705,7 @@ export class BlockUtils {
     /** 获取和方块交互后，实际放置的方块位置。
      * @description 专门适用于 interactWithBlock 的前事件和后事件。
      */
-    static getPlaceLocation(
-        event: minecraft.PlayerInteractWithBlockAfterEvent | minecraft.PlayerInteractWithBlockBeforeEvent
-    ) {
+    static getPlaceLocation(event: minecraft.PlayerInteractWithBlockAfterEvent | minecraft.PlayerInteractWithBlockBeforeEvent) {
         const { block, blockFace } = event;
         const location = block.location;
         const placeLocation: Record<minecraft.Direction, minecraft.Vector3> = {
@@ -1006,12 +974,7 @@ export class EntityUtils {
     }
 
     /** 获取附近的实体 */
-    static getNearby(
-        typeId: string,
-        location: minecraft.Vector3,
-        distance: number,
-        dimension?: string | minecraft.Dimension
-    ) {
+    static getNearby(typeId: string, location: minecraft.Vector3, distance: number, dimension?: string | minecraft.Dimension) {
         return DimensionUtils.getDefault(dimension).getEntities({
             type: typeId,
             location: location,
@@ -1037,11 +1000,7 @@ export class EntityUtils {
     /** 检查实体是否在特定长方体区域内。
      * @param dimension 如果不指定，则默认在实体所在的维度执行。
      */
-    static isInVolume(
-        entity: minecraft.Entity,
-        volume: minecraft.BlockVolume,
-        dimension?: string | minecraft.Dimension
-    ) {
+    static isInVolume(entity: minecraft.Entity, volume: minecraft.BlockVolume, dimension?: string | minecraft.Dimension) {
         const executeDimension = dimension ? DimensionUtils.getDefault(dimension) : entity.dimension;
         return executeDimension
             .getEntities({ location: volume.getMin(), volume: Vector3Utils.add(volume.getSpan(), -1, -1, -1) })
@@ -1246,9 +1205,7 @@ class InventoryUtils {
 
     /** 获取实体物品栏内的有效物品及对应槽位。 */
     static getValidItems(entity: minecraft.Entity): InventoryValidItemData[] {
-        return this.getItems(entity).filter(
-            (itemInfo): itemInfo is InventoryValidItemData => itemInfo.item !== undefined
-        );
+        return this.getItems(entity).filter((itemInfo): itemInfo is InventoryValidItemData => itemInfo.item !== undefined);
     }
 
     /** 获取实体物品栏的某个槽位是否符合给定的信息。 */
@@ -1334,13 +1291,7 @@ class InventoryUtils {
      * @param options 若新增物品，新增何种物品。
      * @returns 返回已添加的物品数量。
      */
-    static addSlot(
-        entity: minecraft.Entity,
-        slot: number,
-        amount: number,
-        itemId?: string,
-        options?: ItemOptions
-    ): number {
+    static addSlot(entity: minecraft.Entity, slot: number, amount: number, itemId?: string, options?: ItemOptions): number {
         // 如果实体不存在物品栏，直接终止程序
         const inventory = this.get(entity);
         if (!inventory) return 0;
@@ -1570,8 +1521,7 @@ export class ItemUtils {
         const itemUnbreakable = itemStack.getComponent("durability")?.unbreakable ?? false;
         // 如果指定了筛选某变量 var，当某变量 var 无法匹配时返回 false
         if (optionsTypeId && !optionsTypeId.includes(itemTypeId)) return false;
-        if (optionsAmountRange && (optionsAmountRange[0] > itemAmount || optionsAmountRange[1] < itemAmount))
-            return false;
+        if (optionsAmountRange && (optionsAmountRange[0] > itemAmount || optionsAmountRange[1] < itemAmount)) return false;
         if (optionsName && optionsName !== itemName) return false;
         if (optionsItemLock && optionsItemLock !== itemItemLock) return false;
         if (optionsKeepOnDeath && optionsKeepOnDeath !== itemKeepOnDeath) return false;
@@ -1587,26 +1537,18 @@ export class ItemUtils {
      * @param entity 仅当实体为玩家时才会检查鼠标物品栏。
      * @param matchOptions 这里的物品数量会检查单组的数量需求。若需要检查物品数量总和，请使用 {@link InventoryUtils} 的 hasItemAmount 方法。
      */
-    static hasItem(
-        entity: minecraft.Entity,
-        matchOptions: ItemMatchOptions,
-        searchOptions: ItemSearchInventoryOptions = {}
-    ) {
+    static hasItem(entity: minecraft.Entity, matchOptions: ItemMatchOptions, searchOptions: ItemSearchInventoryOptions = {}) {
         const { inventory = true, cursorInventory = true, equipment = true } = searchOptions;
 
         // 检查物品栏的物品
-        if (inventory && InventoryUtils.getValidItems(entity).some(itemData => this.match(itemData.item, matchOptions)))
-            return true;
+        if (inventory && InventoryUtils.getValidItems(entity).some(itemData => this.match(itemData.item, matchOptions))) return true;
         // 检查鼠标物品栏的物品
         if (cursorInventory && entity.typeId === "minecraft:player") {
             const cursorItem = CursorInventoryUtils.get(entity as minecraft.Player)?.item;
             if (cursorItem && this.match(cursorItem, matchOptions)) return true;
         }
         // 检查装备栏的物品
-        if (
-            equipment &&
-            Object.values(EquipmentUtils.getItems(entity)).some(item => item && this.match(item, matchOptions))
-        )
+        if (equipment && Object.values(EquipmentUtils.getItems(entity)).some(item => item && this.match(item, matchOptions)))
             return true;
 
         return false;
@@ -1627,9 +1569,8 @@ export class ItemUtils {
         const dataStr = data ? `,data=${data}` : ``;
         // 检测物品
         return (
-            entity.runCommand(
-                `execute if entity @s[hasitem={item=${itemId}${quantityStr}${locationStr}${slotStr}${dataStr} }]`
-            ).successCount !== 0
+            entity.runCommand(`execute if entity @s[hasitem={item=${itemId}${quantityStr}${locationStr}${slotStr}${dataStr} }]`)
+                .successCount !== 0
         );
     }
 
@@ -2357,11 +2298,7 @@ export class Debug {
     }
 
     /** 打印对象 */
-    static printObject(
-        object: Record<string, any> | undefined,
-        mode: "chat" | "actionbar" = "chat",
-        hasFunction = true
-    ) {
+    static printObject(object: Record<string, any> | undefined, mode: "chat" | "actionbar" = "chat", hasFunction = true) {
         /** 待打印的字符串数组 */ let printString: string[] = [];
         // 设置打印的字符串
         if (object == undefined) {
