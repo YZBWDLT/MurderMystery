@@ -172,7 +172,7 @@ class MurderMysterySystem {
     // #region - 系统变量
 
     /** 系统版本。 */
-    readonly version = "1.0 - Exp 6";
+    readonly version = "1.0 - Exp 7";
 
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage: GameStage;
@@ -223,12 +223,6 @@ class MurderMysterySystem {
 
     /** 是否已给予杀手和侦探道具。 */
     getSpecialItem = false;
-
-    /** 是否是一个有效的系统。在游戏结束后，该系统将变得无效化。 */
-    isValid = true;
-
-    /** 该系统变得无效化后，下一张地图指定为何种地图。 */
-    nextMap?: keyof typeof gameData.maps;
 
     /** 全局金锭的生成次数。该值将会决定每次生成会在哪个玩家周围生成金锭。 */
     globalGoldSpawnTimes: number = 0;
@@ -359,7 +353,7 @@ class MurderMysterySystem {
             () => {
                 this.removeAllEntities();
                 MurderMysterySettings.saveSettings(this); // 保存本局设置，以便下局应用
-                this.isValid = false;
+                minecraft.world.setDynamicProperty("murder_mystery:nextMap"); // 随机设置一张新地图
             },
             200
         );
@@ -1556,7 +1550,7 @@ class MurderMysterySettings {
     /** 对玩家显示更新日志 UI。 */
     private static showUpdateLogUI(system: MurderMysterySystem, player: minecraft.Player) {
         const texts: string[] = [
-            "§l1.0 - Snapshot 6 更新日志",
+            "§l1.0 - Exp 7 更新日志",
             "本周我们带来了大家心心念念的游乐园的完整功能，过山车！芜湖——！！",
             "并且，我们在本周还带来了重磅更新——完全实装设置功能！现在你可以在设置中控制地图的运行方式，也可以控制何种地图将会启用，等等。通过设置，这张地图就可以玩出很多花活了！",
             "一起来看看本周的更新吧~",
@@ -1610,16 +1604,7 @@ class MurderMysterySettings {
             type: "button",
             text: { translate: `map.${mapName}` },
             onClick: () => {
-                // 立刻无效化系统
-                system.isValid = false;
-
-                // 移除所有正在监听的时间线和事件
-                lib.gameSystem.unsubscribeAllTimelines();
-                lib.gameSystem.unsubscribeAllEvents();
-                lib.gameSystem.unsubscribeAllDelays();
-
-                // 设定下一张地图
-                system.nextMap = mapName;
+                minecraft.world.setDynamicProperty("murder_mystery:nextMap", mapName);
             },
         }));
         lib.UIUtils.createAction(player, {
@@ -3550,32 +3535,45 @@ class MurderMysteryPlayer {
 }
 
 // #endregion
-// #region 创建实例
+// #region 创建系统实例
+
+// 如果在 murder_mystery:nextMap 动态属性中指定了一张地图，或该属性不存在时，那么就立刻终止当前地图的运行，并新建一个新系统进行初始化
+// 在初始化后，这个属性会变为 false，代表不生成地图
+// 这个进程应该始终存在，不能受到各类 unsubscribe 的影响
 minecraft.world.afterEvents.worldLoad.subscribe(() => {
-    let murderMysterySystem: MurderMysterySystem | undefined;
     minecraft.system.runInterval(() => {
-        // 地图无效化后，对下一张地图预加载后再开启新地图
-        if (!murderMysterySystem || !murderMysterySystem.isValid) {
-            let nextMap = MurderMysterySystem.getMapData(murderMysterySystem?.nextMap);
-            const { from, to } = nextMap.description.range;
-            lib.TickingAreaUtils.remove("gamingArea");
-            const tickingArea = lib.TickingAreaUtils.add("gamingArea", from, to);
-            // 如果未能完成常加载区域初始化，则警告玩家并重置旧系统指定的地图
-            if (!tickingArea) {
-                lib.PlayerUtils.broadcast({
-                    message: {
-                        translate: "chat.error.areaToLarge",
-                        with: { rawtext: [{ translate: `map.${nextMap.description.id}` }] },
-                    },
-                    sound: "random.anvil_land",
-                });
-                if (murderMysterySystem) murderMysterySystem.nextMap = void 0;
-                return;
-            }
-            tickingArea.then(() => {
-                murderMysterySystem = new MurderMysterySystem(nextMap);
+        // ===== 条件判断 =====
+        /** 下一张地图的名称，若为`false`则终止运行，若为`undefined`则为随机生成地图。 */
+        const nextMapName = minecraft.world.getDynamicProperty("murder_mystery:nextMap") as string | false | undefined;
+        if (nextMapName === false) return;
+
+        // ===== 创建新系统 =====
+        // 立刻终止一切当前系统的进程
+        lib.gameSystem.unsubscribeAllTimelines();
+        lib.gameSystem.unsubscribeAllEvents();
+        lib.gameSystem.unsubscribeAllDelays();
+
+        // 清除已记载的新建地图
+        minecraft.world.setDynamicProperty("murder_mystery:nextMap", false);
+
+        // 获取地图数据
+        let nextMap = MurderMysterySystem.getMapData(nextMapName);
+
+        // 尝试添加常加载区域，如果没有成功加载则随机重置地图
+        const { from, to } = nextMap.description.range;
+        lib.TickingAreaUtils.remove("gamingArea");
+        const tickingArea = lib.TickingAreaUtils.add("gamingArea", from, to);
+        if (!tickingArea) {
+            lib.PlayerUtils.broadcast({
+                message: { translate: "chat.error.areaToLarge", with: { rawtext: [{ translate: `map.${nextMap.description.id}` }] } },
+                sound: "random.anvil_land",
             });
+            minecraft.world.setDynamicProperty("murder_mystery:nextMap");
+            return;
         }
+
+        // 在常加载区域加载完成后创立系统
+        tickingArea.then(() => new MurderMysterySystem(nextMap));
     }, 20);
     lib.gameSystem.showDebugMessage = false;
 });
