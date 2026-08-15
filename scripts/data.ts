@@ -26,19 +26,29 @@ export enum MurderMysteryDeathType {
     /** 误杀了其他玩家。 */
     Manslaughter = "manslaughter",
 
-    /** 掉进虚空。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    /** 掉进虚空。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
     Void = "void",
 
-    /** 掉进熔岩。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    /** 掉进熔岩。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
     Lava = "lava",
 
-    /** 掉进末地传送门。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    /** 掉进末地传送门。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
     EndPortal = "endPortal",
 
-    /** 摔到地上。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    /** 摔到地上。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
     HitGround = "hitGround",
 
-    /** 掉进坑里。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    /** 掉进坑里。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
     Hole = "hole",
 
     /** 踩到陷阱。 */
@@ -53,8 +63,20 @@ export enum MurderMysteryDeathType {
     /** 被闪电杀死。 */
     LightningBolt = "lightningBolt",
 
-    /** 被亡魂拖进深渊。使用该死亡方法时应该注意侦探的弓的掉落位置。 */
+    /** 被亡魂拖进深渊。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
     DraggedByTheDead = "draggedByTheDead",
+
+    /** 被食人鱼吃掉。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
+    Piranhas = "piranhas",
+
+    /** 被鲨鱼吃掉。
+     * @remarks 这种死法是一种会导致出图的死法。
+     */
+    Shark = "shark",
 
     /** 其他死因。 */
     Other = "other",
@@ -68,6 +90,8 @@ export const deathTypeOutOfMap: MurderMysteryDeathType[] = [
     MurderMysteryDeathType.EndPortal,
     MurderMysteryDeathType.Hole,
     MurderMysteryDeathType.DraggedByTheDead,
+    MurderMysteryDeathType.Piranhas,
+    MurderMysteryDeathType.Shark,
 ];
 
 // #endregion
@@ -855,6 +879,16 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
             hasFullFunction: false,
         },
+        components: {
+            playerInArea: [
+                { area: { xMin: 861, xMax: 869, yMin: 48, yMax: 57, zMin: 2928, zMax: 2936 }, trigger: "aquarium:ateByPiranhas" },
+                { area: { xMin: 891, xMax: 911, yMin: 35, yMax: 65, zMin: 2951, zMax: 2972 }, trigger: "aquarium:ateByShark" },
+            ],
+        },
+        events: {
+            "aquarium:ateByPiranhas": { setPlayerDead: { deathType: MurderMysteryDeathType.Piranhas } },
+            "aquarium:ateByShark": { setPlayerDead: { deathType: MurderMysteryDeathType.Shark } },
+        },
     },
 
     // #endregion
@@ -1270,7 +1304,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     trigger: "archives:setFire4",
                 },
             ],
-            playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "archives:playerIntoLava" }],
             onGameStart: { trigger: "archives:recover" },
         },
         events: {
@@ -1351,9 +1384,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
             },
             "archives:playerIntoEndPortal": {
                 setPlayerDead: { deathType: MurderMysteryDeathType.EndPortal },
-            },
-            "archives:playerIntoLava": {
-                setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
             },
             "archives:recover": {
                 place: [
@@ -2849,15 +2879,10 @@ export const maps: Record<string, MurderMysteryMapData> = {
             hasFullFunction: false,
         },
         components: {
-            playerHurt: [
-                { cause: minecraft.EntityDamageCause.drowning, trigger: "cruiseShip:playerDrowned" },
-                { cause: minecraft.EntityDamageCause.lightning, trigger: "cruiseShip:playerHitByLightningBolt" },
-            ],
+            playerHurt: [{ cause: minecraft.EntityDamageCause.lightning, trigger: "cruiseShip:playerHitByLightningBolt" }],
+            interaction: [{ blocks: ["minecraft:trapdoor"] }],
         },
         events: {
-            "cruiseShip:playerDrowned": {
-                setPlayerDead: { deathType: MurderMysteryDeathType.Drowned },
-            },
             "cruiseShip:playerHitByLightningBolt": {
                 setPlayerDead: { deathType: MurderMysteryDeathType.LightningBolt },
             },
@@ -3830,7 +3855,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "easterWorld:playerIntoLava" }],
             playerInArea: [
                 {
                     area: { xMin: -166, xMax: -165.3, yMin: 20, yMax: 22, zMin: 3103, zMax: 3105 },
@@ -3870,9 +3894,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         events: {
-            "easterWorld:playerIntoLava": {
-                setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
-            },
             "easterWorld:intoHauntedHouseDoor1": {
                 condition: {
                     isBlock: [
@@ -4392,7 +4413,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         components: {
-            interaction: [{ blocks: ["minecraft:spruce_door"] }],
+            interaction: [{ blocks: ["minecraft:wooden_door", "minecraft:spruce_door"] }],
         },
     },
     // #endregion
@@ -4741,7 +4762,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         components: {
             time: 18000,
-            playerHurt: [{ cause: minecraft.EntityDamageCause.lava, trigger: "hypixelWorld:playerIntoLava" }],
             playerInArea: [
                 {
                     area: { xMin: -960, xMax: -959.3, yMin: 45, yMax: 47, zMin: 2882, zMax: 2884 },
@@ -4786,9 +4806,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
         },
         events: {
-            "hypixelWorld:playerIntoLava": {
-                setPlayerDead: { deathType: MurderMysteryDeathType.Lava },
-            },
             "hypixelWorld:intoHauntedHouseDoor1": {
                 condition: {
                     isBlock: [
@@ -6871,6 +6888,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
             hasFullFunction: false,
         },
+        components: {},
+        events: {},
     },
     // #endregion
 };

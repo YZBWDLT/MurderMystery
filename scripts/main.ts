@@ -1916,6 +1916,20 @@ class MurderMysteryComponents {
             const playerData = system.getPlayer(player);
             if (!playerData) return;
 
+            // 如果不是游戏状态，直接终止运行
+            if (system.gameStage !== GameStage.GamingStage) return;
+
+            // ===== 特殊伤害处理 =====
+            minecraft.system.run(() => {
+                // 如果受到岩浆伤害，立刻处死
+                if (thisCause === minecraft.EntityDamageCause.lava)
+                    eventManager.setPlayerDead({ deathType: gameData.MurderMysteryDeathType.Lava }, playerData);
+
+                // 如果受到溺水伤害，立刻处死
+                if (thisCause === minecraft.EntityDamageCause.drowning)
+                    eventManager.setPlayerDead({ deathType: gameData.MurderMysteryDeathType.Drowned }, playerData);
+            });
+
             // ===== 触发系统事件 =====
             const playerHurtComponent = system.mapData.components?.playerHurt;
             if (!playerHurtComponent) return;

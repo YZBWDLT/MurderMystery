@@ -115,6 +115,8 @@ deathMessage.potion=§e毒药杀死了你。
 deathMessage.drowned=§e你溺死了！
 deathMessage.lightningBolt=§e一道闪电从天而降击中了你！
 deathMessage.draggedByTheDead=§e你被亡魂拖到了深渊！
+deathMessage.piranhas=§e食人鱼吃了你！
+deathMessage.shark=§e鲨鱼吃了你！
 deathMessage.other=§e你死了！
 chat.knifeKilledPlayer=§e在%s米外击杀了目标！
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
