@@ -1345,7 +1345,7 @@ class MurderMysterySettings {
 
     /** 杂项设置，控制游戏中一些其他内容的设置项。 */
     miscellaneous: MurderMysteryMiscellaneousSettings = {
-        infoboardLastLine: "一只卑微的量筒",
+        infoboardLastLine: "YZBWDLT",
     };
 
     mapEnabled: Record<keyof typeof gameData.maps, boolean> = {};
