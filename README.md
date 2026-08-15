@@ -44,3 +44,7 @@
   - 为`undefined`时，指定为随机地图，在该地图初始化时亦可用此值
   - 为`false`时，不进行检查和系统变换
 - 现在在进行系统切换时，会事先检查`murder_mystery:nextMap`是否不为`false`，一旦不为`false`则会立刻尝试重置系统
+- 更名了系统的`alivePlayers`为`livingPlayers`
+- 移除了`MurderMysteryPlayers`和`MurderMysteryAlivePlayers`类型声明，现在使用更灵活的`Record`声明系统的`players`和`livingPlayers`类型
+- 提取了更新日志 UI 的文本内容和关于我们 UI 的文本内容到 data.ts 中去，并实现了初步的 Markdown 化
+- 移除了系统的`removePlayers()`方法中的`onlyAlive`参数，使用新的`removeLivingPlayers()`方法代替之

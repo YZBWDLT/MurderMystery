@@ -76,43 +76,26 @@ const instantTitleDisplay: minecraft.TitleDisplayOptions = { fadeInDuration: 0, 
 // #endregion
 // #region 系统
 
-type MurderMysteryPlayers = {
-    /** 所有玩家。 */
-    allPlayers: MurderMysteryPlayer[];
-    /** 平民。 */
-    innocent: MurderMysteryPlayer[];
-    /** 杀手。 */
-    murderer: MurderMysteryPlayer[];
-    /** 侦探。 */
-    detective: MurderMysteryPlayer[];
-    /** 旁观者。 */
-    spectator: MurderMysteryPlayer[];
-};
-type MurderMysteryAlivePlayers = {
-    /** 所有玩家。 */
-    allPlayers: MurderMysteryPlayer[];
-    /** 平民。 */
-    innocent: MurderMysteryPlayer[];
-    /** 杀手。 */
-    murderer: MurderMysteryPlayer[];
-    /** 侦探。 */
-    detective: MurderMysteryPlayer[];
-};
 /** 游戏开始前信息。 */
-type MurderMysteryBeforeGameInfo = {
+interface MurderMysteryBeforeGameInfo {
     /** 该选项受到设置的控制，见{@link MurderMysteryWaitingSettings}。 */
     minPlayerCount: number;
+
     /** 该选项受到设置的控制，见{@link MurderMysteryWaitingSettings}。 */
     maxPlayerCount: number;
+
     /** 当前玩家人数。 */
     currentPlayerCount: number;
+
     /** 游戏开始倒计时，单位：秒。 */
     startCountdown: number;
+
     /** 玩家数量是否充足。 */
     playerIsEnough: boolean;
+
     /** 游戏是否已经开始倒计时。 */
     countdownStarted: boolean;
-};
+}
 
 /** 游戏结束的原因。 */
 enum MurderMysteryGameOverReason {
@@ -187,7 +170,7 @@ class MurderMysterySystem {
     readonly mapData: gameData.MurderMysteryMapData;
 
     /** 玩家信息。玩家信息中会包含已经死亡的玩家的信息和旁观者玩家的信息。 */
-    readonly players: MurderMysteryPlayers = {
+    readonly players: Record<"allPlayers" | MurderMysteryPlayerRole, MurderMysteryPlayer[]> = {
         allPlayers: [],
         innocent: [],
         murderer: [],
@@ -196,7 +179,7 @@ class MurderMysterySystem {
     };
 
     /** 存活的玩家信息。 */
-    readonly alivePlayers: MurderMysteryAlivePlayers = {
+    readonly livingPlayers: Record<"allPlayers" | "innocent" | "murderer" | "detective", MurderMysteryPlayer[]> = {
         allPlayers: [],
         innocent: [],
         murderer: [],
@@ -296,7 +279,7 @@ class MurderMysterySystem {
 
         // 分配身份，如果存活玩家只有两人，设置为单挑模式
         this.assignRole();
-        if (this.alivePlayers.allPlayers.length === 2) this.isSolo = true;
+        if (this.livingPlayers.allPlayers.length === 2) this.isSolo = true;
 
         // 移除多余实体
         this.removeAllEntities();
@@ -400,30 +383,19 @@ class MurderMysterySystem {
     addPlayer(playerData: PlayerData) {
         // 如果该玩家已被添加过，则阻止添加
         if (this.players.allPlayers.some(data => data.player.id === playerData.player.id)) return;
+
         // 创建一个玩家数据实例
         const murderMysteryPlayer = new MurderMysteryPlayer(this, playerData);
-        // 根据玩家身份向玩家信息数组推入不同玩家
+
+        // 根据玩家身份向所有玩家列表推入玩家信息
         const playerRole = playerData.role;
         this.players.allPlayers.push(murderMysteryPlayer);
-        switch (playerRole) {
-            case MurderMysteryPlayerRole.Innocent:
-                this.players.innocent.push(murderMysteryPlayer);
-                this.alivePlayers.allPlayers.push(murderMysteryPlayer);
-                this.alivePlayers.innocent.push(murderMysteryPlayer);
-                break;
-            case MurderMysteryPlayerRole.Murderer:
-                this.players.murderer.push(murderMysteryPlayer);
-                this.alivePlayers.allPlayers.push(murderMysteryPlayer);
-                this.alivePlayers.murderer.push(murderMysteryPlayer);
-                break;
-            case MurderMysteryPlayerRole.Detective:
-                this.players.detective.push(murderMysteryPlayer);
-                this.alivePlayers.allPlayers.push(murderMysteryPlayer);
-                this.alivePlayers.detective.push(murderMysteryPlayer);
-                break;
-            case MurderMysteryPlayerRole.Spectator:
-                this.players.spectator.push(murderMysteryPlayer);
-                break;
+        this.players[playerRole].push(murderMysteryPlayer);
+
+        // 如果不是旁观者，则还要向存活玩家列表中推入玩家信息
+        if (playerRole !== MurderMysteryPlayerRole.Spectator) {
+            this.livingPlayers.allPlayers.push(murderMysteryPlayer);
+            this.livingPlayers[playerRole].push(murderMysteryPlayer);
         }
     }
 
@@ -432,29 +404,22 @@ class MurderMysterySystem {
         return this.players.allPlayers.find(playerData => playerData.player.id === player.id);
     }
 
-    /** 移除一名玩家的信息。
-     * @param onlyAlive 是否只移除存活玩家的信息。若设定为`false`则同时从所有玩家列表和存活玩家列表中除名；若设定为`true`则只从存活玩家列表中除名。这个参数往往用于玩家刚刚死亡时。 | 默认值：`false`
-     */
-    removePlayer(playerData: MurderMysteryPlayer, onlyAlive = false) {
-        const filterCondition = (player: MurderMysteryPlayer) => player.player.id !== playerData.player.id;
-        if (!onlyAlive) this.players.allPlayers = this.players.allPlayers.filter(filterCondition);
-        this.alivePlayers.allPlayers = this.alivePlayers.allPlayers.filter(filterCondition);
-        switch (playerData.role) {
-            case MurderMysteryPlayerRole.Innocent:
-                if (!onlyAlive) this.players.innocent = this.players.innocent.filter(filterCondition);
-                this.alivePlayers.innocent = this.alivePlayers.innocent.filter(filterCondition);
-                break;
-            case MurderMysteryPlayerRole.Murderer:
-                if (!onlyAlive) this.players.murderer = this.players.murderer.filter(filterCondition);
-                this.alivePlayers.murderer = this.alivePlayers.murderer.filter(filterCondition);
-                break;
-            case MurderMysteryPlayerRole.Detective:
-                if (!onlyAlive) this.players.detective = this.players.detective.filter(filterCondition);
-                this.alivePlayers.detective = this.alivePlayers.detective.filter(filterCondition);
-                break;
-            case MurderMysteryPlayerRole.Spectator:
-                if (!onlyAlive) this.players.spectator = this.players.spectator.filter(filterCondition);
-                break;
+    /** 在全部玩家列表中，移除一名玩家的信息，代表该玩家已不在世界内。 */
+    removePlayer(playerData: MurderMysteryPlayer) {
+        // 在存活列表中移除该玩家
+        this.removeLivingPlayer(playerData);
+
+        // 在全部玩家列表中移除该玩家
+        this.players.allPlayers = this.players.allPlayers.filter(player => player.player.id !== playerData.player.id);
+        this.players[playerData.role] = this.players[playerData.role].filter(player => player.player.id !== playerData.player.id);
+    }
+
+    /** 在存活列表中，移除一名玩家的信息，代表该玩家已经死亡。 */
+    removeLivingPlayer(playerData: MurderMysteryPlayer) {
+        this.livingPlayers.allPlayers = this.players.allPlayers.filter(player => player.player.id !== playerData.player.id);
+        if (playerData.role !== MurderMysteryPlayerRole.Spectator) {
+            const currentRolePlayers = this.livingPlayers[playerData.role];
+            this.livingPlayers[playerData.role] = currentRolePlayers.filter(player => player.player.id !== playerData.player.id);
         }
     }
 
@@ -494,35 +459,20 @@ class MurderMysterySystem {
 
     /** 更改玩家的身份。 */
     transformRole(playerData: MurderMysteryPlayer, toRole: MurderMysteryPlayerRole) {
+        // 先彻底移除该玩家
         this.removePlayer(playerData);
+
+        // 更改玩家的身份
         playerData.role = toRole;
-        const isDead = playerData.isDead;
+
+        // 向所有玩家列表列表推入玩家信息
         this.players.allPlayers.push(playerData);
-        switch (toRole) {
-            case MurderMysteryPlayerRole.Innocent:
-                this.players.innocent.push(playerData);
-                if (!isDead) {
-                    this.alivePlayers.allPlayers.push(playerData);
-                    this.alivePlayers.innocent.push(playerData);
-                }
-                break;
-            case MurderMysteryPlayerRole.Murderer:
-                this.players.murderer.push(playerData);
-                if (!isDead) {
-                    this.alivePlayers.allPlayers.push(playerData);
-                    this.alivePlayers.murderer.push(playerData);
-                }
-                break;
-            case MurderMysteryPlayerRole.Detective:
-                this.players.detective.push(playerData);
-                if (!isDead) {
-                    this.alivePlayers.allPlayers.push(playerData);
-                    this.alivePlayers.detective.push(playerData);
-                }
-                break;
-            case MurderMysteryPlayerRole.Spectator:
-                this.players.spectator.push(playerData);
-                break;
+        this.players[toRole].push(playerData);
+
+        // 如果玩家不是旁观者，并且玩家未死亡，则还要向存活玩家列表列表推入玩家信息
+        if (toRole !== MurderMysteryPlayerRole.Spectator && !playerData.isDead) {
+            this.livingPlayers.allPlayers.push(playerData);
+            this.livingPlayers[toRole].push(playerData);
         }
     }
 
@@ -610,7 +560,7 @@ class MurderMysterySystem {
      */
     gameOverTest(reason: MurderMysteryGameOverReason, probableHero?: MurderMysteryPlayer) {
         // 如果杀手数量不为 0（平民侦探获胜），并且存活玩家不全为杀手（杀手获胜），则游戏不会结束
-        if (this.alivePlayers.murderer.length !== 0 && this.alivePlayers.murderer.length !== this.alivePlayers.allPlayers.length)
+        if (this.livingPlayers.murderer.length !== 0 && this.livingPlayers.murderer.length !== this.livingPlayers.allPlayers.length)
             return;
         // 如果英雄不存在，对系统返回无英雄的情况
         if (!probableHero) return this.enterGameOverStage(reason);
@@ -1255,7 +1205,7 @@ class MurderMysteryEventManager {
             "eventCooldown",
             () => {
                 // 检查还有哪些玩家正处于倒计时下，如果没有玩家则终止这个时间线
-                const inCooldownPlayers = this.system.alivePlayers.allPlayers.filter(
+                const inCooldownPlayers = this.system.livingPlayers.allPlayers.filter(
                     playerData => Object.keys(playerData.eventCooldown).length > 0
                 );
                 if (inCooldownPlayers.length === 0) return false;
@@ -1524,64 +1474,45 @@ class MurderMysterySettings {
 
     /** 对玩家显示关于我们 UI。 */
     private static showAboutUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const author: lib.FormLabelComponent[] = gameData.about.author.map(text => ({ type: "label", text: `§a${text}` }));
+        const map: lib.FormLabelComponent[] = gameData.about.map.map(text => ({ type: "label", text: `§a${text}` }));
+        const tester: lib.FormLabelComponent[] = gameData.about.tester.map(text => ({ type: "label", text: `§a${text}` }));
+        const specialThanks: lib.FormLabelComponent[] = gameData.about.specialThanks.map(text => ({
+            type: "label",
+            text: `§a${text}`,
+        }));
         lib.UIUtils.createAction(player, {
             type: "action",
             onCancel: () => this.showMainSettingsUI(system, player),
             components: [
                 { type: "header", text: { translate: "ui.settings.about.title" } },
                 { type: "divider" },
+
                 { type: "label", text: { translate: "ui.settings.about.author" } },
-                { type: "label", text: "§a一只卑微的量筒 (YZBWDLT)" },
+                ...author,
                 { type: "divider" },
+
                 { type: "label", text: { translate: "ui.settings.about.version" } },
                 { type: "label", text: `§a${system.version}` },
                 { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.about.tester" } },
-                { type: "label", text: "§a1.0 正式版更新后同步……" },
+
+                { type: "label", text: { translate: "ui.settings.about.map" } },
+                ...map,
                 { type: "divider" },
+
+                { type: "label", text: { translate: "ui.settings.about.tester" } },
+                ...tester,
+                { type: "divider" },
+
                 { type: "label", text: { translate: "ui.settings.about.specialThanks" } },
-                { type: "label", text: "§a珂朵莉 (Tetrisoo)" },
-                { type: "label", text: "§a欧拉 (EurluoL)" },
-                // { type: "label", text: "§a祉语 (xhduoduobaby)" }, 应祉语要求，不显示
+                ...specialThanks,
             ],
         });
     }
 
     /** 对玩家显示更新日志 UI。 */
     private static showUpdateLogUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const texts: string[] = [
-            "§l1.0 - Exp 7 更新日志",
-            "本周我们带来了大家心心念念的游乐园的完整功能，过山车！芜湖——！！",
-            "并且，我们在本周还带来了重磅更新——完全实装设置功能！现在你可以在设置中控制地图的运行方式，也可以控制何种地图将会启用，等等。通过设置，这张地图就可以玩出很多花活了！",
-            "一起来看看本周的更新吧~",
-            "==========",
-            "§7§l设置",
-            "§7- 隆重推出剩下的设置项！",
-            "§7- 现在应用设置可以全局保存，无论/reload还是重开游戏都可以自动应用上次的更改",
-            "§7- 对于管理员，可以随时使用/give @s murder_mystery:settings获取设置物品，并随时应用设置更改",
-            "§7- 实装了启用地图设置，现在可以控制哪些地图可以生成，哪些地图不能生成",
-            "§7  - 这同样也会影响每局之后的随机地图生成，也就是只要禁用一张地图，那么这张地图不能在设置中选中，也不能随机生成，只能启用后才能游玩",
-            "§7  - 不能把所有地图全部关闭，会阻止设置应用",
-            "§7- 实装了游戏前设置，现在可以控制一局的最多最少为多少人，并控制游戏倒计时需要多久",
-            "§7- 实装了游戏时设置，可以控制一局的游戏时长，多久后给予侦探或杀手物品，如何拾起弓，是否对旁观玩家显示职业和是否全局启用夜视效果 5 个设置",
-            "§7- 实装了金锭生成设置，控制金锭以何种频率和密度生成",
-            "§7- 实装了杀手刀剑设置，控制杀手飞刀如何运行",
-            "§7- 实装了杂项设置，目前可控制右侧信息栏最底下一行的文本",
-            "§7§l地图",
-            "§7- #37 完全还原了 Hypixel 游乐园和复活节游乐园的功能，现在它们支持进入鬼屋门和使用单轨列车和过山车了",
-            "§7- 略微修改了两张游乐园地图的金点，确保金点不会尝试遍历禁区",
-            "§7- 略微修改了两张游乐园地图的金点，确保不会离岩浆过近",
-            "§7- 现在地图总部可以开启云杉门了",
-            "§7- 新增了运输塔 V1 和运输塔 V2",
-            "§7- 修复了部分地图可能的出图点位，或卡位点位",
-            "§7- 补充了部分地图的画",
-            "§7- 新增了水族馆和寡妇的老窝",
-            "§7§l特性更改&漏洞修复",
-            "§7- 修复了默认会启用所有地图的问题",
-            "§7- #49 现在游戏结束后玩家不再能死亡，导致游戏产生进一步的误判",
-            "§7- 开放了两张游乐园地图的过山车支线",
-        ];
-        const textComponent: lib.FormLabelComponent[] = texts.map(text => ({ type: "label", text: text }));
+        const textComponent: lib.FormLabelComponent[] = gameData.updateLog.map(text => ({ type: "label", text: text }));
         lib.UIUtils.createAction(player, {
             type: "action",
             onCancel: () => this.showMainSettingsUI(system, player),
@@ -1589,6 +1520,7 @@ class MurderMysterySettings {
                 { type: "header", text: { translate: "ui.settings.updateLog.title" } },
                 { type: "label", text: { translate: "ui.settings.updateLog.line1" } },
                 { type: "divider" },
+                { type: "label", text: `§a§l${system.version}` },
                 ...textComponent,
             ],
         });
@@ -2179,7 +2111,7 @@ class MurderMysteryComponents {
             () => {
                 system.timeLeft--;
                 if (system.settings.gaming.timePerGame - system.timeLeft === 60)
-                    system.alivePlayers.murderer.forEach(murderer => {
+                    system.livingPlayers.murderer.forEach(murderer => {
                         if (!isPlayer(murderer.player)) return;
                         if (murderer.kills > 0) return;
                         lib.PlayerUtils.notify(murderer.player, {
@@ -2195,8 +2127,8 @@ class MurderMysteryComponents {
                         sound: "note.hat",
                     });
                 if (system.timeLeft === 30) {
-                    system.alivePlayers.murderer.forEach(murderer => murderer.getLocator());
-                    system.alivePlayers.allPlayers.forEach(playerData => {
+                    system.livingPlayers.murderer.forEach(murderer => murderer.getLocator());
+                    system.livingPlayers.allPlayers.forEach(playerData => {
                         if (isPlayer(playerData.player))
                             lib.PlayerUtils.notify(playerData.player, {
                                 message: { translate: `chat.murdererGetLocator.${playerData.role}` },
@@ -2223,7 +2155,7 @@ class MurderMysteryComponents {
 
                 // 当给杀手刀剩余 1-5 秒时，对所有玩家提示
                 if (getSpecialItemTimeLeft > 0 && getSpecialItemTimeLeft <= 5) {
-                    system.alivePlayers.allPlayers.forEach(playerData => {
+                    system.livingPlayers.allPlayers.forEach(playerData => {
                         if (!isPlayer(playerData.player)) return;
                         lib.PlayerUtils.notify(playerData.player, {
                             message: {
@@ -2236,7 +2168,7 @@ class MurderMysteryComponents {
                 }
                 // 当倒计时结束后，给予杀手和侦探道具并对所有玩家提示
                 if (getSpecialItemTimeLeft <= 0) {
-                    system.alivePlayers.allPlayers.forEach(playerData => {
+                    system.livingPlayers.allPlayers.forEach(playerData => {
                         if (!isPlayer(playerData.player)) return;
                         lib.PlayerUtils.notify(playerData.player, {
                             message: {
@@ -2246,8 +2178,8 @@ class MurderMysteryComponents {
                             sound: "note.hat",
                         });
                     });
-                    system.alivePlayers.murderer.forEach(murderer => murderer.getSword());
-                    system.alivePlayers.detective.forEach(detective => detective.getBow());
+                    system.livingPlayers.murderer.forEach(murderer => murderer.getSword());
+                    system.livingPlayers.detective.forEach(detective => detective.getBow());
                     system.getSpecialItem = true;
                     return false;
                 }
@@ -2271,13 +2203,13 @@ class MurderMysteryComponents {
             // 1. 判断现在是不是时机生成
             // 默认来讲，平均每位玩家有 16s（spawnInterval）的生成时间，这 16s 中所有玩家依次轮流生成。
             // 因此，每 spawnInterval/alivePlayersCount 秒尝试生成一次。
-            const alivePlayersCount = system.alivePlayers.allPlayers.length;
+            const alivePlayersCount = system.livingPlayers.allPlayers.length;
             const realSpawnInterval = Math.floor((20 * spawnInterval) / alivePlayersCount);
             if (minecraft.system.currentTick % realSpawnInterval !== 0) return;
             // 2. 确定生成时机后，判断对哪个玩家生成
             system.globalGoldSpawnTimes++;
             const index = system.globalGoldSpawnTimes % alivePlayersCount;
-            const playerData = system.alivePlayers.allPlayers[index] ?? (system.alivePlayers.allPlayers[0] as MurderMysteryPlayer);
+            const playerData = system.livingPlayers.allPlayers[index] ?? (system.livingPlayers.allPlayers[0] as MurderMysteryPlayer);
             // 3. 查找距离该玩家平面距离（xz）最近的可生成金点，并在选中的金点位置生成金锭
             goldPoints
                 .filter((goldPoint, index) => {
@@ -2517,7 +2449,7 @@ class MurderMysteryComponents {
                 // 如果退出玩家是存活的侦探，掉落弓
                 if (playerData.role === MurderMysteryPlayerRole.Detective && !playerData.isDead) {
                     playerData.dropBow(false, lib.Vector3Utils.getClosest(location, system.mapData.description.spawnPoints));
-                    system.alivePlayers.innocent.forEach(innocent => {
+                    system.livingPlayers.innocent.forEach(innocent => {
                         if (!isPlayer(innocent.player)) return;
                         innocent.player.sendMessage({ translate: "chat.detectiveQuit" });
                     });
@@ -2528,12 +2460,12 @@ class MurderMysteryComponents {
                 // 如果退出玩家是杀手：
                 if (playerData.role === MurderMysteryPlayerRole.Murderer) {
                     // 如果已给刀，或者未给刀但只剩下侦探时，则游戏结束
-                    if (system.getSpecialItem || system.alivePlayers.detective.length === system.alivePlayers.allPlayers.length) {
+                    if (system.getSpecialItem || system.livingPlayers.detective.length === system.livingPlayers.allPlayers.length) {
                         system.gameOverTest(MurderMysteryGameOverReason.MurdererQuit);
                         return;
                     }
                     // 否则，重新分配一个杀手
-                    const innocents = system.alivePlayers.innocent;
+                    const innocents = system.livingPlayers.innocent;
                     const randomInnocent = lib.JSUtils.array.randomElement(innocents);
                     system.transformRole(randomInnocent, MurderMysteryPlayerRole.Murderer);
                     if (isPlayer(randomInnocent.player)) {
@@ -2590,14 +2522,14 @@ class MurderMysteryComponents {
         });
         lib.gameSystem.subscribeTimeline("chargeAmmunition", () => {
             // 为侦探填充弓箭
-            system.alivePlayers.detective
+            system.livingPlayers.detective
                 .filter(detective => detective.chargingTime > 0)
                 .forEach(detective => {
                     detective.chargingTime--;
                     if (detective.chargingTime <= 0) detective.getBow();
                 });
             // 为杀手填充飞刀
-            system.alivePlayers.murderer
+            system.livingPlayers.murderer
                 .filter(murderer => murderer.chargingTime > 0)
                 .forEach(murderer => {
                     murderer.chargingTime--;
@@ -2856,7 +2788,7 @@ class MurderMysteryComponents {
                         // 调用 UI
                         if (!isPlayer(player)) return;
                         const showRole = system.settings.gaming.showRoleInSpectatorTeleportUI;
-                        let playerList = system.alivePlayers.allPlayers.map(playerData => {
+                        let playerList = system.livingPlayers.allPlayers.map(playerData => {
                             const button: lib.FormButtonComponent = {
                                 type: "button",
                                 text: {
@@ -2935,10 +2867,10 @@ class MurderMysteryComponents {
             "murdererGetSpeed",
             () => {
                 // 如果没有杀手，直接终止
-                const murdererData = system.alivePlayers.murderer[0];
+                const murdererData = system.livingPlayers.murderer[0];
                 if (!murdererData) return;
                 // 如果存活玩家不止 1 人，直接终止
-                const alivePlayerCount = [...system.alivePlayers.innocent, ...system.alivePlayers.detective].length;
+                const alivePlayerCount = [...system.livingPlayers.innocent, ...system.livingPlayers.detective].length;
                 if (alivePlayerCount !== 1) return;
                 // 为杀手添加速度效果，并终止该时间线的检查
                 const gameTime = system.settings.gaming.timePerGame;
@@ -2990,7 +2922,7 @@ class MurderMysteryComponents {
             () => {
                 component.forEach(areaData => {
                     const { area, trigger } = areaData;
-                    system.alivePlayers.allPlayers
+                    system.livingPlayers.allPlayers
                         .filter(playerData => {
                             const { x, y, z } = playerData.player.location;
                             // 判断玩家实体的位置，如果规定了条件且不满足条件的则返回 false
@@ -3162,7 +3094,7 @@ class MurderMysteryPlayer {
         // 标记为该玩家已死亡
         this.isDead = true;
         this.chargingTime = 0;
-        this.system.removePlayer(this, true);
+        this.system.removeLivingPlayer(this);
 
         // 若不是出图死亡方式，则生成尸体
         if (!isOutOfMap)
@@ -3197,7 +3129,7 @@ class MurderMysteryPlayer {
         }
 
         // 对所有玩家播放音效
-        this.system.alivePlayers.allPlayers.forEach(playerData => {
+        this.system.livingPlayers.allPlayers.forEach(playerData => {
             if (!isPlayer(playerData.player)) return;
             // 对自己播放骷髅死亡音效（上文已写，这里直接终止）
             if (playerData.player.id === this.player.id) return;
@@ -3235,10 +3167,10 @@ class MurderMysteryPlayer {
     /** 显示信息板。 */
     showInfoboard() {
         if (!isPlayer(this.player)) return;
-        const alivePlayers = this.system.alivePlayers;
+        const livingPlayers = this.system.livingPlayers;
         const bowLine: minecraft.RawMessage = (() => {
             if (!this.system.firstDetectiveDied) return { translate: "infoboard.detectiveAlive" };
-            if (alivePlayers.detective.length > 0) return { translate: "infoboard.bowNotDropped" };
+            if (livingPlayers.detective.length > 0) return { translate: "infoboard.bowNotDropped" };
             return { translate: "infoboard.bowDropped" };
         })();
         const killsLine: minecraft.RawMessage[] = (() => {
@@ -3271,7 +3203,7 @@ class MurderMysteryPlayer {
             { text: "" },
             {
                 translate: "infoboard.innocentLeft",
-                with: [`${alivePlayers.innocent.length + alivePlayers.detective.length}`],
+                with: [`${livingPlayers.innocent.length + livingPlayers.detective.length}`],
             },
             {
                 translate: "infoboard.timeLeft",
@@ -3328,13 +3260,13 @@ class MurderMysteryPlayer {
         }
         this.getBow();
         // 通知其他玩家
-        this.system.alivePlayers.allPlayers.forEach(playerData => {
+        this.system.livingPlayers.allPlayers.forEach(playerData => {
             const player = playerData.player;
             if (player.id === this.player.id) return;
             if (isPlayer(player)) player.sendMessage({ translate: "chat.bowPicked" });
         });
         // 为所有平民禁用定位器
-        [...this.system.alivePlayers.innocent, ...this.system.alivePlayers.detective].forEach(innocent => innocent.removeLocator());
+        [...this.system.livingPlayers.innocent, ...this.system.livingPlayers.detective].forEach(innocent => innocent.removeLocator());
         // 移除弓实体
         bowEntity.remove();
     }
@@ -3353,7 +3285,7 @@ class MurderMysteryPlayer {
         // 对其它玩家公告
         if (shouldAnnounce) {
             const message = this.isFirstDetective ? "detectiveKilled" : "bowDropped";
-            this.system.alivePlayers.allPlayers.forEach(playerData => {
+            this.system.livingPlayers.allPlayers.forEach(playerData => {
                 if (!isPlayer(playerData.player)) return;
                 lib.PlayerUtils.notify(playerData.player, {
                     message: { translate: `chat.${message}` },
@@ -3367,7 +3299,7 @@ class MurderMysteryPlayer {
         const bowLocation = forceLocation ?? this.player.location;
         lib.EntityUtils.add(bowEntityId, bowLocation);
         // 为所有平民解锁定位器
-        this.system.alivePlayers.innocent.forEach(innocent => {
+        this.system.livingPlayers.innocent.forEach(innocent => {
             if (isPlayer(innocent.player)) innocent.player.sendMessage({ translate: "chat.innocentGetLocator" });
             innocent.getLocator();
         });
@@ -3443,7 +3375,7 @@ class MurderMysteryPlayer {
         // 杀手的定位栏，定位到其他所有存活的玩家
         if (this.role === MurderMysteryPlayerRole.Murderer) {
             player.locatorBar.removeAllWaypoints();
-            this.system.alivePlayers.allPlayers.forEach(playerData => {
+            this.system.livingPlayers.allPlayers.forEach(playerData => {
                 // 不注册自己的定位栏
                 if (player.id === playerData.player.id) return;
                 // 如果是杀手，注册红色的定位栏
@@ -3541,6 +3473,7 @@ class MurderMysteryPlayer {
 // 在初始化后，这个属性会变为 false，代表不生成地图
 // 这个进程应该始终存在，不能受到各类 unsubscribe 的影响
 minecraft.world.afterEvents.worldLoad.subscribe(() => {
+    minecraft.world.setDynamicProperty("murder_mystery:nextMap"); // 进入地图时，随机生成一张地图
     minecraft.system.runInterval(() => {
         // ===== 条件判断 =====
         /** 下一张地图的名称，若为`false`则终止运行，若为`undefined`则为随机生成地图。 */
