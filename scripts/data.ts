@@ -170,6 +170,9 @@ export interface MurderMysteryMapDataDescription {
 
     /** 默认状态下，这张地图是否启用。 | 默认值：`true` */
     readonly enabledByDefault?: boolean;
+
+    /** 标记该地图是否拥有完整功能。若没有则会在游戏开始时提示玩家。 | 默认值：`true` */
+    readonly hasFullFunction?: boolean;
 }
 
 export interface MurderMysteryWaitHallDescription {
@@ -850,6 +853,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 932.5, y: 68.5, z: 2945.5 },
                 { x: 932.5, y: 67.5, z: 2953.5 },
             ],
+            hasFullFunction: false,
         },
     },
 
@@ -1736,6 +1740,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 866.5, y: 100.5, z: 105.5 },
             ],
             enabledByDefault: false,
+            hasFullFunction: false,
         },
         components: {
             playerInArea: [
@@ -2094,6 +2099,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 700.5, y: 76.5, z: 528.5 },
                 { x: 700.5, y: 76.5, z: 533.5 },
             ],
+            hasFullFunction: false,
         },
         components: {
             playerInArea: [
@@ -2442,6 +2448,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 120.5, y: 35.5, z: 1129.5 },
                 { x: 122.5, y: 35.5, z: 1124.5 },
             ],
+            hasFullFunction: false,
         },
         components: {},
         events: {},
@@ -2839,6 +2846,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1204.5, y: 95.5, z: 898.5 },
                 { x: 1205.5, y: 95.5, z: 900.5 },
             ],
+            hasFullFunction: false,
         },
         components: {
             playerHurt: [
@@ -5668,6 +5676,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1123.5, y: 112.5, z: -4008.5 },
                 { x: 1126.5, y: 115.5, z: -4015.5 },
             ],
+            hasFullFunction: false,
         },
         components: {
             playerHurt: [{ cause: minecraft.EntityDamageCause.fall, trigger: "towerFall:playerHitGround" }],
@@ -6461,6 +6470,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1250.5, y: 19.5, z: -2223.5 },
                 { x: 1250.5, y: 19.5, z: -2219.5 },
             ],
+            hasFullFunction: false,
         },
         components: {
             time: 18000,
@@ -6859,6 +6869,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1952.5, y: 86.5, z: -788.5 },
                 { x: 1955.5, y: 86.5, z: -798.5 },
             ],
+            hasFullFunction: false,
         },
     },
     // #endregion

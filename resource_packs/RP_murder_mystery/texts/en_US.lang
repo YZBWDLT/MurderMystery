@@ -229,6 +229,9 @@ chat.cooldown=§cThe %s has %s seconds to cool down!
 chat.error.noValidMaps=§cWarning: No valid maps found. Please contact an admin to check the enabled map settings and enable at least one map. To ensure the game runs properly, a new map has been randomly enabled.
 chat.error.areaToLarge=§cWarning: Invalid map – the area is too large to initialize a tickingarea. Please contact an admin to disable map %s. To ensure the game runs properly, a new map has been randomly enabled.
 
+### No Full Function Warning
+chat.hasNoFullFunction=§cNote: This map has not yet been fully adapted. Only the most basic features are available. Full adaptation will come in future updates.
+
 ## ===== Settings UI =====
 
 ### Settings Item Button

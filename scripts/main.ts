@@ -321,6 +321,12 @@ class MurderMysterySystem {
             if (typeof trigger === "string") this.eventManager.triggerEvent(trigger);
             else trigger.forEach(t => this.eventManager.triggerEvent(t));
         }
+
+        // 若该地图没有实现完整功能，提示玩家
+        const hasFullFunction = this.mapData.description.hasFullFunction;
+        if (hasFullFunction === false) {
+            lib.PlayerUtils.broadcast({ message: { translate: "chat.hasNoFullFunction" } });
+        }
     }
 
     /** 令游戏进入结束阶段。
