@@ -120,6 +120,7 @@ chat.knifeKilledPlayer=§eKilled target at %s meters away!
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
 
 ### Murderer throwing knife
+interact.throwKnife=Throw Knife / Stop Throwing
 chat.murdererThrowingKnife.stopped=§cStopped Throwing!
 
 ### Murderer killed Detective
@@ -251,6 +252,7 @@ ui.settings.main.miscellaneous=Miscellaneous...
 ui.settings.about.title=About Us
 ui.settings.about.author=§lAuthor
 ui.settings.about.version=§lVersion
+ui.settings.about.map=§lMap Adaptation
 ui.settings.about.tester=§lTesters
 ui.settings.about.specialThanks=§lSpecial Thanks
 
@@ -260,6 +262,7 @@ ui.settings.updateLog.line1=This paragraph is written in Chinese. Please use tra
 
 ### Select Map UI
 ui.settings.selectMap.title=Select Map
+ui.settings.selectMap.randomMap=Random
 
 ### Enable Map UI
 ui.settings.mapEnabled.title=Enable Map

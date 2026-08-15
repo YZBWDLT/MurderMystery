@@ -94,19 +94,13 @@ const updateLogRaw: string[] = [
     "- 更新了地图 Widow’s Den 的翻译为 黑寡妇巢穴，和 Hypixel 最新的翻译一致",
     "### 最低版本需求",
     "- 因为添加了 16 向旋转的头颅，现在提高了游戏最低版本需求为 26.40",
+    "### 杀手飞刀",
+    "- #29 为手机版的杀手飞刀添加了一个交互按钮，现在不必长按也能触发杀手飞刀了",
+    "### 设置",
+    "- 现在游戏开始后会在玩家的物品栏中新增一个设置物品，以便管理员等玩家可以在游戏内进行设置",
     "### 漏洞修复",
     "- 修复了多处英语翻译错误或不清的地方",
     "- 修复了系统会在常加载区域加载完毕之前就尝试新建新系统，导致系统无法创建，游戏直接卡死的问题",
-    "### 技术性",
-    "- 更新了行为包和资源包的版本为`1.0.13`",
-    "  - 这里，更新为`1.0.13`是为了把 Exp 版本的资源包和 Snapshot 版本的资源包区分开，防止管理群内测和测试群公测时部分群友需要删缓存重进",
-    "  - 版本号原则是：Exp 版本：`1.0.(version*2-1)`；Snapshot 版本：`1.0.(version*2)`，例如 Exp 7 版本为`1.0.13`，Snapshot 7 则为`1.0.14`",
-    "- 现在使用 Minecraft 世界动态属性`murder_mystery:nextMap`来存储下一张待生成的地图信息",
-    "  - 该值可能为 3 种类型：`string | false | undefined`",
-    "  - 为`string`时，指定为特定类型的地图",
-    "  - 为`undefined`时，指定为随机地图，在该地图初始化时亦可用此值",
-    "  - 为`false`时，不进行检查和系统变换",
-    "- 现在在进行系统切换时，会事先检查`murder_mystery:nextMap`是否不为`false`，一旦不为`false`则会立刻尝试重置系统",
 ];
 
 /**
@@ -124,13 +118,9 @@ function formatUpdateLog(lines: string[]): string[] {
 
         // 1. 处理三级标题（行首可能带有缩进，但通常无缩进）
         const headingMatch = result.match(/^###\s+(.*)/);
-        if (headingMatch) {
-            result = "§l" + headingMatch[1];
-        }
+        if (headingMatch) result = "§l" + headingMatch[1];
         // 2. 处理分割线（允许前后有空格）
-        else if (result.trim() === "---") {
-            result = "----------";
-        }
+        else if (result.trim() === "---") result = "----------";
         // 3. 处理行内代码块（在标题或正文中均可）
         result = result.replace(/`([^`]*)`/g, "§b$1§r");
 

@@ -120,6 +120,7 @@ chat.knifeKilledPlayer=§e在%s米外击杀了目标！
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
 
 ### 杀手飞刀
+interact.throwKnife=飞刀/停止飞刀
 chat.murdererThrowingKnife.stopped=§c已停止蓄力！
 
 ### 杀手杀死侦探
@@ -251,6 +252,7 @@ ui.settings.main.miscellaneous=杂项...
 ui.settings.about.title=关于我们
 ui.settings.about.author=§l作者
 ui.settings.about.version=§l版本
+ui.settings.about.map=§l地图适配
 ui.settings.about.tester=§l测试员
 ui.settings.about.specialThanks=§l特别感谢
 
@@ -260,6 +262,7 @@ ui.settings.updateLog.line1=本段使用中文编写，若您需要请使用翻�
 
 ### 选择地图 UI
 ui.settings.selectMap.title=选择地图
+ui.settings.selectMap.randomMap=随机
 
 ### 启用地图 UI
 ui.settings.mapEnabled.title=启用地图

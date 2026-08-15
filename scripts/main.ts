@@ -284,8 +284,11 @@ class MurderMysterySystem {
         // 移除多余实体
         this.removeAllEntities();
 
-        // 移除所有玩家的所有物品
-        lib.PlayerUtils.getAll().forEach(player => player.getComponent("inventory")?.container.clearAll());
+        // 移除所有玩家的所有物品，新增设置物品
+        lib.PlayerUtils.getAll().forEach(player => {
+            player.getComponent("inventory")?.container.clearAll();
+            lib.ItemUtils.inventory.set(player, 6, "murder_mystery:settings", { itemLock: minecraft.ItemLockMode.slot });
+        });
 
         // 注册必选组件
         this.general();
@@ -1545,6 +1548,13 @@ class MurderMysterySettings {
             components: [
                 { type: "header", text: { translate: "ui.settings.selectMap.title" } },
                 { type: "divider" },
+                {
+                    type: "button",
+                    text: { translate: `ui.settings.selectMap.randomMap` },
+                    onClick: () => {
+                        minecraft.world.setDynamicProperty("murder_mystery:nextMap");
+                    },
+                },
                 ...selectMapButtons,
             ],
         });
@@ -2294,7 +2304,7 @@ class MurderMysteryComponents {
             if (attackerData.role !== MurderMysteryPlayerRole.Murderer) return;
             // 杀手必须拿剑
             const attackerMainhandItem = lib.ItemUtils.equipment.getItem(attacker, minecraft.EquipmentSlot.Mainhand);
-            if (attackerMainhandItem?.typeId !== "minecraft:iron_sword") return;
+            if (attackerMainhandItem?.typeId !== "murder_mystery:iron_sword") return;
             // 记录击杀
             victimData.setDead(gameData.MurderMysteryDeathType.MurdererStab, attackerData);
         });
@@ -2581,7 +2591,7 @@ class MurderMysteryComponents {
                 // 如果杀手再度交互则阻止扔刀
                 lib.gameSystem.subscribeEvent("murdererKnifeStopThrowingByUsingAgain", minecraft.world.afterEvents.itemUse, event => {
                     // 如果交互的不是刀，或者交互的不是这名玩家，则终止
-                    if (event.itemStack.typeId !== "minecraft:iron_sword") return;
+                    if (event.itemStack.typeId !== "murder_mystery:iron_sword") return;
                     if (event.source.id !== murderer.id) return;
                     // 取消蓄力
                     stopThrowingKnifeTest(murderer, murdererData);
@@ -2761,7 +2771,7 @@ class MurderMysteryComponents {
             if (murdererData.role !== MurderMysteryPlayerRole.Murderer) return;
 
             // 检查是否为剑，且对应的杀手是否未在冷却期，如果不是则终止运行
-            if (ironSword.typeId !== "minecraft:iron_sword") return;
+            if (ironSword.typeId !== "murder_mystery:iron_sword") return;
             if (murdererData.chargingTime !== 0) return;
 
             // 注册扔出刀检查的时间线
@@ -3312,7 +3322,7 @@ class MurderMysteryPlayer {
     getSword() {
         if (this.role !== MurderMysteryPlayerRole.Murderer) return;
         if (!isPlayer(this.player)) return;
-        lib.ItemUtils.inventory.set(this.player, 1, "minecraft:iron_sword", {
+        lib.ItemUtils.inventory.set(this.player, 1, "murder_mystery:iron_sword", {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,
         });

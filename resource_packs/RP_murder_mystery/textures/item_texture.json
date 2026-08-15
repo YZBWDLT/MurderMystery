@@ -6,6 +6,7 @@
         "mystery_potion_2": { "textures": "textures/items/mystery_potion_2" },
         "mystery_potion_3": { "textures": "textures/items/mystery_potion_3" },
         "mystery_potion_4": { "textures": "textures/items/mystery_potion_4" },
+        "iron_sword": { "textures": "textures/items/iron_sword" },
         "settings": { "textures": "textures/items/settings" }
     }
 }
