@@ -3097,10 +3097,8 @@ class MurderMysteryComponents {
                 // 如果存活玩家不止 1 人，直接终止
                 const alivePlayerCount = [...system.livingPlayers.innocent, ...system.livingPlayers.detective].length;
                 if (alivePlayerCount !== 1) return;
-                // 为杀手添加速度效果，并终止该时间线的检查
-                const gameTime = system.settings.gaming.timePerGame;
-                murdererData.player.addEffect("speed", 20 * gameTime, { showParticles: false });
-                return false;
+                // 为杀手添加速度效果
+                murdererData.player.addEffect("speed", 300, { showParticles: false });
             },
             21
         );
