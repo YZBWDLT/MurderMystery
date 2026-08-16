@@ -16,11 +16,17 @@
 
 我们这里使用了 Microsoft 提供的工具 just-scripts 构建，您可以在[下一步：用 TypeScript 编写脚本 | Microsoft Learn](https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/next-steps?view=minecraft-bedrock-stable)了解更多。
 
+我们的地图安装了自定义头颅，使用了南瓜汁（@PumpkinJui）的脚本进行代码生成。您可以在 [mm_head 仓库](https://github.com/PumpkinJui/mm_head)了解更多。
+
 如果还有什么想要了解的，请联系我们的 QQ 群，进群申请填写为「GitHub 密室杀手」。
 
 ## 1.0 - Snapshot 7 更新日志
 
-本周的更新修复了上周出现的一些问题，并更新了三张新地图。
+### 地图
+
+- 略微扩大了地图高坠塔的范围
+- 对多张地图的多处细节都进行了修改和修复
+- 新增地图水上度假村
 
 ### 神秘药水
 
