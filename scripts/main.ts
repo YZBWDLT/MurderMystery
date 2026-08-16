@@ -1320,6 +1320,9 @@ type MurderMysteryGameSettings = {
     /** 在游戏开始多久后给予杀手和侦探物品。单位：秒。 */
     getSpecialItemDelay: number;
 
+    /** 侦探在射箭之后，多久后重新装填一根箭。单位：秒。 */
+    detectiveBowCooldown: number;
+
     /** 平民如何拾取弓。可以选择右键拾取或接近拾取。 */
     pickupBowMethod: "rightClick" | "nearby";
 
@@ -1334,6 +1337,9 @@ type MurderMysteryGoldSpawnSettings = {
     /** 在玩家附近多少格的金点会尝试生成。 */
     spawnRadius: number;
 
+    /** 在每次选取时，至多选取玩家附近多少个金点。 */
+    maxGoldPointsPerTime: number;
+
     /** 待生成金锭的金点中，有多少概率能够实际生成。 */
     spawnChance: number;
 
@@ -1342,6 +1348,9 @@ type MurderMysteryGoldSpawnSettings = {
 };
 
 type MurderMysteryMurdererSwordSettings = {
+    /** 杀手在飞刀之后，多久后重新装填飞刀。单位：秒。 */
+    knifeCooldown: number;
+
     /** 杀手飞刀投掷出去的速度。 */
     knifeSpeed: number;
 
@@ -1388,6 +1397,7 @@ class MurderMysterySettings {
     gaming: MurderMysteryGameSettings = {
         timePerGame: 270,
         getSpecialItemDelay: 15,
+        detectiveBowCooldown: 5,
         pickupBowMethod: "nearby",
         showRoleInSpectatorTeleportUI: true,
         applyNightVision: false,
@@ -1396,12 +1406,14 @@ class MurderMysterySettings {
     /** 金锭生成设置，控制如何生成金锭。 */
     goldSpawn: MurderMysteryGoldSpawnSettings = {
         spawnRadius: 5,
+        maxGoldPointsPerTime: 8,
         spawnChance: 0.15,
         spawnInterval: 16,
     };
 
     /** 杀手刀剑设置，控制杀手的刀的表现。 */
     murdererSword: MurderMysteryMurdererSwordSettings = {
+        knifeCooldown: 5,
         knifeCollideArrowDistance: 2.5,
         knifeSpeed: 1.0,
         knifeThrowTime: 10,
@@ -1778,8 +1790,14 @@ class MurderMysterySettings {
 
     /** 对玩家显示游戏时 UI。 */
     private static showGamingUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { timePerGame, getSpecialItemDelay, pickupBowMethod, showRoleInSpectatorTeleportUI, applyNightVision } =
-            system.settings.gaming;
+        const {
+            timePerGame,
+            getSpecialItemDelay,
+            detectiveBowCooldown,
+            pickupBowMethod,
+            showRoleInSpectatorTeleportUI,
+            applyNightVision,
+        } = system.settings.gaming;
         const pickupBowMethodList: Record<"rightClick" | "nearby", number> = {
             rightClick: 0,
             nearby: 1,
@@ -1813,6 +1831,18 @@ class MurderMysterySettings {
                     step: 5,
                     onSubmit: result => {
                         system.settings.gaming.getSpecialItemDelay = result;
+                    },
+                },
+                {
+                    type: "slider",
+                    description: { translate: "ui.settings.gaming.detectiveBowCooldown.title" },
+                    tipText: { translate: "ui.settings.gaming.detectiveBowCooldown.description" },
+                    default: detectiveBowCooldown,
+                    min: 0,
+                    max: 10,
+                    step: 1,
+                    onSubmit: result => {
+                        system.settings.gaming.detectiveBowCooldown = result;
                     },
                 },
                 {
@@ -1863,7 +1893,7 @@ class MurderMysterySettings {
 
     /** 对玩家显示金锭生成 UI。 */
     private static showGoldSpawnUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { spawnChance, spawnInterval, spawnRadius } = system.settings.goldSpawn;
+        const { spawnChance, spawnInterval, spawnRadius, maxGoldPointsPerTime } = system.settings.goldSpawn;
         this.generateSettingsUI(system, player, "goldSpawn", [
             {
                 type: "slider",
@@ -1875,6 +1905,18 @@ class MurderMysterySettings {
                 step: 5,
                 onSubmit: result => {
                     system.settings.goldSpawn.spawnChance = result / 100;
+                },
+            },
+            {
+                type: "slider",
+                description: { translate: "ui.settings.goldSpawn.maxGoldPointsPerTime.title" },
+                tipText: { translate: "ui.settings.goldSpawn.maxGoldPointsPerTime.description" },
+                default: maxGoldPointsPerTime,
+                min: 0,
+                max: 15,
+                step: 1,
+                onSubmit: result => {
+                    system.settings.goldSpawn.maxGoldPointsPerTime = result;
                 },
             },
             {
@@ -1906,8 +1948,20 @@ class MurderMysterySettings {
 
     /** 对玩家显示杀手刀剑 UI。 */
     private static showMurdererSwordUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { knifeCollideArrowDistance, knifeSpeed, knifeThrowTime } = system.settings.murdererSword;
+        const { knifeCooldown, knifeCollideArrowDistance, knifeSpeed, knifeThrowTime } = system.settings.murdererSword;
         this.generateSettingsUI(system, player, "murdererSword", [
+            {
+                type: "slider",
+                description: { translate: "ui.settings.murdererSword.knifeCooldown.title" },
+                tipText: { translate: "ui.settings.murdererSword.knifeCooldown.description" },
+                default: knifeCooldown,
+                min: 0,
+                max: 10,
+                step: 1,
+                onSubmit: result => {
+                    system.settings.murdererSword.knifeCooldown = result;
+                },
+            },
             {
                 type: "slider",
                 description: { translate: "ui.settings.murdererSword.knifeCollideArrowDistance.title" },
@@ -2419,7 +2473,7 @@ class MurderMysteryComponents {
             return (location2.x - location1.x) ** 2 + (location2.z - location1.z) ** 2;
         }
         lib.gameSystem.subscribeTimeline("generateGold", () => {
-            const { spawnChance, spawnInterval, spawnRadius } = system.settings.goldSpawn;
+            const { spawnChance, spawnInterval, spawnRadius, maxGoldPointsPerTime } = system.settings.goldSpawn;
             // 1. 判断现在是不是时机生成
             // 默认来讲，平均每位玩家有 16s（spawnInterval）的生成时间，这 16s 中所有玩家依次轮流生成。
             // 因此，每 spawnInterval/alivePlayersCount 秒尝试生成一次。
@@ -2441,7 +2495,7 @@ class MurderMysteryComponents {
                 })
                 .filter((goldPoint, index) => {
                     // 最多取 8 个金点
-                    if (index > 8) return false;
+                    if (index > maxGoldPointsPerTime) return false;
                     return true;
                 })
                 .forEach(goldPoint => {
@@ -2737,7 +2791,7 @@ class MurderMysteryComponents {
             const role = playerData.role;
             // 侦探使用弓箭
             if (role === MurderMysteryPlayerRole.Detective && itemStack.typeId === "minecraft:bow") {
-                playerData.chargingTime = 100;
+                playerData.chargingTime = 20 * system.settings.gaming.detectiveBowCooldown;
             }
         });
         lib.gameSystem.subscribeTimeline("chargeAmmunition", () => {
@@ -3496,7 +3550,7 @@ class MurderMysteryPlayer {
         // 播放飞刀音效
         if (isPlayer(this.player)) this.player.playSound("mob.enderdragon.flap");
         // 令杀手进入冷却
-        this.chargingTime = 100;
+        this.chargingTime = 20 * this.system.settings.murdererSword.knifeCooldown;
         this.throwingTime = 0;
         // 返回飞刀信息
         return knife;
