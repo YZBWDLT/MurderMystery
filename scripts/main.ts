@@ -312,7 +312,6 @@ class MurderMysterySystem {
         // 注册可选组件
         MurderMysteryComponents.mysteryPotion(this);
         MurderMysteryComponents.playerInArea(this);
-        MurderMysteryComponents.preventDamage(this);
 
         // 若地图注册了 onGameStart 组件，则触发其规定的事件
         const onGameStart = this.mapData.components?.onGameStart;
@@ -681,6 +680,7 @@ class MurderMysteryEventManager {
      * @returns 返回是否成功地触发了事件。这会影响是否移除金锭等情况。
      */
     triggerEvent(id: string, playerData?: MurderMysteryPlayer): boolean {
+        // ===== 条件检查 =====
         // 如果游戏已结束，直接终止
         if (this.system.gameStage !== GameStage.GamingStage) return false;
 
@@ -688,7 +688,7 @@ class MurderMysteryEventManager {
         const triggedEvent = this.events[id];
         if (!triggedEvent) return false;
 
-        // 变量准备
+        // ===== 变量准备 =====
         const {
             condition,
             getMysteryPotion,
@@ -702,7 +702,10 @@ class MurderMysteryEventManager {
             teleport,
             rideMinecart,
             cooldown,
+            consumeGold,
         } = triggedEvent;
+        let consumeGoldCount = 0;
+        let notifyPlayerWhenGoldNotEnough = true;
 
         // ===== 判断条件是否通过 =====
         // 如果这里的条件不通过，则直接返回 false，不触发后续的事件
@@ -732,6 +735,35 @@ class MurderMysteryEventManager {
                         });
                     return false;
                 }
+            }
+        }
+
+        // 如果玩家金锭不足，则直接返回 false
+        if (consumeGold) {
+            // 如果执行此事件时没有执行玩家，返回 false
+            if (!playerData) return false;
+            const player = playerData.player;
+            if (!isPlayer(player)) return false;
+
+            // 解析事件响应
+            if (typeof consumeGold === "number") consumeGoldCount = consumeGold;
+            else {
+                consumeGoldCount = consumeGold.count;
+                notifyPlayerWhenGoldNotEnough = consumeGold.notifyWhenGoldNotEnough;
+            }
+
+            // 检查玩家的金锭数
+            const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
+            if (playerGoldCount < consumeGoldCount) {
+                if (notifyPlayerWhenGoldNotEnough) {
+                    minecraft.system.run(() =>
+                        lib.PlayerUtils.notify(player, {
+                            message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consumeGold}`] },
+                            sound: "random.anvil_land",
+                        })
+                    );
+                }
+                return false;
             }
         }
 
@@ -825,7 +857,9 @@ class MurderMysteryEventManager {
         if (broadcast) lib.PlayerUtils.broadcast(broadcast);
         if (notify && playerData && isPlayer(playerData.player)) lib.PlayerUtils.notify(playerData.player, notify);
 
-        // ===== 执行成功后，触发新的事件 =====
+        // ===== 执行成功后，移除金锭，触发新的事件 =====
+        if (consumeGoldCount && playerData?.player && isPlayer(playerData.player))
+            lib.ItemUtils.removeItem(playerData.player, "murder_mystery:gold_ingot", -1, consumeGoldCount);
         if (trigger) {
             const { id, delay } = trigger;
             if (!delay) this.triggerEvent(id, playerData);
@@ -1178,7 +1212,7 @@ class MurderMysteryEventManager {
         // ===== 生成矿车并锁定玩家 =====
 
         // 生成矿车并施加初始速度
-        const minecart = lib.EntityUtils.add("minecraft:minecart", from);
+        let minecart = lib.EntityUtils.add("minecraft:minecart", from);
         minecart.applyImpulse(initVelocity);
 
         // 禁用玩家的下车权限
@@ -1190,14 +1224,43 @@ class MurderMysteryEventManager {
         if (!rideableComp) return false;
         rideableComp.addRider(player);
 
+        // 如果玩家的矿车坏掉了，则立刻补充一个新的矿车
+        lib.gameSystem.subscribeEvent(`prevent${player.id}MinecartDestroyed`, minecraft.world.beforeEvents.entityRemove, event => {
+            // 如果不是这辆矿车被破坏就不管它
+            if (event.removedEntity.id !== minecart.id) return;
+
+            // 获取旧矿车的信息
+            const { typeId, location, dimension } = minecart;
+            const rotation = minecart.getRotation().y;
+            const velocity = minecart.getVelocity();
+
+            // 补充新矿车，把记录的 minecart 改为新矿车，然后让玩家强制乘坐
+            minecraft.system.run(() => {
+                minecart = lib.EntityUtils.add(typeId, lib.Vector3Utils.add(location, 0, 0.5, 0), dimension, {
+                    initialRotation: rotation,
+                });
+                minecart.applyImpulse(lib.Vector3Utils.scale(velocity, 8));
+                minecart.getComponent("rideable")?.addRider(player);
+            });
+        });
+
         // 当矿车到达终点时，移除矿车，启用玩家的下车权限并终止时间线
         lib.gameSystem.subscribeTimeline(`${player.id}RideMinecart`, () => {
+            if (!minecart.isValid) return; // 因为这里矿车可能会被移除，故而矿车可能会无效化
             const location = minecart.location;
             if (lib.Vector3Utils.distance(location, to, true) <= 1) {
+                // 恢复玩家的权限
                 player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
                 player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
+
+                // 先解除矿车无法被破坏的状态，再强制移除
+                lib.gameSystem.unsubscribeEvent(`prevent${player.id}MinecartDestroyed`);
                 minecart.remove();
+
+                // 触发事件
                 this.triggerEvent(onArrival, playerData);
+
+                // 最后终止时间线
                 return false;
             }
         });
@@ -2058,12 +2121,16 @@ class MurderMysteryComponents {
     }
 
     /** 玩家和方块交互组件。
-     * @description 阻止玩家和地图交互组件`interactions`中指定之外的方块交互。
+     * @description 阻止玩家和地图交互组件`interactions`、`pressButton`中指定之外的方块交互。
      * @description 触发具有交互组件的其他事件，例如门、获得神秘药水等。
      * @description 不会阻止创造模式玩家和方块交互。
      */
     static interaction(system: MurderMysterySystem) {
-        const interactionComponent = system.mapData.components?.interaction;
+        /** 全部的交互组件。 */
+        const interactionComponent = system.mapData.components?.interaction ?? [];
+
+        /** 由玩家与方块交互前事件传递给玩家按下按钮后事件的所有信息集合。 */
+        const pressedButtonEvent = new Map<string, { player: minecraft.Player; location: minecraft.Vector3; trigger: string }>();
 
         // 检查玩家交互
         lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
@@ -2076,6 +2143,7 @@ class MurderMysteryComponents {
                 event.cancel = true;
                 return;
             }
+
             // 如果是创造模式玩家，直接终止
             if (player.getGameMode() === minecraft.GameMode.Creative) return;
 
@@ -2084,16 +2152,18 @@ class MurderMysteryComponents {
                 event.cancel = true;
                 return;
             }
+
             // 如果不是有效玩家，直接终止
             const playerData = system.getPlayer(player);
             if (!playerData) return;
 
             // ===== 解析地图交互属性 =====
 
-            const matchedInteraction = interactionComponent?.find(data => {
+            /** 匹配到的交互属性。若没有匹配属性，则为 undefined。 */
+            const matchedInteraction = interactionComponent.find(data => {
                 // 如果有给定坐标或给定方块则返回
-                if (data.at && lib.Vector3Utils.hasPosition(data.at, location)) return true;
-                if (data.blocks && data.blocks.includes(blockId)) return true;
+                if ("at" in data && data.at && lib.Vector3Utils.hasPosition(data.at, location)) return true;
+                if ("blocks" in data && data.blocks && data.blocks.includes(blockId)) return true;
                 // 否则不返回
                 return false;
             });
@@ -2103,31 +2173,34 @@ class MurderMysteryComponents {
                 event.cancel = true;
                 return;
             }
+            const { stillCancelEvent = false, trigger = "" } = matchedInteraction;
 
-            const { consume = 0, notifyPlayerWhenGoldNotEnough = true, stillCancelEvent = false, trigger = "" } = matchedInteraction;
-
-            // 如果玩家没有足够的金锭，则取消事件并终止运行
-            const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
-            if (playerGoldCount < consume) {
-                if (notifyPlayerWhenGoldNotEnough) {
-                    minecraft.system.run(() =>
-                        lib.PlayerUtils.notify(player, {
-                            message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consume}`] },
-                            sound: "random.anvil_land",
-                        })
-                    );
-                }
-                event.cancel = true;
+            // 如果触发的交互属性为按钮，则交给按下按钮后事件执行，然后终止，1 秒后销毁该事件信息
+            // 这里是为了防止玩家在按钮按下后仍然能够触发事件
+            if (matchedInteraction.type === "button") {
+                pressedButtonEvent.set(player.id, { player, location, trigger });
+                minecraft.system.runTimeout(() => pressedButtonEvent.delete(player.id), 20);
                 return;
             }
 
             // ===== 执行交互属性的功能 =====
             if (stillCancelEvent) event.cancel = true;
-            minecraft.system.run(() => {
-                // 检查是否成功执行了相关逻辑，仅当成功执行才能移除金锭
-                const result = system.eventManager.triggerEvent(trigger, playerData);
-                if (result) lib.ItemUtils.removeItem(player, "murder_mystery:gold_ingot", -1, consume);
-            });
+            minecraft.system.run(() => system.eventManager.triggerEvent(trigger, playerData));
+        });
+
+        lib.gameSystem.subscribeEvent("playerPressButton", minecraft.world.afterEvents.buttonPush, event => {
+            // ===== 条件检查 =====
+            // 如果玩家未曾交互过按钮，或者出现其他问题时，终止运行
+            const { block, source } = event;
+            const eventInfo = pressedButtonEvent.get(source.id);
+            if (!eventInfo) return;
+            if (!lib.Vector3Utils.isEqual(block.location, eventInfo.location)) return;
+            const playerData = system.getPlayer(source);
+            if (!playerData) return;
+
+            // ===== 触发事件 =====
+            system.eventManager.triggerEvent(eventInfo.trigger, playerData);
+            pressedButtonEvent.delete(eventInfo.player.id);
         });
     }
 
@@ -3046,24 +3119,6 @@ class MurderMysteryComponents {
             },
             5
         );
-    }
-
-    /** 阻止实体受到伤害组件。
-     * @description 会自动判断系统的地图数据是否含有`preventDamage`组件，若不含该组件则不会注册该组件。
-     * @description 会阻止特定实体受到伤害。
-     */
-    static preventDamage(system: MurderMysterySystem) {
-        // 检查是否有阻止受伤组件
-        const preventDamageComponent = system.mapData.components?.preventDamage;
-        if (!preventDamageComponent) return;
-
-        // 变量准备
-        const entityTypes = preventDamageComponent.id;
-
-        // 阻止受伤
-        lib.gameSystem.subscribeEvent("playerUseMysteryPotionTest", minecraft.world.beforeEvents.entityHurt, event => {
-            if (entityTypes.includes(event.hurtEntity.typeId)) event.cancel = true;
-        });
     }
 
     // #endregion

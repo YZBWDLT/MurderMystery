@@ -232,7 +232,7 @@ export interface MurderMysteryMapDataComponent {
     /** 交互组件，定义地图可能出现的交互。默认情况下，阻止玩家与一切方块的交互。而在交互列表中的方块或位置则除外。
      * 并且，与这些方块交互还可以规定触发特殊事件。
      */
-    readonly interaction?: MurderMysteryInteractionComponent[];
+    readonly interaction?: (MurderMysteryInteractionAtComponent | MurderMysteryInteractionWithBlockComponent)[];
 
     /** 检查玩家进入特定区域组件。当玩家进入特定区域的时候，触发特定事件。 */
     readonly playerInArea?: MurderMysteryPlayerInAreaComponent[];
@@ -244,29 +244,30 @@ export interface MurderMysteryMapDataComponent {
      * @remarks 注意：由该组件触发的各事件响应不能获得操作的玩家。
      */
     readonly onGameStart?: MurderMysteryOnGameStartComponent;
-
-    /** 阻止特定类型实体受到伤害组件。当特定实体受伤的时候，阻止该伤害。 */
-    readonly preventDamage?: MurderMysteryPreventDamageComponent;
 }
 
 export interface MurderMysteryInteractionComponent {
-    /** 允许交互的方块。 */
-    blocks?: string[];
-
-    /** 允许交互的方块坐标。注意：如果不同的交互属性有同一个坐标，只会计算第一个交互属性。 */
-    at?: minecraft.Vector3[];
-
-    /** 这次交互需要消耗多少金锭。 | 默认值：`0` */
-    consume?: number;
-
-    /** 金锭不足时是否通知玩家。 | 默认值：`true` */
-    notifyPlayerWhenGoldNotEnough?: boolean;
+    /** 交互类型。
+     * - `normal`：默认值。正常的交互逻辑。只要交互就会触发事件。
+     * - `button`：适用于按钮的交互逻辑。只有按钮被弹回后按下才会触发事件。
+     */
+    type?: "normal" | "button";
 
     /** 是否仍然取消事件。通常用于只触发事件，但不进行交互的场景，例如在地图档案馆中和漏斗的交互。| 默认值：`false` */
     stillCancelEvent?: boolean;
 
     /** 触发何种事件。触发的事件是 {@link MurderMysteryMapData} 中的 events 对应的事件。事件的各种功能和需求见 {@link MurderMysteryEvents}。 */
     trigger?: string;
+}
+
+export interface MurderMysteryInteractionAtComponent extends MurderMysteryInteractionComponent {
+    /** 允许交互的方块坐标。注意：如果不同的交互属性有同一个坐标，只会计算第一个交互属性。 */
+    at: minecraft.Vector3[];
+}
+
+export interface MurderMysteryInteractionWithBlockComponent extends MurderMysteryInteractionComponent {
+    /** 允许交互的方块。 */
+    blocks: string[];
 }
 
 export interface MurderMysteryEnableMysteryPotionComponent {}
@@ -323,6 +324,9 @@ export interface MurderMysteryEvents {
     /** 触发事件的条件。系统会首先判断该条件是否通过，仅当触发该事件时，所有的条件都通过时才能触发事件，否则无法触发事件。 */
     readonly condition?: MurderMysteryEventCondition;
 
+    /** 消耗金锭。若玩家没有足够的金锭，则无法触发事件。 */
+    readonly consumeGold?: number | MurderMysteryConsumeGoldEvent;
+
     /** 设置冷却。当进入冷却状态后，系统将开始对冷却进入倒计时。 */
     readonly cooldown?: MurderMysteryCooldownEvent;
 
@@ -373,7 +377,7 @@ export interface MurderMysteryEvents {
 
 export interface MurderMysteryEventCondition {
     /** 特定位置是否有特定的方块。仅当数组所有方块的条件都成立后通过。 */
-    isBlock?: lib.BlockData[];
+    isBlock?: lib.BlockMatchData[];
 
     /** 触发事件的玩家在特定高度的下方。仅当该事件有触发玩家且高度条件成立后通过。 */
     playerBelowHeight?: number;
@@ -384,6 +388,14 @@ export interface MurderMysteryEventCondition {
         /** 当前正在冷却的项目。可指定为键名。 */
         itemName: string;
     };
+}
+
+export interface MurderMysteryConsumeGoldEvent {
+    /** 消耗金锭的数目。 */
+    count: number;
+
+    /** 在金锭不足时是否提醒玩家。 */
+    notifyWhenGoldNotEnough: boolean;
 }
 
 export interface MurderMysteryCooldownEvent {
@@ -1286,29 +1298,21 @@ export const maps: Record<string, MurderMysteryMapData> = {
             interaction: [
                 {
                     at: [{ x: 1038, y: 125, z: -184 }],
-                    consume: 1,
-                    notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
                     trigger: "archives:setFire1",
                 },
                 {
                     at: [{ x: 1038, y: 125, z: -188 }],
-                    consume: 1,
-                    notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
                     trigger: "archives:setFire2",
                 },
                 {
                     at: [{ x: 1041, y: 135, z: -184 }],
-                    consume: 1,
-                    notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
                     trigger: "archives:setFire3",
                 },
                 {
                     at: [{ x: 1041, y: 135, z: -188 }],
-                    consume: 1,
-                    notifyPlayerWhenGoldNotEnough: false,
                     stillCancelEvent: true,
                     trigger: "archives:setFire4",
                 },
@@ -1317,6 +1321,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         events: {
             "archives:setFire1": {
+                consumeGold: { count: 1, notifyWhenGoldNotEnough: false },
                 place: [
                     {
                         type: "setBlock",
@@ -1328,6 +1333,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 trigger: { id: "archives:openDoor" },
             },
             "archives:setFire2": {
+                consumeGold: { count: 1, notifyWhenGoldNotEnough: false },
                 place: [
                     {
                         type: "setBlock",
@@ -1339,6 +1345,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 trigger: { id: "archives:openDoor" },
             },
             "archives:setFire3": {
+                consumeGold: { count: 1, notifyWhenGoldNotEnough: false },
                 place: [
                     {
                         type: "setBlock",
@@ -1350,6 +1357,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 trigger: { id: "archives:openDoor" },
             },
             "archives:setFire4": {
+                consumeGold: { count: 1, notifyWhenGoldNotEnough: false },
                 place: [
                     {
                         type: "setBlock",
@@ -3266,62 +3274,24 @@ export const maps: Record<string, MurderMysteryMapData> = {
         components: {
             time: 18000,
             interaction: [
-                // 每一个神秘药水的坐标都是第一个为按钮，第二个为酿造台
-                // 因为必须阻止玩家打开酿造台，所以取消事件
+                // 通过按钮触发神秘药水
+                { at: [{ x: 71, y: 36, z: 1947 }], trigger: "darkfall:getMysteryPotion1", type: "button" },
+                { at: [{ x: 99, y: 42, z: 1941 }], trigger: "darkfall:getMysteryPotion2", type: "button" },
+                { at: [{ x: 120, y: 38, z: 1914 }], trigger: "darkfall:getMysteryPotion3", type: "button" },
+                { at: [{ x: 131, y: 37, z: 1922 }], trigger: "darkfall:getMysteryPotion4", type: "button" },
+                { at: [{ x: 120, y: 37, z: 1892 }], trigger: "darkfall:getMysteryPotion5", type: "button" },
+                // 通过酿造台触发神秘药水，需要取消事件
+                { at: [{ x: 71, y: 37, z: 1946 }], trigger: "darkfall:getMysteryPotion1", stillCancelEvent: true },
+                { at: [{ x: 98, y: 43, z: 1941 }], trigger: "darkfall:getMysteryPotion2", stillCancelEvent: true },
+                { at: [{ x: 120, y: 39, z: 1913 }], trigger: "darkfall:getMysteryPotion3", stillCancelEvent: true },
+                { at: [{ x: 130, y: 38, z: 1922 }], trigger: "darkfall:getMysteryPotion4", stillCancelEvent: true },
+                { at: [{ x: 121, y: 38, z: 1892 }], trigger: "darkfall:getMysteryPotion5", stillCancelEvent: true },
+                // 开启陷阱
                 {
                     at: [
-                        { x: 71, y: 36, z: 1947 },
-                        { x: 71, y: 37, z: 1946 },
+                        { x: 106, y: 38, z: 1885 },
+                        { x: 106, y: 38, z: 1878 },
                     ],
-                    consume: 1,
-                    trigger: "darkfall:getMysteryPotion1",
-                    stillCancelEvent: true,
-                },
-                {
-                    at: [
-                        { x: 99, y: 42, z: 1941 },
-                        { x: 98, y: 43, z: 1941 },
-                    ],
-                    consume: 1,
-                    trigger: "darkfall:getMysteryPotion2",
-                    stillCancelEvent: true,
-                },
-                {
-                    at: [
-                        { x: 120, y: 38, z: 1914 },
-                        { x: 120, y: 39, z: 1913 },
-                    ],
-                    consume: 1,
-                    trigger: "darkfall:getMysteryPotion3",
-                    stillCancelEvent: true,
-                },
-                {
-                    at: [
-                        { x: 131, y: 37, z: 1922 },
-                        { x: 130, y: 38, z: 1922 },
-                    ],
-                    consume: 1,
-                    trigger: "darkfall:getMysteryPotion4",
-                    stillCancelEvent: true,
-                },
-                {
-                    at: [
-                        { x: 120, y: 37, z: 1892 },
-                        { x: 121, y: 38, z: 1892 },
-                    ],
-                    consume: 1,
-                    trigger: "darkfall:getMysteryPotion5",
-                    stillCancelEvent: true,
-                },
-                {
-                    at: [{ x: 106, y: 38, z: 1885 }],
-                    consume: 2,
-                    trigger: "darkfall:openTrap",
-                    stillCancelEvent: true,
-                },
-                {
-                    at: [{ x: 106, y: 38, z: 1878 }],
-                    consume: 2,
                     trigger: "darkfall:openTrap",
                     stillCancelEvent: true,
                 },
@@ -3345,21 +3315,27 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         events: {
             "darkfall:getMysteryPotion1": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: 71, y: 37, z: 1946 } },
             },
             "darkfall:getMysteryPotion2": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: 98, y: 43, z: 1941 } },
             },
             "darkfall:getMysteryPotion3": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: 120, y: 39, z: 1913 } },
             },
             "darkfall:getMysteryPotion4": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: 130, y: 38, z: 1922 } },
             },
             "darkfall:getMysteryPotion5": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: 121, y: 38, z: 1892 } },
             },
             "darkfall:openTrap": {
+                consumeGold: 2,
                 // 拉杆必须均为关闭状态
                 condition: {
                     isBlock: [
@@ -3886,19 +3862,18 @@ export const maps: Record<string, MurderMysteryMapData> = {
             onGameStart: {
                 trigger: ["easterWorld:recoverDoor1", "easterWorld:recoverDoor2", "easterWorld:recoverDoor3", "easterWorld:setText"],
             },
-            preventDamage: { id: ["minecraft:minecart"] },
             interaction: [
-                { at: [{ x: -133, y: 26, z: 3140 }], trigger: "easterWorld:playerOnMonorail1", consume: 1 },
-                { at: [{ x: -76, y: 26, z: 3059 }], trigger: "easterWorld:playerOnMonorail2", consume: 1 },
+                { at: [{ x: -133, y: 26, z: 3140 }], trigger: "easterWorld:playerOnMonorail1", type: "button" },
+                { at: [{ x: -76, y: 26, z: 3059 }], trigger: "easterWorld:playerOnMonorail2", type: "button" },
                 {
                     at: [
                         { x: -82, y: 22, z: 3034 },
                         { x: -81, y: 22, z: 3033 },
                     ],
                     trigger: "easterWorld:playerOnRollerCoaster",
-                    consume: 1,
+                    type: "button",
                 },
-                // 过山车支线
+                // 过山车支线的按钮
                 { at: [{ x: -63, y: 29, z: 3031 }] },
             ],
         },
@@ -4030,6 +4005,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 ],
             },
             "easterWorld:playerOnMonorail1": {
+                consumeGold: 1,
                 condition: {
                     cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
                 },
@@ -4041,6 +4017,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
             },
             "easterWorld:playerOnMonorail2": {
+                consumeGold: 1,
                 condition: {
                     cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
                 },
@@ -4052,6 +4029,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
             },
             "easterWorld:playerOnRollerCoaster": {
+                consumeGold: 1,
                 condition: {
                     cooldownCompleted: { type: "rail", itemName: "hypixelWorld.rollerCoaster" },
                 },
@@ -4798,17 +4776,16 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     "hypixelWorld:setText",
                 ],
             },
-            preventDamage: { id: ["minecraft:minecart"] },
             interaction: [
-                { at: [{ x: -927, y: 51, z: 2919 }], trigger: "hypixelWorld:playerOnMonorail1", consume: 1 },
-                { at: [{ x: -870, y: 51, z: 2838 }], trigger: "hypixelWorld:playerOnMonorail2", consume: 1 },
+                { at: [{ x: -927, y: 51, z: 2919 }], trigger: "hypixelWorld:playerOnMonorail1", type: "button" },
+                { at: [{ x: -870, y: 51, z: 2838 }], trigger: "hypixelWorld:playerOnMonorail2", type: "button" },
                 {
                     at: [
                         { x: -875, y: 47, z: 2812 },
                         { x: -876, y: 47, z: 2813 },
                     ],
                     trigger: "hypixelWorld:playerOnRollerCoaster",
-                    consume: 1,
+                    type: "button",
                 },
                 // 过山车支线
                 { at: [{ x: -857, y: 54, z: 2810 }] },
@@ -4942,6 +4919,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 ],
             },
             "hypixelWorld:playerOnMonorail1": {
+                consumeGold: 1,
                 condition: {
                     cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
                 },
@@ -4953,6 +4931,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
             },
             "hypixelWorld:playerOnMonorail2": {
+                consumeGold: 1,
                 condition: {
                     cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
                 },
@@ -4964,6 +4943,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
             },
             "hypixelWorld:playerOnRollerCoaster": {
+                consumeGold: 1,
                 condition: {
                     cooldownCompleted: { type: "rail", itemName: "hypixelWorld.rollerCoaster" },
                 },
@@ -5284,27 +5264,22 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
                 {
                     at: [{ x: -884, y: 102, z: 1923 }],
-                    consume: 1,
                     trigger: "library:getMysteryPotion1",
                 },
                 {
                     at: [{ x: -907, y: 102, z: 1909 }],
-                    consume: 1,
                     trigger: "library:getMysteryPotion2",
                 },
                 {
                     at: [{ x: -927, y: 102, z: 1935 }],
-                    consume: 1,
                     trigger: "library:getMysteryPotion3",
                 },
                 {
                     at: [{ x: -853, y: 102, z: 1953 }],
-                    consume: 1,
                     trigger: "library:getMysteryPotion4",
                 },
                 {
                     at: [{ x: -884, y: 111, z: 1966 }],
-                    consume: 1,
                     trigger: "library:getMysteryPotion5",
                 },
             ],
@@ -5323,18 +5298,23 @@ export const maps: Record<string, MurderMysteryMapData> = {
         },
         events: {
             "library:getMysteryPotion1": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: -884, y: 102, z: 1923 } },
             },
             "library:getMysteryPotion2": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: -907, y: 102, z: 1909 } },
             },
             "library:getMysteryPotion3": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: -927, y: 102, z: 1935 } },
             },
             "library:getMysteryPotion4": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: -853, y: 102, z: 1953 } },
             },
             "library:getMysteryPotion5": {
+                consumeGold: 1,
                 getMysteryPotion: { animationLocation: { x: -884, y: 111, z: 1966 } },
             },
             "library:playerIntoVoid": {

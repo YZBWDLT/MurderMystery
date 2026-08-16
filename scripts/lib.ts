@@ -620,6 +620,18 @@ export interface BlockData {
     states?: Record<string, boolean | number | string | undefined>;
 }
 
+/** 表示一个方块匹配的信息。 */
+export interface BlockMatchData {
+    /** 方块位置。 */
+    location: minecraft.Vector3;
+
+    /** 方块 ID。 */
+    id?: string;
+
+    /** 方块状态。 */
+    states?: Record<string, boolean | number | string | undefined>;
+}
+
 /** 表示填充一个方块区域的信息。 */
 export interface BlockFillData {
     /** 方块 ID。 */
@@ -720,12 +732,12 @@ export class BlockUtils {
     }
 
     /** 检查特定位置的方块是否为符合条件的方块。 */
-    static match(blockData: BlockData, dimension?: string | minecraft.Dimension): boolean {
+    static match(blockData: BlockMatchData, dimension?: string | minecraft.Dimension): boolean {
         const { id, location, states } = blockData;
         const block = this.get(location, dimension);
         // 如果方块不存在，或者 ID 无法匹配，则返回 false
         if (!block) return false;
-        if (block.typeId !== id) return false;
+        if (id && block.typeId !== id) return false;
         // 检查所有的方块状态，如果存在不能对应的方块状态则返回 false
         if (states) {
             const hasUnmatchedState = Object.entries(states).some(([state, value]) => {
