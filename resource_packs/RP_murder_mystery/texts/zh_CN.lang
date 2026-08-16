@@ -78,6 +78,7 @@ role.deadWithColor=§7死亡
 
 ### 游戏开始倒计时
 chat.beforeGameStart.countdown=§e游戏将在§r%s§e秒后开始！
+chat.beforeGameStart.countdown.1s=§e游戏将在§c1§e秒后开始！
 
 ### 游戏开始
 title.gameStart.innocent=§a身份：平民
@@ -197,7 +198,7 @@ chat.gameWillOver=§c60§e秒后，平民将会胜出！
 ui.spectatorTeleport.title=传送到……
 ui.spectatorTeleport.line1=选择传送到哪个玩家。§c注意：您现在是旁观者，请勿在聊天栏声明仍存活的玩家的身份！
 ui.spectatorTeleport.playerName=%s（%s§r）
-chat.spectatorTeleport.tip=§c抬头以传送到存活的玩家！
+chat.spectatorTeleport.tip=§c抬头以开启设置，或传送到存活的玩家！
 chat.spectatorTeleport.playerIsInvalid=§c你不能传送到一名无效玩家的身上！
 chat.spectatorTeleport.teleported=§a已传送到§6%s§a的位置处
 
@@ -247,6 +248,8 @@ ui.settings.main.title=设置
 ui.settings.main.playerSettings=§l玩家设置
 ui.settings.main.about=关于我们
 ui.settings.main.updateLog=更新日志
+ui.settings.main.spectatorSettings=§l旁观者设置
+ui.settings.main.teleportTo=传送到...
 ui.settings.main.operatorSettings=§l管理员设置
 ui.settings.main.selectMap=选择地图
 ui.settings.main.enableMap=启用地图...
@@ -255,6 +258,8 @@ ui.settings.main.gaming=游戏时...
 ui.settings.main.goldSpawn=金锭生成...
 ui.settings.main.murdererSword=杀手刀剑...
 ui.settings.main.miscellaneous=杂项...
+ui.settings.main.developerSettings=§l开发者设置
+ui.settings.main.fakePlayerManager=管理假玩家...
 
 ### 关于我们 UI
 ui.settings.about.title=关于我们
@@ -328,6 +333,11 @@ ui.settings.miscellaneous.title=杂项设置
 ui.settings.miscellaneous.description=控制游戏中一些其他内容的设置项。
 ui.settings.miscellaneous.infoboardLastLine.title=信息板最后一行
 ui.settings.miscellaneous.infoboardLastLine.description=信息板最后一行的内容，使用黄色字体。
+
+### 假玩家管理器 UI
+ui.settings.fakePlayerManager.title=假玩家管理器
+ui.settings.fakePlayerManager.addAmount.title=添加假玩家
+ui.settings.fakePlayerManager.addAmount.description=添加的假玩家数量。为负数时则为减少的数量。
 
 ui.settings.defaultSettings.title=恢复默认设置
 

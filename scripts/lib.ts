@@ -1644,7 +1644,7 @@ export class ItemUtils {
 /** UI 数据。 */
 interface UIDataBase {
     /** UI 标题。 */
-    title?: string | minecraft.RawMessage;
+    readonly title?: string | minecraft.RawMessage;
 
     /** UI 的父表单，在此表单关闭后显示的表单。
      * @remarks 通常来说该参数无需额外定义，在启动子界面时会自动注册父界面。
@@ -1654,47 +1654,47 @@ interface UIDataBase {
 
 /** ActionUI 数据。 */
 export interface ActionUIData extends UIDataBase {
-    type: "action";
+    readonly type: "action";
 
     /** UI 内部的文字简介信息。 */
-    body?: string | minecraft.RawMessage;
+    readonly body?: string | minecraft.RawMessage;
 
     /** UI 使用的表单组件。 */
-    components?: ActionUIComponent[];
+    readonly components?: ActionUIComponent[];
 
     /** UI 被取消时执行的事件。 */
-    onCancel?: (reason?: ui.FormCancelationReason, thisForm?: ActionUIData | ModalUIData) => void | OpenNewFormOptions;
+    readonly onCancel?: (reason?: ui.FormCancelationReason, thisForm?: ActionUIData | ModalUIData) => void | OpenNewFormOptions;
 }
 
 /** MessageUI 数据。 */
 export interface MessageUIData extends UIDataBase {
-    type: "message";
+    readonly type: "message";
 
     /** UI 内部的文字简介信息。 */
-    body?: string | minecraft.RawMessage;
+    readonly body?: string | minecraft.RawMessage;
 
     /** UI 的第一个按钮。 */
-    button1: FormButtonComponent;
+    readonly button1: FormButtonComponent;
 
     /** UI 的第二个按钮。 */
-    button2: FormButtonComponent;
+    readonly button2: FormButtonComponent;
 }
 
 /** ModalUI 数据。 */
 export interface ModalUIData extends UIDataBase {
-    type: "modal";
+    readonly type: "modal";
 
     /** UI 的提交信息。 */
-    submitButton?: string | minecraft.RawMessage;
+    readonly submitButton?: string | minecraft.RawMessage;
 
     /** UI 使用的表单组件。 */
-    components?: ModalUIComponent[];
+    readonly components?: ModalUIComponent[];
 
     /** UI 被取消时执行的事件，该事件会在各组件的数据处理完后执行。 */
-    onCancel?: (reason?: ui.FormCancelationReason, thisForm?: ActionUIData | ModalUIData) => void | OpenNewFormOptions;
+    readonly onCancel?: (reason?: ui.FormCancelationReason, thisForm?: ActionUIData | ModalUIData) => void | OpenNewFormOptions;
 
     /** UI 被提交后执行的事件，该事件会在各组件的数据处理完后执行。 */
-    onSubmit?: (
+    readonly onSubmit?: (
         result?: (string | number | boolean | undefined)[],
         thisForm?: ActionUIData | ModalUIData
     ) => void | OpenNewFormOptions;
@@ -1709,108 +1709,108 @@ interface FormComponentBase {
     /** 是否可见。 | 默认值：`true`
      * @remarks 对 MessageUI 无效，因为该 UI 固定使用两个按钮
      */
-    visible?: boolean;
+    readonly visible?: boolean;
 }
 
 /** ModalUI 表单组件。 */
 interface ModalFormComponentBase extends FormComponentBase {
     /** 描述。 */
-    description: string | minecraft.RawMessage;
+    readonly description: string | minecraft.RawMessage;
 
     /** 默认值。 */
-    default?: number | boolean | string;
+    readonly default?: number | boolean | string;
 
     /** 旁侧提示文本。 */
-    tipText?: string | minecraft.RawMessage;
+    readonly tipText?: string | minecraft.RawMessage;
 }
 
 /** 标题表单组件。 */
 export interface FormHeaderComponent extends FormComponentBase {
-    type: "header";
+    readonly type: "header";
 
     /** 标题文本。 */
-    text: string | minecraft.RawMessage;
+    readonly text: string | minecraft.RawMessage;
 }
 
 /** 文本表单组件。 */
 export interface FormLabelComponent extends FormComponentBase {
-    type: "label";
+    readonly type: "label";
 
     /** 文本。 */
-    text: string | minecraft.RawMessage;
+    readonly text: string | minecraft.RawMessage;
 }
 
 /** 分割线表单组件。 */
 export interface FormDividerComponent extends FormComponentBase {
-    type: "divider";
+    readonly type: "divider";
 }
 
 /** 按钮表单组件。 */
 export interface FormButtonComponent extends FormComponentBase {
-    type: "button";
+    readonly type: "button";
 
     /** 按钮文本。 */
-    text: string | minecraft.RawMessage;
+    readonly text: string | minecraft.RawMessage;
 
     /** 按钮图标。
      * @remarks 仅限 ActionUI 可用。
      * @example "textures/items/apple"
      */
-    icon?: string;
+    readonly icon?: string;
 
     /** 按钮被选中后的设置。 */
-    onClick: () => void | OpenNewFormOptions;
+    readonly onClick: () => void | OpenNewFormOptions;
 }
 
 /** 下拉栏表单组件。 */
 export interface FormDropdownComponent extends ModalFormComponentBase {
-    type: "dropdown";
-    default?: number;
+    readonly type: "dropdown";
+    readonly default?: number;
 
     /** 下拉栏全部可用选项。 */
-    items: (minecraft.RawMessage | string)[];
+    readonly items: (minecraft.RawMessage | string)[];
 
     /** 在此下拉栏选择特定值提交后执行的函数。 */
-    onSubmit: (result: number, items: (minecraft.RawMessage | string)[]) => void;
+    readonly onSubmit: (result: number, items: (minecraft.RawMessage | string)[]) => void;
 }
 
 /** 滑块表单组件。 */
 export interface FormSliderComponent extends ModalFormComponentBase {
-    type: "slider";
-    default?: number;
+    readonly type: "slider";
+    readonly default?: number;
 
     /** 滑块范围最小值。 */
-    min: number;
+    readonly min: number;
 
     /** 滑块范围最大值。 */
-    max: number;
+    readonly max: number;
 
     /** 每次滑动滑块时的步长。 | 默认值：`1` */
-    step?: number;
+    readonly step?: number;
 
     /** 在此滑块选择特定值提交后执行的函数。 */
-    onSubmit: (result: number) => void;
+    readonly onSubmit: (result: number) => void;
 }
 
 /** 文字输入框表单组件。 */
 export interface FormTextFieldComponent extends ModalFormComponentBase {
-    type: "textField";
-    default?: string;
+    readonly type: "textField";
+    readonly default?: string;
 
     /** 文本输入框背景字。 */
-    placeholderText: string | minecraft.RawMessage;
+    readonly placeholderText: string | minecraft.RawMessage;
 
     /** 在此文本输入框输入特定值提交后执行的函数。 */
-    onSubmit: (result: string) => void;
+    readonly onSubmit: (result: string) => void;
 }
 
 /** 开关表单组件。 */
 export interface FormToggleComponent extends ModalFormComponentBase {
-    type: "toggle";
-    default?: boolean;
+    readonly type: "toggle";
+    readonly default?: boolean;
 
     /** 在此开关选择特定值提交后执行的函数。 */
-    onSubmit: (result: boolean) => void;
+    readonly onSubmit: (result: boolean) => void;
 }
 
 export type ActionUIComponent = FormHeaderComponent | FormLabelComponent | FormDividerComponent | FormButtonComponent;
@@ -1828,10 +1828,10 @@ export interface OpenNewFormOptions {
     /** 子界面。
      * @remarks 在该子界面打开后会自动为该子界面注册父界面。
      */
-    childForm?: UIData;
+    readonly childForm?: UIData;
 
     /** 在关闭该界面后打开何界面，在不存在对应界面时直接跳过。 */
-    openForm: "childForm" | "parentForm";
+    readonly openForm: "childForm" | "parentForm";
 }
 
 export class UIUtils {

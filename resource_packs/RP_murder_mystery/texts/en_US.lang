@@ -78,6 +78,7 @@ role.deadWithColor=§7Dead
 
 ### Game start countdown
 chat.beforeGameStart.countdown=§eThe game starts in §r%s§e seconds!
+chat.beforeGameStart.countdown.1s=§eThe game starts in §c1§e second!
 
 ### Game started
 title.gameStart.innocent=§aROLE: INNOCENT
@@ -197,7 +198,7 @@ chat.gameWillOver=§eInnocents will win in §c60§e seconds!
 ui.spectatorTeleport.title=Teleport To ...
 ui.spectatorTeleport.line1=Select which player to teleport to. §cNote: You are a spectator now. DO NOT claim the role of alive players in chat!
 ui.spectatorTeleport.playerName=%s (%s§r)
-chat.spectatorTeleport.tip=§cHead up to teleport to player alive!
+chat.spectatorTeleport.tip=§cHead up to open settings ui, or teleport to players alive!
 chat.spectatorTeleport.playerIsInvalid=§cYou can't teleport to an invalid player!
 chat.spectatorTeleport.teleported=§aHas been teleported to §6%s§a's location
 
@@ -247,6 +248,8 @@ ui.settings.main.title=Settings
 ui.settings.main.playerSettings=§lPlayer Settings
 ui.settings.main.about=About Us
 ui.settings.main.updateLog=Update Log
+ui.settings.main.spectatorSettings=§lSpectator Settings
+ui.settings.main.teleportTo=Teleport To...
 ui.settings.main.operatorSettings=§lOperator Settings
 ui.settings.main.selectMap=Select Map
 ui.settings.main.enableMap=Enable Map...
@@ -255,6 +258,8 @@ ui.settings.main.gaming=Gaming...
 ui.settings.main.goldSpawn=Gold Spawn...
 ui.settings.main.murdererSword=Murderer Sword...
 ui.settings.main.miscellaneous=Miscellaneous...
+ui.settings.main.developerSettings=§lDeveloper Settings
+ui.settings.main.fakePlayerManager=Manage Fake Player...
 
 ### About Us UI
 ui.settings.about.title=About Us
@@ -328,6 +333,11 @@ ui.settings.miscellaneous.title=Miscellaneous Settings
 ui.settings.miscellaneous.description=Control other things in game.
 ui.settings.miscellaneous.infoboardLastLine.title=Last Line of Infoboard
 ui.settings.miscellaneous.infoboardLastLine.description=The content of last line of infoboard, with the color of yellow.
+
+### Manage Fake Player UI
+ui.settings.fakePlayerManager.title=Manage Fake Player
+ui.settings.fakePlayerManager.addAmount.title=Add fake player amount
+ui.settings.fakePlayerManager.addAmount.description=The number of fake players to add. If negative, it represents the number to remove.
 
 ui.settings.defaultSettings.title=Change to Default
 

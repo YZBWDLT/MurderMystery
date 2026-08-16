@@ -1404,9 +1404,6 @@ class MurderMysterySettings {
     static showMainSettingsUI(system: MurderMysterySystem, player: minecraft.Player) {
         // ===== 变量准备 =====
 
-        /** 玩家权限。部分选项仅对管理员或更高权限的玩家开放。 */
-        const permission = player.playerPermissionLevel;
-
         /** 玩家设置选项。 */
         const playerSettings: lib.ActionUIComponent[] = [
             { type: "divider" },
@@ -1425,8 +1422,24 @@ class MurderMysterySettings {
             },
         ];
 
+        /** 旁观者选项。 */
+        const spectatorSettings: lib.ActionUIComponent[] = [];
+        const playerData = system.getPlayer(player);
+        if (playerData && playerData.isDead)
+            spectatorSettings.push(
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.main.spectatorSettings" } },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.teleportTo" },
+                    icon: "textures/ui/dressing_room_skins",
+                    onClick: () => this.showTeleportToUI(system, player),
+                }
+            );
+
         /** 管理员设置选项。 */
         const operatorSettings: lib.ActionUIComponent[] = [];
+        const permission = player.playerPermissionLevel;
         if (permission >= 2)
             operatorSettings.push(
                 { type: "divider" },
@@ -1475,10 +1488,64 @@ class MurderMysterySettings {
                 }
             );
 
+        /** 开发者设置选项。 */
+        const developerSettings: lib.ActionUIComponent[] = [];
+        const isDeveloper = player.hasTag("developer");
+        if (permission >= 2 && isDeveloper)
+            developerSettings.push(
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.main.developerSettings" } },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.fakePlayerManager" },
+                    onClick: () => this.showFakePlayerManagerUI(system, player),
+                }
+            );
+
         // ===== 显示设置界面 =====
         lib.UIUtils.createAction(player, {
             type: "action",
-            components: [{ type: "header", text: { translate: "ui.settings.main.title" } }, ...playerSettings, ...operatorSettings],
+            components: [
+                { type: "header", text: { translate: "ui.settings.main.title" } },
+                ...playerSettings,
+                ...spectatorSettings,
+                ...operatorSettings,
+                ...developerSettings,
+            ],
+        });
+    }
+
+    /** 生成一个常规设置 UI。可以通过添加设置名称和组件来新增功能。 */
+    private static generateSettingsUI<K extends keyof MurderMysterySettings>(
+        system: MurderMysterySystem,
+        player: minecraft.Player,
+        settingsName: K,
+        components: lib.ModalUIComponent[],
+        submitCallback?: () => void
+    ) {
+        lib.UIUtils.createModal(player, {
+            type: "modal",
+            submitButton: { translate: "ui.settings.confirm" },
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: `ui.settings.${settingsName}.title` } },
+                { type: "label", text: { translate: `ui.settings.${settingsName}.description` } },
+                { type: "divider" },
+                ...components,
+                { type: "divider" },
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.defaultSettings.title" },
+                    onSubmit: result => {
+                        if (result) system.settings[settingsName] = new MurderMysterySettings()[settingsName];
+                    },
+                },
+            ],
+            onSubmit: () => {
+                if (submitCallback) submitCallback();
+                MurderMysterySettings.saveSettings(system);
+                this.showMainSettingsUI(system, player); // 返回到上一级
+            },
         });
     }
 
@@ -1834,37 +1901,86 @@ class MurderMysterySettings {
         ]);
     }
 
-    /** 生成一个常规设置 UI。可以通过添加设置名称和组件来新增功能。 */
-    private static generateSettingsUI<K extends keyof MurderMysterySettings>(
-        system: MurderMysterySystem,
-        player: minecraft.Player,
-        settingsName: K,
-        components: lib.ModalUIComponent[],
-        submitCallback?: () => void
-    ) {
+    /** 对玩家显示假玩家管理器 UI。 */
+    private static showFakePlayerManagerUI(system: MurderMysterySystem, player: minecraft.Player) {
         lib.UIUtils.createModal(player, {
             type: "modal",
             submitButton: { translate: "ui.settings.confirm" },
             onCancel: () => this.showMainSettingsUI(system, player),
             components: [
-                { type: "header", text: { translate: `ui.settings.${settingsName}.title` } },
-                { type: "label", text: { translate: `ui.settings.${settingsName}.description` } },
-                { type: "divider" },
-                ...components,
+                { type: "header", text: { translate: `ui.settings.fakePlayerManager.title` } },
                 { type: "divider" },
                 {
-                    type: "toggle",
-                    description: { translate: "ui.settings.defaultSettings.title" },
+                    type: "slider",
+                    default: 0,
+                    description: { translate: "ui.settings.fakePlayerManager.addAmount.title" },
+                    tipText: { translate: "ui.settings.fakePlayerManager.addAmount.description" },
+                    max: 16,
+                    min: -16,
+                    step: 1,
                     onSubmit: result => {
-                        if (result) system.settings[settingsName] = new MurderMysterySettings()[settingsName];
+                        if (result > 0) {
+                            for (let i = 0; i < result; i++) {
+                                lib.EntityUtils.add("murder_mystery:fake_player", player.location);
+                            }
+                        } else if (result < 0) {
+                            const removeAmount = Math.abs(result);
+                            const fakePlayers = lib.EntityUtils.getType("murder_mystery:fake_player");
+                            for (let i = 0; i < removeAmount; i++) {
+                                const fakePlayer = fakePlayers[i];
+                                if (!fakePlayer) break;
+                                fakePlayer.remove();
+                            }
+                        }
                     },
                 },
             ],
             onSubmit: () => {
-                if (submitCallback) submitCallback();
-                MurderMysterySettings.saveSettings(system);
                 this.showMainSettingsUI(system, player); // 返回到上一级
             },
+        });
+    }
+
+    /** 对玩家显示传送到 UI。 */
+    private static showTeleportToUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const showRole = system.settings.gaming.showRoleInSpectatorTeleportUI;
+        let playerList: lib.FormButtonComponent[] = system.livingPlayers.allPlayers.map(playerData => ({
+            type: "button" as "button",
+            text: {
+                translate: showRole ? "ui.spectatorTeleport.playerName" : "%%s",
+                with: {
+                    rawtext: [{ text: `${playerData.getName()}` }, { translate: `role.${playerData.role}WithColor` }],
+                },
+            },
+            onClick: () => {
+                if (!playerData.player.isValid) {
+                    lib.PlayerUtils.notify(player, {
+                        message: { translate: "chat.spectatorTeleport.playerIsInvalid" },
+                        sound: "random.anvil_land",
+                    });
+                    return;
+                }
+                player.teleport(playerData.player.location);
+                lib.PlayerUtils.notify(player, {
+                    message: {
+                        translate: "chat.spectatorTeleport.teleported",
+                        with: [`${playerData.getName()}`],
+                    },
+                    sound: "random.orb",
+                    soundDelay: 3,
+                });
+            },
+        }));
+        if (!showRole) playerList = lib.JSUtils.array.shuffle(playerList);
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.spectatorTeleport.title" } },
+                { type: "label", text: { translate: "ui.spectatorTeleport.line1" } },
+                { type: "divider" },
+                ...playerList,
+            ],
         });
     }
 
@@ -2086,7 +2202,7 @@ class MurderMysteryComponents {
                 function countdownNotice(countdown: string, showTitle = true) {
                     lib.PlayerUtils.broadcast({
                         message: {
-                            translate: "chat.beforeGameStart.countdown",
+                            translate: countdown === "1" ? "chat.beforeGameStart.countdown.1s" : "chat.beforeGameStart.countdown",
                             with: [countdown],
                         },
                         title: showTitle ? countdown : void 0,
@@ -2800,8 +2916,8 @@ class MurderMysteryComponents {
         });
     }
 
-    /** 旁观玩家抬头传送组件。
-     * @description 当旁观玩家或死亡玩家抬头时，调用 UI。
+    /** 旁观玩家抬头打开设置组件。
+     * @description 当旁观玩家或死亡玩家抬头时，调用设置 UI。
      */
     static spectatorTeleport(system: MurderMysterySystem) {
         lib.gameSystem.subscribeTimeline(
@@ -2816,54 +2932,9 @@ class MurderMysteryComponents {
                         if (playerRotation.x > -88) return;
                         // 抬头后，放平视角
                         player.teleport(player.location, { rotation: { ...playerRotation, x: 0 } });
-                        // 调用 UI
+                        // 调用设置 UI
                         if (!isPlayer(player)) return;
-                        const showRole = system.settings.gaming.showRoleInSpectatorTeleportUI;
-                        let playerList = system.livingPlayers.allPlayers.map(playerData => {
-                            const button: lib.FormButtonComponent = {
-                                type: "button",
-                                text: {
-                                    translate: showRole ? "ui.spectatorTeleport.playerName" : "%%s",
-                                    with: {
-                                        rawtext: [
-                                            { text: `${playerData.getName()}` },
-                                            { translate: `role.${playerData.role}WithColor` },
-                                        ],
-                                    },
-                                },
-                                onClick: () => {
-                                    if (!playerData.player.isValid) {
-                                        lib.PlayerUtils.notify(player, {
-                                            message: { translate: "chat.spectatorTeleport.playerIsInvalid" },
-                                            sound: "random.anvil_land",
-                                        });
-                                        return;
-                                    }
-                                    player.teleport(playerData.player.location);
-                                    minecraft.system.runTimeout(() =>
-                                        lib.PlayerUtils.notify(player, {
-                                            message: {
-                                                translate: "chat.spectatorTeleport.teleported",
-                                                with: [`${playerData.getName()}`],
-                                            },
-                                            sound: "random.orb",
-                                            soundDelay: 3,
-                                        })
-                                    );
-                                },
-                            };
-                            return button;
-                        });
-                        if (!showRole) playerList = lib.JSUtils.array.shuffle(playerList);
-                        lib.UIUtils.createAction(player, {
-                            type: "action",
-                            components: [
-                                { type: "header", text: { translate: "ui.spectatorTeleport.title" } },
-                                { type: "label", text: { translate: "ui.spectatorTeleport.line1" } },
-                                { type: "divider" },
-                                ...playerList,
-                            ],
-                        });
+                        MurderMysterySettings.showMainSettingsUI(system, player);
                     });
             },
             5
