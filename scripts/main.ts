@@ -425,10 +425,11 @@ class MurderMysterySystem {
 
     /** 在存活列表中，移除一名玩家的信息，代表该玩家已经死亡。 */
     removeLivingPlayer(playerData: MurderMysteryPlayer) {
-        this.livingPlayers.allPlayers = this.players.allPlayers.filter(player => player.player.id !== playerData.player.id);
+        this.livingPlayers.allPlayers = this.livingPlayers.allPlayers.filter(player => player.player.id !== playerData.player.id);
         if (playerData.role !== MurderMysteryPlayerRole.Spectator) {
-            const currentRolePlayers = this.livingPlayers[playerData.role];
-            this.livingPlayers[playerData.role] = currentRolePlayers.filter(player => player.player.id !== playerData.player.id);
+            this.livingPlayers[playerData.role] = this.livingPlayers[playerData.role].filter(
+                player => player.player.id !== playerData.player.id
+            );
         }
     }
 
