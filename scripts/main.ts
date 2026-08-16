@@ -1405,7 +1405,7 @@ class MurderMysterySettings {
 
     /** 金锭生成设置，控制如何生成金锭。 */
     goldSpawn: MurderMysteryGoldSpawnSettings = {
-        spawnRadius: 5,
+        spawnRadius: 6,
         maxGoldPointsPerTime: 8,
         spawnChance: 0.15,
         spawnInterval: 16,
@@ -2468,10 +2468,6 @@ class MurderMysteryComponents {
      */
     static generateGold(system: MurderMysterySystem) {
         const goldPoints = lib.JSUtils.array.shuffle(system.mapData.description.goldPoints);
-        /** 返回两坐标在 xz 平面上的距离平方。 */
-        function xzDistanceSquared(location1: minecraft.Vector3, location2: minecraft.Vector3) {
-            return (location2.x - location1.x) ** 2 + (location2.z - location1.z) ** 2;
-        }
         lib.gameSystem.subscribeTimeline("generateGold", () => {
             const { spawnChance, spawnInterval, spawnRadius, maxGoldPointsPerTime } = system.settings.goldSpawn;
             // 1. 判断现在是不是时机生成
@@ -2488,7 +2484,7 @@ class MurderMysteryComponents {
             goldPoints
                 .filter((goldPoint, index) => {
                     // 如果距离过远，则排除之
-                    if (xzDistanceSquared(playerData.player.location, goldPoint) > spawnRadius ** 2) return false;
+                    if (lib.Vector3Utils.distance(playerData.player.location, goldPoint, true) > spawnRadius ** 2) return false;
                     // 如果不幸没随机到，则排除之
                     if (Math.random() > spawnChance) return false;
                     return true;
