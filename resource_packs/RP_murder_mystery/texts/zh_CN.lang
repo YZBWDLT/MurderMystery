@@ -1,10 +1,4 @@
 ## ===== 方块 =====
-tile.player_head:yzbwdlt.name=YZBWDLT 的头
-tile.player_head:freamoluwu.name=Freamoluwu 的头
-tile.player_head:jhy2189.name=JHY2189 的头
-tile.player_head:violetmiaw.name=VioletMiaw 的头
-tile.player_head:cheesey.name=Cheesey 的头
-tile.player_head:fudgiethewhale.name=_fudgiethewhale 的头
 tile.murder_mystery:portal.name=传送门
 
 ## ===== 实体 =====

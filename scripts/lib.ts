@@ -914,6 +914,20 @@ export class Vector3Utils {
         const { x, y, z } = vector;
         return { x: x * scale, y: y * scale, z: z * scale };
     }
+
+    /** 将一个形式为`"x y z"`的字符串输出为`Vector3`格式。 */
+    static parseString(location: string): minecraft.Vector3 {
+        const parts = location.trim().split(" ");
+        if (parts.length !== 3) throw new Error(`Invalid location format: expected "X Y Z", got "${location}"`);
+
+        const [xStr, yStr, zStr] = parts;
+        const x = Number(xStr);
+        const y = Number(yStr);
+        const z = Number(zStr);
+        if (isNaN(x) || isNaN(y) || isNaN(z)) throw new Error(`Invalid numeric value in location string: "${location}"`);
+
+        return { x, y, z };
+    }
 }
 
 // #endregion
