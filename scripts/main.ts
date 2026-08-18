@@ -155,7 +155,7 @@ class MurderMysterySystem {
     // #region - 系统变量
 
     /** 系统版本。 */
-    readonly version = "1.0 - Exp 7";
+    readonly version = "1.0 - Snapshot 7b";
 
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage: GameStage;

@@ -142,7 +142,7 @@ chat.bowPicked=§6A player has picked up the bow!
 chat.bowPicked.picker=§aYou picked up the Bow! §6GOAL: §eFind and kill the Murderer!
 
 ### Player quit
-chat.detectiveQuit=§6The Detective has left!§eFind the Bow for a chance to kill the Murderer.
+chat.detectiveQuit=§6The Detective has left! §eFind the Bow for a chance to kill the Murderer.
 chat.murdererQuit=§aThe previous murderer left, you are now taking their position!
 chat.murdererQuit.gameOver=§aThe murderer left, game over!
 
@@ -351,7 +351,7 @@ chat.settings.applyNextGame=These settings will apply in next game
 infoboard.title=§l§e MURDER MYSTERY 
 infoboard.mapName=Map: §a%s§r
 infoboard.playerCount=Players: §a%s/%s
-infoboard.waiting=Waiting……
+infoboard.waiting=Waiting...
 infoboard.countdown=Starting in: §a%s Seconds
 infoboard.mode=Mode: §a%s§r
 infoboard.role=Role: §a%s§r
