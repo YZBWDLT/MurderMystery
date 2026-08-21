@@ -155,7 +155,7 @@ class MurderMysterySystem {
     // #region - 系统变量
 
     /** 系统版本。 */
-    readonly version = "1.0 - Snapshot 7b";
+    readonly version = "1.0 - Exp 8";
 
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage: GameStage;
@@ -2421,37 +2421,34 @@ class MurderMysteryComponents {
      * @description 剩余 0 秒时，杀手将拿到剑，侦探将拿到弓，并注销此组件。
      */
     static getSpecialItem(system: MurderMysterySystem) {
+        /** 提醒所有玩家杀手即将拿到剑。 */
+        function murdererGetSwordNotice(getSpecialItemTimeLeft: number) {
+            system.livingPlayers.allPlayers.forEach(playerData => {
+                // 检查是否为玩家，如果不是则终止
+                if (!isPlayer(playerData.player)) return;
+                // 获取消息
+                let message = `chat.murderWillGetSword.${playerData.role}`;
+                if (getSpecialItemTimeLeft === 1) message = `chat.murderWillGetSword.${playerData.role}.1s`;
+                else if (getSpecialItemTimeLeft <= 0) message = `chat.murderGetSword.${playerData.role}`;
+                // 发送消息
+                lib.PlayerUtils.notify(playerData.player, {
+                    message: { translate: message, with: [`§c${getSpecialItemTimeLeft}`] },
+                    sound: "note.hat",
+                });
+            });
+        }
+
         lib.gameSystem.subscribeTimeline(
             "getSpecialItem",
             () => {
                 const getSpecialItemTimeLeft =
                     system.settings.gaming.getSpecialItemDelay - (system.settings.gaming.timePerGame - system.timeLeft);
 
-                // 当给杀手刀剩余 1-5 秒时，对所有玩家提示
-                if (getSpecialItemTimeLeft > 0 && getSpecialItemTimeLeft <= 5) {
-                    system.livingPlayers.allPlayers.forEach(playerData => {
-                        if (!isPlayer(playerData.player)) return;
-                        lib.PlayerUtils.notify(playerData.player, {
-                            message: {
-                                translate: `chat.murderWillGetSword.${playerData.role}`,
-                                with: [`§c${getSpecialItemTimeLeft}`],
-                            },
-                            sound: "note.hat",
-                        });
-                    });
-                }
+                // 对玩家提示
+                murdererGetSwordNotice(getSpecialItemTimeLeft);
+
                 // 当倒计时结束后，给予杀手和侦探道具并对所有玩家提示
                 if (getSpecialItemTimeLeft <= 0) {
-                    system.livingPlayers.allPlayers.forEach(playerData => {
-                        if (!isPlayer(playerData.player)) return;
-                        lib.PlayerUtils.notify(playerData.player, {
-                            message: {
-                                translate: `chat.murderGetSword.${playerData.role}`,
-                                with: [`§c${getSpecialItemTimeLeft}`],
-                            },
-                            sound: "note.hat",
-                        });
-                    });
                     system.livingPlayers.murderer.forEach(murderer => murderer.getSword());
                     system.livingPlayers.detective.forEach(detective => detective.getBow());
                     system.getSpecialItem = true;
