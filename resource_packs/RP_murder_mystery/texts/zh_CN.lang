@@ -35,23 +35,32 @@ item.murder_mystery:settings=设置
 
 ### 地图名
 map.aquarium=水族馆
+map.ancientTomb=古墓
 map.archives=档案馆
 map.archivesTopFloor=档案馆顶层
 map.archivesTopFloorV1=档案馆顶层 V1
 map.cattleridgeFarm=牛脊农场
 map.cruiseShip=游轮
-map.darkFall=暗景秋色
+map.darkfall=暗景秋色
 map.easterWorld=复活节游乐园
-map.headQuarters=总部
+map.goldRush=淘金热
+map.headquarters=总部
+map.hollywood=好莱坞
 map.hypixelWorld=Hypixel游乐园
+map.mountain=山脉
 map.library=图书馆
 map.sanPeraticoV1=港口小镇 V1
+map.sanPeratico=港口小镇
 map.skywayPier=水上度假村
+map.snowfallV1=雪中平安夜 V1
+map.snowfall=雪中平安夜
 map.spookyMansionV1=阴森庄园 V1
-map.spookyMansionV2=阴森庄园
+map.spookyMansion=阴森庄园
+map.subway=地铁
 map.towerFall=高坠塔
 map.transportV1=运输塔 V1
-map.transportV2=运输塔
+map.transport=运输塔
+map.villa=Villa
 map.widowsDen=黑寡妇巢穴
 
 ### 模式名

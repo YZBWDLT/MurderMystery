@@ -35,23 +35,32 @@ item.murder_mystery:settings=Settings
 
 ### Map name
 map.aquarium=Aquarium
+map.ancientTomb=Ancient Tomb
 map.archives=Archives
 map.archivesTopFloor=Archives Top Floor
 map.archivesTopFloorV1=Archives Top Floor V1
 map.cattleridgeFarm=Cattleridge Farm
 map.cruiseShip=Cruise Ship
-map.darkFall=Darkfall
+map.darkfall=Darkfall
 map.easterWorld=Easter World
-map.headQuarters=Headquarters
+map.goldRush=GoldRush
+map.headquarters=Headquarters
+map.hollywood=Hollywood
 map.hypixelWorld=Hypixel World
+map.mountain=Mountain
 map.library=Library
 map.sanPeraticoV1=San Peratico V1
+map.sanPeratico=San Peratico
 map.skywayPier=Skyway Pier
+map.snowfallV1=Snowfall V1
+map.snowfall=Snowfall
 map.spookyMansionV1=Spooky Mansion V1
-map.spookyMansionV2=Spooky Mansion
+map.spookyMansion=Spooky Mansion
+map.subway=Subway
 map.towerFall=Tower Fall
 map.transportV1=Transport V1
-map.transportV2=Transport
+map.transport=Transport
+map.villa=Villa
 map.widowsDen=Widow's Den
 
 ### Mode name
