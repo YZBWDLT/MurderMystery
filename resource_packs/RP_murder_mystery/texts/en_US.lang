@@ -259,6 +259,7 @@ interact.settings=Map Settings...
 ### Main Settings UI
 ui.settings.main.title=Settings
 ui.settings.main.playerSettings=§lPlayer Settings
+ui.settings.main.optOutSpectate=Opt-Out Spectate Settings...
 ui.settings.main.about=About Us
 ui.settings.main.updateLog=Update Log
 ui.settings.main.spectatorSettings=§lSpectator Settings
@@ -287,6 +288,13 @@ ui.settings.about.specialThanks=§lSpecial Thanks
 ### Update Log UI
 ui.settings.updateLog.title=Update Log
 ui.settings.updateLog.line1=This paragraph is written in Chinese. Please use translation software if in need.
+
+### Opt-Out Spectate UI
+ui.settings.optoutspectate.title=Opt-Out Spectate Settings
+ui.settings.optoutspectate.description=Whether to join the current game. Current: §a%s.
+ui.settings.optoutspectate.none=Don't Spectate
+ui.settings.optoutspectate.nextGame=Spectate Next Game Only
+ui.settings.optoutspectate.always=Always Spectate
 
 ### Select Map UI
 ui.settings.selectMap.title=Select Map
@@ -371,6 +379,8 @@ ui.settings.confirm=Confirm
 
 chat.settings.applyNextGame=These settings will apply in next game
 
+chat.youChose=§eYou chose §c%s§e.
+
 ## ===== Infoboard Message =====
 
 infoboard.title=§l§e MURDER MYSTERY 
@@ -388,3 +398,4 @@ infoboard.bowNotDropped=Bow: §aNot Dropped§r
 infoboard.bowDropped=Bow: §cDropped§r
 infoboard.throwing=Throwing: §a%ss§r
 infoboard.charging=Charging: §a%ss§r
+infoboard.optOutSpectate.enabled=§cOpt-Out Spectate Enabled

@@ -259,6 +259,7 @@ interact.settings=地图设置...
 ### 主设置 UI
 ui.settings.main.title=设置
 ui.settings.main.playerSettings=§l玩家设置
+ui.settings.main.optOutSpectate=主动旁观设置...
 ui.settings.main.about=关于我们
 ui.settings.main.updateLog=更新日志
 ui.settings.main.spectatorSettings=§l旁观者设置
@@ -287,6 +288,13 @@ ui.settings.about.specialThanks=§l特别感谢
 ### 更新日志 UI
 ui.settings.updateLog.title=更新日志
 ui.settings.updateLog.line1=本段使用中文编写，若您需要请使用翻译软件进行翻译。
+
+### 主动旁观 UI
+ui.settings.optoutspectate.title=主动旁观设置
+ui.settings.optoutspectate.description=是否加入进本局游戏。当前：§a%s。
+ui.settings.optoutspectate.none=不旁观
+ui.settings.optoutspectate.nextGame=仅下局旁观
+ui.settings.optoutspectate.always=总是旁观
 
 ### 选择地图 UI
 ui.settings.selectMap.title=选择地图
@@ -371,6 +379,8 @@ ui.settings.confirm=确认
 
 chat.settings.applyNextGame=这些设置将在下一局应用
 
+chat.youChose=§e你选择了§c%s§e。
+
 ## ===== 信息板消息 =====
 
 infoboard.title=§l§e    密室杀手    
@@ -388,3 +398,4 @@ infoboard.bowNotDropped=弓：§a未掉落§r
 infoboard.bowDropped=弓：§c已掉落§r
 infoboard.throwing=投掷中：§a%s秒§r
 infoboard.charging=填充中：§a%s秒§r
+infoboard.optOutSpectate.enabled=§c主动旁观已启用

@@ -253,7 +253,7 @@ class MurderMysterySystem {
         this.gameStage = GameStage.WaitingStage;
 
         // 初始化所有玩家
-        const players = this.getPlayersBeforeGame();
+        const players = this.getPlayersBeforeGame(true);
         players.forEach(player => this.initPlayer(player));
 
         // 移除多余实体
@@ -433,37 +433,67 @@ class MurderMysterySystem {
         }
     }
 
-    /** 在开始游戏前获取可能参与游戏的有效玩家。 */
-    getPlayersBeforeGame() {
-        const players = minecraft.world.getPlayers();
+    /** 在开始游戏前获取可能参与游戏的有效玩家。
+     * @param includeOptOutSpectators 是否包含主动旁观的玩家。
+     */
+    getPlayersBeforeGame(includeOptOutSpectators = false) {
+        // 若玩家的动态属性 "murder_mystery:optOutSpectate" 为 undefined，则为正常参与游戏，否则为主动旁观，不考虑该玩家
+        const players = minecraft.world.getPlayers().filter(player => {
+            const isOptOutSpectator = MurderMysterySystem.getOptOutSpectateState(player) !== "none";
+            if (!includeOptOutSpectators && isOptOutSpectator) return false;
+            return true;
+        });
         const fakePlayers = lib.EntityUtils.getType("murder_mystery:fake_player");
         return [...players, ...fakePlayers];
     }
 
     /** 分配身份，并传送玩家。 */
     assignRole() {
-        const players = lib.JSUtils.array.shuffle(this.getPlayersBeforeGame());
+        /** 所有玩家（包括主动旁观的玩家）。 */
+        let players = lib.JSUtils.array.shuffle(this.getPlayersBeforeGame(true));
         const locations = lib.JSUtils.array.shuffle(this.mapData.description.spawnPoints);
         const maxPlayerCount = this.settings.waiting.maxPlayerCount;
         const maxLocationCount = locations.length;
-        players.forEach((player, index) => {
-            // 隐藏玩家的名称
+
+        /** 处理玩家，包括设置名字为空、传送玩家、设置重生点。 */
+        function dealPlayer(player: minecraft.Entity, index: number) {
             player.nameTag = "";
-
-            // 分配身份，第 1 名玩家设置为杀手，第 2 名玩家设置为侦探，
-            // 第 3 ~ maxPlayerCount 名玩家设置为平民，其余玩家设置为旁观者
-            if (index === 0) {
-                this.addPlayer({ player, role: MurderMysteryPlayerRole.Murderer });
-            } else if (index === 1) this.addPlayer({ player, role: MurderMysteryPlayerRole.Detective });
-            else if (index >= 2 && index < maxPlayerCount) this.addPlayer({ player, role: MurderMysteryPlayerRole.Innocent });
-            else this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
-
-            // 传送玩家并设置重生点
             const location = locations[index % maxLocationCount] as minecraft.Vector3;
             player.teleport(location);
             if (isPlayer(player)) {
                 player.setSpawnPoint({ ...location, dimension: lib.DimensionUtils.getOverworld() });
             }
+        }
+
+        // ===== 主动旁观玩家筛选 =====
+        // 先筛掉主动旁观玩家，然后再分配玩家身份。
+        players
+            .filter(player => MurderMysterySystem.getOptOutSpectateState(player) !== "none")
+            .forEach(player => {
+                const optOutSpectateState = MurderMysterySystem.getOptOutSpectateState(player);
+                if (optOutSpectateState !== "none") this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
+                // 如果玩家此时是仅下局旁观，则改回 none
+                if (optOutSpectateState === "nextGame") MurderMysterySystem.setOptOutSpectateState(player, "none");
+                // 更改全部玩家列表，将该玩家弹出
+                players = players.filter(leftPlayer => leftPlayer.id !== player.id);
+                // 处理玩家
+                dealPlayer(player, 0);
+            });
+
+        // ===== 非主动旁观玩家筛选 =====
+        players.forEach((player, index) => {
+            // ===== 处理玩家 =====
+            dealPlayer(player, index);
+
+            // ===== 分配玩家身份 =====
+            // 第 1 名玩家设置为杀手
+            if (index === 0) return this.addPlayer({ player, role: MurderMysteryPlayerRole.Murderer });
+            // 第 2 名玩家设置为侦探
+            if (index === 1) return this.addPlayer({ player, role: MurderMysteryPlayerRole.Detective });
+            // 第 3 - maxPlayerCount 名玩家设置为平民
+            if (index >= 2 && index < maxPlayerCount) return this.addPlayer({ player, role: MurderMysteryPlayerRole.Innocent });
+            // 其余玩家设置为旁观者
+            this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
         });
     }
 
@@ -513,21 +543,31 @@ class MurderMysterySystem {
         player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
     }
 
+    /** 获取玩家的主动旁观状态。 */
+    static getOptOutSpectateState(player: minecraft.Entity) {
+        const state = player.getDynamicProperty("murder_mystery:optOutSpectate") as undefined | "nextGame" | "always";
+        return state ?? "none";
+    }
+
+    /** 设置玩家的主动旁观状态。 */
+    static setOptOutSpectateState(player: minecraft.Entity, state: "nextGame" | "always" | "none") {
+        player.setDynamicProperty("murder_mystery:optOutSpectate", state === "none" ? void 0 : state);
+    }
+
     // #endregion
     // #region - 系统功能
 
     /** 获取游戏前信息板。 */
-    getBeforeGameInfoboard() {
+    getBeforeGameInfoboard(player: minecraft.Player) {
         const { id: mapName, mode: mapMode } = this.mapData.description;
         const { startCountdown, currentPlayerCount, maxPlayerCount, playerIsEnough } = this.beforeGameInfo;
-        const stateText: minecraft.RawMessage = (() => {
-            if (playerIsEnough)
-                return {
-                    translate: "infoboard.countdown",
-                    with: [`${startCountdown}`],
-                };
-            return { translate: "infoboard.waiting" };
-        })();
+        const stateText: minecraft.RawMessage = playerIsEnough
+            ? { translate: "infoboard.countdown", with: [`${startCountdown}`] }
+            : { translate: "infoboard.waiting" };
+        const optOutSpectateEnabled: minecraft.RawMessage[] =
+            MurderMysterySystem.getOptOutSpectateState(player) === "none"
+                ? []
+                : [{ text: "" }, { translate: "infoboard.optOutSpectate.enabled" }];
         const texts: minecraft.RawMessage[] = [
             { translate: "infoboard.title" },
             { text: `§7${lib.JSUtils.timeDisplay.formatDateToYYMMDD()} §8${this.gameId}` },
@@ -546,6 +586,7 @@ class MurderMysterySystem {
             stateText,
             { text: `` },
             { translate: "infoboard.mode", with: { rawtext: [{ translate: `mode.${mapMode}` }] } },
+            ...optOutSpectateEnabled,
             { text: `` },
             { text: `§e${this.settings.miscellaneous.infoboardLastLine}` },
         ];
@@ -1507,6 +1548,12 @@ class MurderMysterySettings {
             { type: "label", text: { translate: "ui.settings.main.playerSettings" } },
             {
                 type: "button",
+                text: { translate: "ui.settings.main.optOutSpectate" },
+                icon: "textures/items/ender_eye",
+                onClick: () => this.showOptOutSpectateUI(system, player),
+            },
+            {
+                type: "button",
                 text: { translate: "ui.settings.main.about" },
                 icon: "textures/items/spyglass",
                 onClick: () => this.showAboutUI(system, player),
@@ -1689,6 +1736,68 @@ class MurderMysterySettings {
                 { type: "divider" },
                 { type: "label", text: `§a§l${system.version}` },
                 ...textComponent,
+            ],
+        });
+    }
+
+    /** 对玩家显示主动旁观 UI。 */
+    private static showOptOutSpectateUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const currentState = MurderMysterySystem.getOptOutSpectateState(player);
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.settings.optoutspectate.title" } },
+                {
+                    type: "label",
+                    text: {
+                        translate: "ui.settings.optoutspectate.description",
+                        with: { rawtext: [{ translate: `ui.settings.optoutspectate.${currentState}` }] },
+                    },
+                },
+                { type: "divider" },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.optoutspectate.none" },
+                    onClick: () => {
+                        MurderMysterySystem.setOptOutSpectateState(player, "none");
+                        lib.PlayerUtils.notify(player, {
+                            message: {
+                                translate: "chat.youChose",
+                                with: { rawtext: [{ translate: "ui.settings.optoutspectate.none" }] },
+                            },
+                            sound: "random.orb",
+                        });
+                    },
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.optoutspectate.nextGame" },
+                    onClick: () => {
+                        MurderMysterySystem.setOptOutSpectateState(player, "nextGame");
+                        lib.PlayerUtils.notify(player, {
+                            message: {
+                                translate: "chat.youChose",
+                                with: { rawtext: [{ translate: "ui.settings.optoutspectate.nextGame" }] },
+                            },
+                            sound: "random.orb",
+                        });
+                    },
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.optoutspectate.always" },
+                    onClick: () => {
+                        MurderMysterySystem.setOptOutSpectateState(player, "always");
+                        lib.PlayerUtils.notify(player, {
+                            message: {
+                                translate: "chat.youChose",
+                                with: { rawtext: [{ translate: "ui.settings.optoutspectate.always" }] },
+                            },
+                            sound: "random.orb",
+                        });
+                    },
+                },
             ],
         });
     }
@@ -2159,8 +2268,10 @@ class MurderMysteryComponents {
                 case GameStage.ClearStage:
                 case GameStage.LoadStage:
                 case GameStage.WaitingStage:
-                    const texts = system.getBeforeGameInfoboard();
-                    lib.PlayerUtils.getAll().forEach(player => player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts)));
+                    lib.PlayerUtils.getAll().forEach(player => {
+                        const texts = system.getBeforeGameInfoboard(player);
+                        player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts));
+                    });
                     break;
                 case GameStage.GamingStage:
                 case GameStage.GameOverStage:
