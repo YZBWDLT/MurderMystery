@@ -2453,7 +2453,7 @@ class MurderMysteryComponents {
                     system.settings.gaming.getSpecialItemDelay - (system.settings.gaming.timePerGame - system.timeLeft);
 
                 // 对玩家提示
-                murdererGetSwordNotice(getSpecialItemTimeLeft);
+                if (getSpecialItemTimeLeft <= 5) murdererGetSwordNotice(getSpecialItemTimeLeft);
 
                 // 当倒计时结束后，给予杀手和侦探道具并对所有玩家提示
                 if (getSpecialItemTimeLeft <= 0) {

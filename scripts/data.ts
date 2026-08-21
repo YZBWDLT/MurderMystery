@@ -5769,6 +5769,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
             hasFullFunction: false,
         },
+        components: {
+            time: 18000,
+        },
     },
     // #endregion
 
@@ -5778,12 +5781,12 @@ export const maps: Record<string, MurderMysteryMapData> = {
             id: "sanPeraticoV1",
             mode: "classic",
             waitHall: {
-                location: { x: -996, y: 34, z: -34 },
-                facingLocation: { x: -997, y: 34, z: -34 },
+                location: { x: -992, y: 39, z: -45 },
+                facingLocation: { x: -991, y: 39, z: -45 },
             },
             range: {
-                from: { x: -1000, y: 5, z: -100 }, // -1000 5 -100
-                to: { x: -870, y: 80, z: 5 }, // -870 80 5
+                from: { x: -1000, y: 5, z: -100 }, //-1000 5 -100
+                to: { x: -870, y: 80, z: 5 }, //-870 80 5
             },
             spawnPoints: [
                 { x: -982.5, y: 27.5, z: -56.5 },
@@ -7285,13 +7288,16 @@ export const maps: Record<string, MurderMysteryMapData> = {
             hasFullFunction: false,
             enabledByDefault: false,
         },
+        components: {
+            time: 18000,
+        },
     },
     // #endregion
 
     // #region - 雪中平安夜
     snowfall: {
         description: {
-            id: "snowfallV2",
+            id: "snowfall",
             mode: "classic",
             waitHall: {
                 location: { x: -885, y: 90, z: -4054 },
@@ -7660,6 +7666,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: -853.5, y: 90.5, z: -4095.5 },
             ],
             hasFullFunction: false,
+        },
+        components: {
+            time: 18000,
         },
     },
     // #endregion
@@ -8671,8 +8680,8 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 facingLocation: { x: 1087, y: 131, z: -4026 },
             },
             range: {
-                from: { x: 1060, y: 30, z: -4070 }, //1060 30 -4070
-                to: { x: 1150, y: 160, z: -3980 }, //1150 160 -3980
+                from: { x: 1060, y: 30, z: -4070 }, // 1060 30 -4070
+                to: { x: 1150, y: 160, z: -3980 }, // 1150 160 -3980
             },
             spawnPoints: [
                 { x: 1084.5, y: 101.5, z: -4025.5 },
