@@ -2366,7 +2366,7 @@ class MurderMysteryComponents {
                 function countdownNotice(countdown: string, showTitle = true) {
                     lib.PlayerUtils.broadcast({
                         message: {
-                            translate: countdown === "1" ? "chat.beforeGameStart.countdown.1s" : "chat.beforeGameStart.countdown",
+                            translate: countdown === "§c1" ? "chat.beforeGameStart.countdown.1s" : "chat.beforeGameStart.countdown",
                             with: [countdown],
                         },
                         title: showTitle ? countdown : void 0,
