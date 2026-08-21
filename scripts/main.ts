@@ -1628,6 +1628,10 @@ class MurderMysterySettings {
     private static showAboutUI(system: MurderMysterySystem, player: minecraft.Player) {
         const author: lib.FormLabelComponent[] = gameData.about.author.map(text => ({ type: "label", text: `§a${text}` }));
         const map: lib.FormLabelComponent[] = gameData.about.map.map(text => ({ type: "label", text: `§a${text}` }));
+        const customHeadAdaption: lib.FormLabelComponent[] = gameData.about.customHeadAdaption.map(text => ({
+            type: "label",
+            text: `§a${text}`,
+        }));
         const tester: lib.FormLabelComponent[] = gameData.about.tester.map(text => ({ type: "label", text: `§a${text}` }));
         const specialThanks: lib.FormLabelComponent[] = gameData.about.specialThanks.map(text => ({
             type: "label",
@@ -1650,6 +1654,10 @@ class MurderMysterySettings {
 
                 { type: "label", text: { translate: "ui.settings.about.map" } },
                 ...map,
+                { type: "divider" },
+
+                { type: "label", text: { translate: "ui.settings.about.customHeadAdaption" } },
+                ...customHeadAdaption,
                 { type: "divider" },
 
                 { type: "label", text: { translate: "ui.settings.about.tester" } },

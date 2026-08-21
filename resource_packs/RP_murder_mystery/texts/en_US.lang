@@ -48,10 +48,10 @@ map.library=Library
 map.sanPeraticoV1=San Peratico V1
 map.skywayPier=Skyway Pier
 map.spookyMansionV1=Spooky Mansion V1
-map.spookyMansionV2=Spooky Mansion V2
+map.spookyMansionV2=Spooky Mansion
 map.towerFall=Tower Fall
 map.transportV1=Transport V1
-map.transportV2=Transport V2
+map.transportV2=Transport
 map.widowsDen=Widow's Den
 
 ### Mode name
@@ -264,6 +264,7 @@ ui.settings.about.title=About Us
 ui.settings.about.author=§lAuthor
 ui.settings.about.version=§lVersion
 ui.settings.about.map=§lMap Adaptation
+ui.settings.about.customHeadAdaption=§lIn-Map Custom Head Adaptation
 ui.settings.about.tester=§lTesters
 ui.settings.about.specialThanks=§lSpecial Thanks
 

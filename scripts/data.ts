@@ -104,6 +104,9 @@ export const about = {
     /** 地图适配。 */
     map: ["珂朵莉 (Tetrisoo)", "狂野巴豆 (Andy7343)"],
 
+    /** 地图内自定义头颅适配。 */
+    customHeadAdaption: ["南瓜汁 (PumpkinJui)", "o绿叶o (GreeLeaf)", "KrisChamber文雨 (KrisWenYu)", "狂野巴豆 (Andy7343)"],
+
     /** 测试员。 */
     tester: ["1.0 正式版更新后同步……"],
 

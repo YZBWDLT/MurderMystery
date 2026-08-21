@@ -48,10 +48,10 @@ map.library=图书馆
 map.sanPeraticoV1=港口小镇 V1
 map.skywayPier=水上度假村
 map.spookyMansionV1=阴森庄园 V1
-map.spookyMansionV2=阴森庄园 V2
+map.spookyMansionV2=阴森庄园
 map.towerFall=高坠塔
 map.transportV1=运输塔 V1
-map.transportV2=运输塔 V2
+map.transportV2=运输塔
 map.widowsDen=黑寡妇巢穴
 
 ### 模式名
@@ -264,6 +264,7 @@ ui.settings.about.title=关于我们
 ui.settings.about.author=§l作者
 ui.settings.about.version=§l版本
 ui.settings.about.map=§l地图适配
+ui.settings.about.customHeadAdaption=§l地图内自定义头颅适配
 ui.settings.about.tester=§l测试员
 ui.settings.about.specialThanks=§l特别感谢
 
