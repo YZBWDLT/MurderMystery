@@ -226,6 +226,7 @@ class MurderMysterySystem {
         MurderMysteryComponents.onPlayerHurt(this);
         MurderMysteryComponents.interaction(this);
         MurderMysteryComponents.settings(this);
+        MurderMysteryComponents.sendMessageToSpectator(this);
 
         // 注册可选组件
         MurderMysteryComponents.applyNightVision(this);
@@ -1479,6 +1480,27 @@ class MurderMysterySettings {
     static showMainSettingsUI(system: MurderMysterySystem, player: minecraft.Player) {
         // ===== 变量准备 =====
 
+        /** 旁观者选项。 */
+        const spectatorSettings: lib.ActionUIComponent[] = [];
+        const playerData = system.getPlayer(player);
+        if (playerData && playerData.isDead)
+            spectatorSettings.push(
+                { type: "divider" },
+                { type: "label", text: { translate: "ui.settings.main.spectatorSettings" } },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.teleportTo" },
+                    icon: "textures/ui/dressing_room_skins",
+                    onClick: () => this.showTeleportToUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.sendMessage" },
+                    icon: "textures/ui/chat_send",
+                    onClick: () => this.showSendMessageToSpectatorUI(system, player),
+                }
+            );
+
         /** 玩家设置选项。 */
         const playerSettings: lib.ActionUIComponent[] = [
             { type: "divider" },
@@ -1496,21 +1518,6 @@ class MurderMysterySettings {
                 onClick: () => this.showUpdateLogUI(system, player),
             },
         ];
-
-        /** 旁观者选项。 */
-        const spectatorSettings: lib.ActionUIComponent[] = [];
-        const playerData = system.getPlayer(player);
-        if (playerData && playerData.isDead)
-            spectatorSettings.push(
-                { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.main.spectatorSettings" } },
-                {
-                    type: "button",
-                    text: { translate: "ui.settings.main.teleportTo" },
-                    icon: "textures/ui/dressing_room_skins",
-                    onClick: () => this.showTeleportToUI(system, player),
-                }
-            );
 
         /** 管理员设置选项。 */
         const operatorSettings: lib.ActionUIComponent[] = [];
@@ -1582,8 +1589,8 @@ class MurderMysterySettings {
             type: "action",
             components: [
                 { type: "header", text: { translate: "ui.settings.main.title" } },
-                ...playerSettings,
                 ...spectatorSettings,
+                ...playerSettings,
                 ...operatorSettings,
                 ...developerSettings,
             ],
@@ -2105,6 +2112,28 @@ class MurderMysterySettings {
                 { type: "label", text: { translate: "ui.spectatorTeleport.line1" } },
                 { type: "divider" },
                 ...playerList,
+            ],
+        });
+    }
+
+    /** 对玩家显示在旁观者频道发言 UI。 */
+    static showSendMessageToSpectatorUI(system: MurderMysterySystem, player: minecraft.Player) {
+        // 显示 UI
+        lib.UIUtils.createModal(player, {
+            type: "modal",
+            components: [
+                { type: "header", text: { translate: "ui.settings.sendMessage.title" } },
+                { type: "label", text: { translate: "ui.settings.sendMessage.description" } },
+                { type: "divider" },
+                {
+                    type: "textField",
+                    description: "",
+                    placeholderText: "",
+                    onSubmit: message => {
+                        system.getPlayer(player)?.sendMessageToSpectators(message.replace(/%/g, "%%"));
+                    },
+                },
+                { type: "label", text: { translate: "ui.settings.sendMessage.tip" } },
             ],
         });
     }
@@ -3109,6 +3138,22 @@ class MurderMysteryComponents {
         );
     }
 
+    /** 旁观者在旁观者频道发送消息组件。
+     * @description 当旁观者玩家使用`/s <message>`命令时，对所有旁观者发送消息。
+     */
+    static sendMessageToSpectator(system: MurderMysterySystem) {
+        lib.gameSystem.subscribeEvent("sendMessageToSpectator", minecraft.system.afterEvents.scriptEventReceive, event => {
+            // 条件筛选
+            if (event.id !== "murder_mystery:sendSpectatorMessage") return;
+            // 获取变量
+            const player = event.sourceEntity;
+            if (!player) return;
+            if (!isPlayer(player)) return;
+            // 调用 UI
+            MurderMysterySettings.showSendMessageToSpectatorUI(system, player);
+        });
+    }
+
     // #endregion
     // #region - 开始后可选
 
@@ -3556,6 +3601,27 @@ class MurderMysteryPlayer {
     }
 
     // #endregion
+    // #region - 旁观者
+
+    /** 当玩家为死亡玩家时，对其他玩家发送消息。 */
+    sendMessageToSpectators(message: string) {
+        // 如果不是玩家，终止运行
+        const player = this.player;
+        if (!isPlayer(player)) return;
+
+        // 如果不是旁观者，终止运行
+        if (!this) return player.sendMessage({ translate: "command.s.error.notASpectator" });
+        if (!this.isDead) return player.sendMessage({ translate: "command.s.error.notASpectator" });
+
+        // 对所有旁观者发送消息
+        this.system.players.allPlayers.forEach(spectatorData => {
+            if (!spectatorData.isDead) return;
+            if (!isPlayer(spectatorData.player)) return;
+            spectatorData.player.sendMessage({ translate: "command.s.success", with: [`${player.name}`, `${message}`] });
+        });
+    }
+
+    // #endregion
     // #region - 定位栏
 
     /** 使玩家获取定位器。 */
@@ -3719,6 +3785,30 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
         tickingArea.then(() => new MurderMysterySystem(nextMap));
     }, 20);
     lib.gameSystem.showDebugMessage = false;
+});
+
+// 创建一条新命令 /s <message>，使旁观者在旁观者频道发言
+minecraft.system.beforeEvents.startup.subscribe(event => {
+    event.customCommandRegistry.registerCommand(
+        {
+            name: "murder_mystery:s",
+            description: "在旁观者频道发言。",
+            permissionLevel: minecraft.CommandPermissionLevel.Any,
+        },
+        (origin, message: string) => {
+            // 如果不是玩家执行，则报错
+            const notAPlayerError: minecraft.CustomCommandResult = {
+                message: "执行者必须为玩家",
+                status: minecraft.CustomCommandStatus.Failure,
+            };
+            const player = origin.sourceEntity;
+            if (!player) return notAPlayerError;
+            if (!isPlayer(player)) return notAPlayerError;
+
+            // 令玩家发送脚本消息
+            minecraft.system.run(() => player.runCommand(`scriptevent murder_mystery:sendSpectatorMessage ${message}`));
+        }
+    );
 });
 
 // #endregion

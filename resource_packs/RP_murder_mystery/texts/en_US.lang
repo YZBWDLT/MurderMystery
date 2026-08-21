@@ -31,6 +31,12 @@ item.murder_mystery:mystery_potion_4=§a??? Mystery Potion ???
 item.murder_mystery:locator=Locator
 item.murder_mystery:settings=Settings
 
+## ===== Command =====
+
+### /s <message: string>: Chat in the spectator channel.
+command.s.error.notASpectator=§cYou are not a spectator and cannot execute this command!
+command.s.success=§7[Spectator] %s: %s
+
 ## ===== Noun Translations =====
 
 ### Map name
@@ -257,6 +263,7 @@ ui.settings.main.about=About Us
 ui.settings.main.updateLog=Update Log
 ui.settings.main.spectatorSettings=§lSpectator Settings
 ui.settings.main.teleportTo=Teleport To...
+ui.settings.main.sendMessage=Send Message...
 ui.settings.main.operatorSettings=§lOperator Settings
 ui.settings.main.selectMap=Select Map
 ui.settings.main.enableMap=Enable Map...
@@ -352,6 +359,11 @@ ui.settings.miscellaneous.infoboardLastLine.description=The content of last line
 ui.settings.fakePlayerManager.title=Manage Fake Player
 ui.settings.fakePlayerManager.addAmount.title=Add fake player amount
 ui.settings.fakePlayerManager.addAmount.description=The number of fake players to add. If negative, it represents the number to remove.
+
+### Send Message UI
+ui.settings.sendMessage.title=Send Message
+ui.settings.sendMessage.description=Send a message to other spectators. Alive players will not see these messages.
+ui.settings.sendMessage.tip=§7You can also use §b/s§7 to bring up this UI.
 
 ui.settings.defaultSettings.title=Change to Default
 

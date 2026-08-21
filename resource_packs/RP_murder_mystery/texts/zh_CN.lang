@@ -31,6 +31,12 @@ item.murder_mystery:mystery_potion_4=§a？？？神秘药水？？？
 item.murder_mystery:locator=定位器
 item.murder_mystery:settings=设置
 
+## ===== 命令 =====
+
+### /s <message: string>：在旁观者频道发言。
+command.s.error.notASpectator=§c你不是旁观者，不能执行此命令！
+command.s.success=§7[旁观者] %s：%s
+
 ## ===== 名词翻译 =====
 
 ### 地图名
@@ -257,6 +263,7 @@ ui.settings.main.about=关于我们
 ui.settings.main.updateLog=更新日志
 ui.settings.main.spectatorSettings=§l旁观者设置
 ui.settings.main.teleportTo=传送到...
+ui.settings.main.sendMessage=发送消息...
 ui.settings.main.operatorSettings=§l管理员设置
 ui.settings.main.selectMap=选择地图
 ui.settings.main.enableMap=启用地图...
@@ -352,6 +359,11 @@ ui.settings.miscellaneous.infoboardLastLine.description=信息板最后一行的
 ui.settings.fakePlayerManager.title=假玩家管理器
 ui.settings.fakePlayerManager.addAmount.title=添加假玩家
 ui.settings.fakePlayerManager.addAmount.description=添加的假玩家数量。为负数时则为减少的数量。
+
+### 发送消息 UI
+ui.settings.sendMessage.title=发送消息
+ui.settings.sendMessage.description=对其他旁观者发送消息。存活玩家不会看到这些信息。
+ui.settings.sendMessage.tip=§7您也可以使用§b/s§7呼出这个 UI。
 
 ui.settings.defaultSettings.title=恢复默认设置
 
