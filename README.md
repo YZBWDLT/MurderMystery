@@ -46,8 +46,17 @@
 
 - 修复了在英语环境下，杀手获取刀剑时，剩余 1 秒提示"1 seconds"的问题
 - 同步了珂朵莉的 Java 版名字（Chthollies）
+- #55 修复了侦探弓冷却在设置为 0 时无法正确获取第 2 根箭的问题
+- #56 修复了飞刀有可能穿过普通方块继续飞下去的问题
 
 ### 技术性
 
 - 更新了主包的行为包和资源包版本为`1.0.15`
 - 更新了头颅包的行为包和资源包版本为`1.0.1`
+- 为`lib`新增了`gameSystem.unsubscribeTimelines()`方法和`gameSystem.unsubscribeEvents()`方法
+- 为密室杀手系统新增了`getOptOutSpectateState()`静态方法和`setOptOutSpectateState()`静态方法，以获取玩家当前的主动旁观设置
+- 为密室杀手系统新增了`getArrowHitState()`静态方法和`setArrowHitState()`静态方法，以获取箭是否击中
+- 现在特殊物品冷却交由`MurderMysteryPlayer.startCharging()`方法执行
+- 更名密室杀手组件`chargeAmmunition()`为`detectiveUseBow()`
+- 为密室杀手玩家添加了`shootArrow()`方法，以检查玩家射箭是否为侦探，若为侦探则应用冷却
+- 为密室杀手玩家添加了`throwingKnife()`方法、`knifeHitTest()`私有方法，并将`throwKnife()`改造为私有方法，现在通过调用`throwingKnife()`方法使玩家开始尝试飞刀，大幅简化了`murdererKnife()`组件的实现

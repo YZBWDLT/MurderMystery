@@ -67,6 +67,11 @@ class GameSystem {
         return true;
     }
 
+    /** 取消多个时间线。 */
+    unsubscribeTimelines(...ids: string[]) {
+        return ids.map(id => this.unsubscribeTimeline(id));
+    }
+
     /** 获取所有时间线的 ID。 */
     getAllTimelineIds() {
         return Object.keys(this.gameTimeline);
@@ -161,6 +166,11 @@ class GameSystem {
         delete this.gameEvent[id];
         if (this.showDebugMessage) minecraft.world.sendMessage(`§c- 事件 ${id}`);
         return true;
+    }
+
+    /** 取消多个事件。 */
+    unsubscribeEvents(...ids: string[]) {
+        return ids.map(id => this.unsubscribeEvent(id));
     }
 
     /** 获取所有事件 ID。 */
