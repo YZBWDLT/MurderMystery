@@ -335,6 +335,9 @@ class MurderMysterySystem {
      * @description 通知玩家游戏结束。
      */
     enterGameOverStage(reason: MurderMysteryGameOverReason, hero?: MurderMysteryPlayer) {
+        // 如果当前已经在游戏结束阶段，直接终止
+        if (this.gameStage === GameStage.GameOverStage) return;
+
         // 转换阶段并移除所有正在监听的时间线和事件
         lib.gameSystem.unsubscribeAllTimelines();
         lib.gameSystem.unsubscribeAllEvents();
@@ -3922,7 +3925,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
         // 在常加载区域加载完成后创立系统
         tickingArea.then(() => new MurderMysterySystem(nextMap));
     }, 20);
-    lib.gameSystem.showDebugMessage = true;
+    lib.gameSystem.showDebugMessage = false;
 });
 
 // 创建一条新命令 /s <message>，使旁观者在旁观者频道发言
