@@ -275,6 +275,9 @@ ui.settings.main.murdererSword=Murderer Sword...
 ui.settings.main.miscellaneous=Miscellaneous...
 ui.settings.main.developerSettings=§lDeveloper Settings
 ui.settings.main.fakePlayerManager=Manage Fake Player...
+ui.settings.main.restoreDefault=Restore Default Settings
+
+chat.settings.restoreDefault=§eAll settings have been restored to default values. Some settings may require a system restart to take effect.
 
 ### About Us UI
 ui.settings.about.title=About Us

@@ -1640,6 +1640,24 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.main.fakePlayerManager" },
                     onClick: () => this.showFakePlayerManagerUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.main.restoreDefault" },
+                    onClick: () => {
+                        const defaultSettings = new MurderMysterySettings();
+                        system.settings.gaming = defaultSettings.gaming;
+                        system.settings.goldSpawn = defaultSettings.goldSpawn;
+                        system.settings.mapEnabled = defaultSettings.mapEnabled;
+                        system.settings.miscellaneous = defaultSettings.miscellaneous;
+                        system.settings.murdererSword = defaultSettings.murdererSword;
+                        system.settings.waiting = defaultSettings.waiting;
+                        this.saveSettings(system);
+                        lib.PlayerUtils.notify(player, {
+                            message: { translate: "chat.settings.restoreDefault" },
+                            sound: "random.orb",
+                        });
+                    },
                 }
             );
 

@@ -275,6 +275,9 @@ ui.settings.main.murdererSword=杀手刀剑...
 ui.settings.main.miscellaneous=杂项...
 ui.settings.main.developerSettings=§l开发者设置
 ui.settings.main.fakePlayerManager=管理假玩家...
+ui.settings.main.restoreDefault=恢复默认设置
+
+chat.settings.restoreDefault=§e已将所有设置调整为默认值，部分设置需要重置系统以生效
 
 ### 关于我们 UI
 ui.settings.about.title=关于我们
