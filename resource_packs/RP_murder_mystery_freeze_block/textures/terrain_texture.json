@@ -1,0 +1,6 @@
+{
+    "resource_pack_name": "freeze_block",
+    "texture_data": {
+        "freeze_block_farm_land": { "textures": "textures/blocks/farmland_dry" }
+    }
+}

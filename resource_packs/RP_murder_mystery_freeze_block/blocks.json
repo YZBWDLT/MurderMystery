@@ -1,0 +1,4 @@
+{
+    "format_version": "1.21.40",
+    "freeze_block:farmland": { "sound": "gravel" }
+}

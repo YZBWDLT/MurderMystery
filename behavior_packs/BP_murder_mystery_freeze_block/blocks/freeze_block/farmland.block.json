@@ -1,0 +1,22 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:block": {
+        "description": {
+            "identifier": "freeze_block:farmland",
+            "menu_category": {
+                "category": "construction",
+                "group": "freeze_block:itemGroup.name.freeze_block"
+            }
+        },
+        "components": {
+            "minecraft:geometry": "geometry.farmland",
+            "minecraft:material_instances": {
+                "*": { "texture": "farmland_side" },
+                "up": { "texture": "freeze_block_farm_land" }
+            },
+            "minecraft:display_name": "tile.farmland.name",
+            "minecraft:collision_box": { "origin": [-8, 0, -8], "size": [16, 15, 16] },
+            "minecraft:selection_box": { "origin": [-8, 0, -8], "size": [16, 15, 16] }
+        }
+    }
+}

@@ -1,9 +1,9 @@
 {
     "format_version": 2,
     "header": {
-        "name": "量筒的密室杀手：自定义头颅包",
-        "description": "存储地图内所有自定义头颅的包",
-        "uuid": "de6a672e-585c-4fa2-9fe9-832963485d5a",
+        "name": "量筒的密室杀手：冻结方块包",
+        "description": "存储地图内所有冻结方块的包",
+        "uuid": "b08198ad-629d-4499-9579-7aad251c6247",
         "version": [1, 0, 16],
         "min_engine_version": [1, 26, 40]
     },
@@ -11,15 +11,15 @@
         {
             "type": "resources",
             "version": [1, 0, 0],
-            "uuid": "56398b17-fd48-4942-96f4-b0c98127a8d2"
+            "uuid": "0fe05ede-499b-47ce-9bd8-c940115f0325"
         }
     ],
     "metadata": {
-        "authors": ["YZBWDLT", "PumpkinJui", "GreeLeaf", "KrisWenYu"]
+        "authors": ["YZBWDLT", "GreeLeaf"]
     },
     "dependencies": [
         {
-            "uuid": "f9d13050-a65d-4bff-9029-28b9dad04064",
+            "uuid": "3a2bedee-b509-4ab6-8da4-3f2fbdb31e40",
             "version": [1, 0, 16]
         }
     ],
