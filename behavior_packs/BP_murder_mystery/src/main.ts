@@ -2775,6 +2775,7 @@ class MurderMysteryComponents {
         });
         // 弓箭射杀检测
         lib.gameSystem.subscribeEvent("playerKillTestArrow", minecraft.world.afterEvents.projectileHitEntity, event => {
+            // ===== 变量准备 & 条件筛选 =====
             const { projectile, source: attacker } = event;
             if (projectile.typeId !== "minecraft:arrow") return;
             if (!attacker) return;
@@ -2784,23 +2785,26 @@ class MurderMysteryComponents {
             if (!victim) return;
             const victimData = system.getPlayer(victim);
             if (!victimData) return;
+            const killDistance = lib.Vector3Utils.distance(attacker.location, victim.location);
+
+            // ===== 射中检查 =====
             // 考虑各个身份被射中时：
             switch (victimData.role) {
                 // 杀手被击杀
                 case MurderMysteryPlayerRole.Murderer:
-                    victimData.setDead(gameData.MurderMysteryDeathType.Player, attackerData);
+                    victimData.setDead(gameData.MurderMysteryDeathType.Player, attackerData, killDistance);
                     break;
                 // 平民或侦探被击杀
                 case MurderMysteryPlayerRole.Innocent:
                 case MurderMysteryPlayerRole.Detective:
                     // 被杀手杀死，则记录为杀手射杀
                     if (attackerData.role === MurderMysteryPlayerRole.Murderer)
-                        victimData.setDead(gameData.MurderMysteryDeathType.MurdererShot, attackerData);
+                        victimData.setDead(gameData.MurderMysteryDeathType.MurdererShot, attackerData, killDistance);
                     // 被自己杀死，则记录为自杀
                     else if (attacker.id === victim.id) victimData.setDead(gameData.MurderMysteryDeathType.ShotSelf, attackerData);
                     // 被其他人杀死，则记录为其他玩家射杀，并将射杀之人处死
                     else {
-                        victimData.setDead(gameData.MurderMysteryDeathType.Player, attackerData);
+                        victimData.setDead(gameData.MurderMysteryDeathType.Player, attackerData, killDistance);
                         attackerData.setDead(gameData.MurderMysteryDeathType.Manslaughter);
                     }
                     break;
@@ -3272,7 +3276,11 @@ class MurderMysteryPlayer {
     /** 设置玩家为已死亡，并对玩家播放死因。如果是侦探死亡，则全体公告。如果触发特定条件，会导致游戏结束。
      * @returns 返回是否成功将该玩家设定为死亡。
      */
-    setDead(deathType: gameData.MurderMysteryDeathType = gameData.MurderMysteryDeathType.Other, killer?: MurderMysteryPlayer) {
+    setDead(
+        deathType: gameData.MurderMysteryDeathType = gameData.MurderMysteryDeathType.Other,
+        killer?: MurderMysteryPlayer,
+        killDistance: number = 0,
+    ) {
         // 如果游戏已结束，直接终止
         if (this.system.gameStage !== GameStage.GamingStage) return false;
 
@@ -3306,11 +3314,11 @@ class MurderMysteryPlayer {
             // 对玩家显示死因
             lib.PlayerUtils.notify(this.player, {
                 title: { translate: "title.youDied" },
-                subtitle: { translate: `deathMessage.${deathType}` },
+                subtitle: { translate: `deathMessage.${deathType}`, with: [killDistance.toFixed(2)] },
                 titleOptions: instantTitleDisplay,
                 message: {
                     translate: "chat.youDied",
-                    with: { rawtext: [{ translate: `deathMessage.${deathType}` }] },
+                    with: { rawtext: [{ translate: `deathMessage.${deathType}`, with: [killDistance.toFixed(2)] }] },
                 },
                 sound: "mob.skeleton.death",
                 soundDelay: 3,
@@ -3659,9 +3667,9 @@ class MurderMysteryPlayer {
             if (hitPlayerRole === MurderMysteryPlayerRole.Spectator) return;
 
             // ===== 处死玩家 =====
-            hitPlayerData.setDead(gameData.MurderMysteryDeathType.MurdererKnife, this);
+            const distance = lib.Vector3Utils.distance(murderer.location, hitPlayer.location);
+            hitPlayerData.setDead(gameData.MurderMysteryDeathType.MurdererKnife, this, distance);
             if (isPlayer(murderer)) {
-                const distance = lib.Vector3Utils.distance(murderer.location, hitPlayer.location);
                 murderer.sendMessage({ translate: "chat.knifeKilledPlayer", with: [distance.toFixed(2)] });
             }
             stopTesting();
