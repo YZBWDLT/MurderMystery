@@ -1448,6 +1448,9 @@ type MurderMysteryMurdererSwordSettings = {
 type MurderMysteryMiscellaneousSettings = {
     /** 信息板最后一行的内容。默认为黄色字体。 */
     infoboardLastLine: string;
+
+    /** 获取金锭时是否提示玩家。 */
+    getGoldHint: boolean;
 };
 
 /** 密室杀手设置。在设置内包含众多玩家可以调控的设置项。 */
@@ -1505,6 +1508,7 @@ class MurderMysterySettings {
 
     /** 杂项设置，控制游戏中一些其他内容的设置项。 */
     miscellaneous: MurderMysteryMiscellaneousSettings = {
+        getGoldHint: true,
         infoboardLastLine: "YZBWDLT",
     };
 
@@ -2187,7 +2191,7 @@ class MurderMysterySettings {
 
     /** 对玩家显示杂项 UI。 */
     private static showMiscellaneousUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { infoboardLastLine } = system.settings.miscellaneous;
+        const { infoboardLastLine, getGoldHint } = system.settings.miscellaneous;
         this.generateSettingsUI(system, player, "miscellaneous", [
             {
                 type: "textField",
@@ -2197,6 +2201,15 @@ class MurderMysterySettings {
                 placeholderText: "",
                 onSubmit: result => {
                     system.settings.miscellaneous.infoboardLastLine = result;
+                },
+            },
+            {
+                type: "toggle",
+                description: { translate: "ui.settings.miscellaneous.getGoldHint.title" },
+                tipText: { translate: "ui.settings.miscellaneous.getGoldHint.description" },
+                default: getGoldHint,
+                onSubmit: result => {
+                    system.settings.miscellaneous.getGoldHint = result;
                 },
             },
         ]);
@@ -2717,7 +2730,8 @@ class MurderMysteryComponents {
             event => {
                 const { entity: player, items: goldIngot } = event;
                 if (!isPlayer(player)) return;
-                player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0]?.amount}`] });
+                if (system.settings.miscellaneous.getGoldHint)
+                    player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0]?.amount}`] });
                 const inventoryUtils = lib.ItemUtils.inventory;
                 // 锁定玩家的金锭到快捷栏的最后一位
                 inventoryUtils

@@ -1195,6 +1195,7 @@ class MurderMysterySettings {
     };
     /** 杂项设置，控制游戏中一些其他内容的设置项。 */
     miscellaneous = {
+        getGoldHint: true,
         infoboardLastLine: "YZBWDLT",
     };
     mapEnabled = {};
@@ -1805,7 +1806,7 @@ class MurderMysterySettings {
     }
     /** 对玩家显示杂项 UI。 */
     static showMiscellaneousUI(system, player) {
-        const { infoboardLastLine } = system.settings.miscellaneous;
+        const { infoboardLastLine, getGoldHint } = system.settings.miscellaneous;
         this.generateSettingsUI(system, player, "miscellaneous", [
             {
                 type: "textField",
@@ -1815,6 +1816,15 @@ class MurderMysterySettings {
                 placeholderText: "",
                 onSubmit: result => {
                     system.settings.miscellaneous.infoboardLastLine = result;
+                },
+            },
+            {
+                type: "toggle",
+                description: { translate: "ui.settings.miscellaneous.getGoldHint.title" },
+                tipText: { translate: "ui.settings.miscellaneous.getGoldHint.description" },
+                default: getGoldHint,
+                onSubmit: result => {
+                    system.settings.miscellaneous.getGoldHint = result;
                 },
             },
         ]);
@@ -2305,7 +2315,8 @@ class MurderMysteryComponents {
             const { entity: player, items: goldIngot } = event;
             if (!isPlayer(player))
                 return;
-            player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0]?.amount}`] });
+            if (system.settings.miscellaneous.getGoldHint)
+                player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0]?.amount}`] });
             const inventoryUtils = lib.ItemUtils.inventory;
             // 锁定玩家的金锭到快捷栏的最后一位
             inventoryUtils

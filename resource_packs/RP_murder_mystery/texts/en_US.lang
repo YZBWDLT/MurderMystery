@@ -366,6 +366,8 @@ ui.settings.miscellaneous.title=Miscellaneous Settings
 ui.settings.miscellaneous.description=Control other things in game.
 ui.settings.miscellaneous.infoboardLastLine.title=Last Line of Infoboard
 ui.settings.miscellaneous.infoboardLastLine.description=The content of last line of infoboard, with the color of yellow.
+ui.settings.miscellaneous.getGoldHint.title=Gold Pickup Hint
+ui.settings.miscellaneous.getGoldHint.description=Whether to notify the player when picking up gold ingots.
 
 ### Manage Fake Player UI
 ui.settings.fakePlayerManager.title=Manage Fake Player
