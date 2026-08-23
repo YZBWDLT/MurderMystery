@@ -237,6 +237,7 @@ hypixelWorld.monorail=Monorail
 hypixelWorld.rollerCoaster=Roller Coaster
 textDisplay.hypixelWorld.monorail=Monorail - 1§6 Gold
 textDisplay.hypixelWorld.rollerCoaster=Roller Coaster - 1§6 Gold
+chat.hypixelWorld.rideTwoMinecarts=§cYou cannot ride another minecart while already riding one!
 
 ### Trap
 textDisplay.trap=Trap - %s§6 Golds

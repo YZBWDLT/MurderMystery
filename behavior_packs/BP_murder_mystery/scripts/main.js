@@ -96,7 +96,7 @@ class MurderMysterySystem {
     }
     // #region - 系统变量
     /** 系统版本。 */
-    version = "1.0 - Exp 8";
+    version = "1.0 - Snapshot 8";
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage;
     /** 游戏设置信息，获取管理员等输入的设置信息，并自动应用于设置中。 */
@@ -335,7 +335,7 @@ class MurderMysterySystem {
     getPlayersBeforeGame(includeOptOutSpectators = false) {
         // 若玩家的动态属性 "murder_mystery:optOutSpectate" 为 undefined，则为正常参与游戏，否则为主动旁观，不考虑该玩家
         const players = minecraft.world.getPlayers().filter(player => {
-            const isOptOutSpectator = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
+            const isOptOutSpectator = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") !== "none";
             if (!includeOptOutSpectators && isOptOutSpectator)
                 return false;
             return true;
@@ -1049,9 +1049,18 @@ class MurderMysteryEventManager {
     rideMinecart(rideMinecartEvent, playerData) {
         // ===== 变量准备&条件检查 =====
         const { from, to, initVelocity, onArrival } = rideMinecartEvent;
+        // 如果不是玩家，阻止触发此事件
         const player = playerData.player;
         if (!isPlayer(player))
             return false;
+        // 如果玩家正在乘坐矿车，阻止重复触发此事件
+        if (playerData.isRidingMinecart) {
+            lib.PlayerUtils.notify(player, {
+                message: { translate: "chat.hypixelWorld.rideTwoMinecarts" },
+                sound: "random.anvil_land",
+            });
+            return false;
+        }
         // ===== 生成矿车并锁定玩家 =====
         // 生成矿车并施加初始速度
         let minecart = lib.EntityUtils.add("minecraft:minecart", from);
@@ -1064,6 +1073,8 @@ class MurderMysteryEventManager {
         if (!rideableComp)
             return false;
         rideableComp.addRider(player);
+        // 标记玩家正在乘坐矿车
+        playerData.isRidingMinecart = true;
         // 如果玩家的矿车坏掉了，则立刻补充一个新的矿车
         lib.gameSystem.subscribeEvent(`prevent${player.id}MinecartDestroyed`, minecraft.world.beforeEvents.entityRemove, event => {
             // 如果不是这辆矿车被破坏就不管它
@@ -1093,6 +1104,8 @@ class MurderMysteryEventManager {
                 // 恢复玩家的权限
                 player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
                 player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
+                // 注销玩家乘坐中的矿车
+                playerData.isRidingMinecart = false;
                 // 先解除矿车无法被破坏的状态，再强制移除
                 lib.gameSystem.unsubscribeEvent(`prevent${player.id}MinecartDestroyed`);
                 minecart.remove();
@@ -3428,6 +3441,8 @@ class MurderMysteryPlayer {
     isInHauntedHouseDoor = false;
     /** 事件冷却列表。触发了特定事件后可能会导致特定类型的事件冷却，在冷却期内可指定为无法再次触发事件。 */
     eventCooldown = {};
+    /** 是否正在乘坐矿车。 */
+    isRidingMinecart = false;
 }
 // #endregion
 // #region 创建系统实例

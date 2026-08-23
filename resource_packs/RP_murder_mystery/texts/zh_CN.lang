@@ -237,6 +237,7 @@ hypixelWorld.monorail=单轨列车
 hypixelWorld.rollerCoaster=过山车
 textDisplay.hypixelWorld.monorail=单轨列车 - 1§6块金锭
 textDisplay.hypixelWorld.rollerCoaster=过山车 - 1§6块金锭
+chat.hypixelWorld.rideTwoMinecarts=§c你不能在乘坐矿车时再乘坐另一辆矿车！
 
 ### 陷阱
 textDisplay.trap=陷阱 - %s§6块金锭
