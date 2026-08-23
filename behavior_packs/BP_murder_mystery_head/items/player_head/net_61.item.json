@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.90",
+    "minecraft:item": {
+        "description": {
+            "identifier": "player_head:net_61",
+            "menu_category": { "category": "items", "group": "minecraft:itemGroup.name.skull" }
+        },
+        "components": {
+            "minecraft:block_placer": { "block": "player_head:net_61", "replace_block_item": true },
+            "minecraft:wearable": { "slot": "slot.armor.head", "hides_player_location": true },
+            "minecraft:display_name": { "value": "tile.player_head:net_61.name" },
+            "minecraft:rarity": "uncommon"
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Watch BP_murder_mystery",
+            "type": "shell",
+            "command": "tsc",
+            "args": ["-p", "behavior_packs/BP_murder_mystery/tsconfig.json", "--watch"],
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
+        },
+        {
+            "label": "Watch BP_murder_mystery_head",
+            "type": "shell",
+            "command": "tsc",
+            "args": ["-p", "behavior_packs/BP_murder_mystery_head/tsconfig.json", "--watch"],
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
+        },
+        {
+            "label": "Watch All",
+            "dependsOn": ["Watch BP_murder_mystery", "Watch BP_murder_mystery_head"],
+            "problemMatcher": []
+        }
+    ]
+}
