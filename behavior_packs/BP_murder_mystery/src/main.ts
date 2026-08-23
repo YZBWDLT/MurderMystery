@@ -1291,8 +1291,11 @@ class MurderMysteryEventManager {
             const rotation = minecart.getRotation().y;
             const velocity = minecart.getVelocity();
 
-            // 补充新矿车，把记录的 minecart 改为新矿车，然后让玩家强制乘坐
             minecraft.system.run(() => {
+                // 移除矿车掉落物
+                lib.ItemUtils.removeEntity("minecraft:minecart");
+
+                // 补充新矿车，把记录的 minecart 改为新矿车，然后让玩家强制乘坐
                 minecart = lib.EntityUtils.add(typeId, lib.Vector3Utils.add(location, 0, 0.5, 0), dimension, {
                     initialRotation: rotation,
                 });
