@@ -335,7 +335,7 @@ class MurderMysterySystem {
     getPlayersBeforeGame(includeOptOutSpectators = false) {
         // 若玩家的动态属性 "murder_mystery:optOutSpectate" 为 undefined，则为正常参与游戏，否则为主动旁观，不考虑该玩家
         const players = minecraft.world.getPlayers().filter(player => {
-            const isOptOutSpectator = MurderMysterySystem.getOptOutSpectateState(player) !== "none";
+            const isOptOutSpectator = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
             if (!includeOptOutSpectators && isOptOutSpectator)
                 return false;
             return true;
@@ -362,14 +362,14 @@ class MurderMysterySystem {
         // ===== 主动旁观玩家筛选 =====
         // 先筛掉主动旁观玩家，然后再分配玩家身份。
         players
-            .filter(player => MurderMysterySystem.getOptOutSpectateState(player) !== "none")
+            .filter(player => MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") !== "none")
             .forEach(player => {
-            const optOutSpectateState = MurderMysterySystem.getOptOutSpectateState(player);
+            const optOutSpectateState = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
             if (optOutSpectateState !== "none")
                 this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
             // 如果玩家此时是仅下局旁观，则改回 none
             if (optOutSpectateState === "nextGame")
-                MurderMysterySystem.setOptOutSpectateState(player, "none");
+                MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "none");
             // 更改全部玩家列表，将该玩家弹出
             players = players.filter(leftPlayer => leftPlayer.id !== player.id);
             // 处理玩家
@@ -432,15 +432,6 @@ class MurderMysterySystem {
         }
         player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
     }
-    /** 获取玩家的主动旁观状态。 */
-    static getOptOutSpectateState(player) {
-        const state = player.getDynamicProperty("murder_mystery:optOutSpectate");
-        return state ?? "none";
-    }
-    /** 设置玩家的主动旁观状态。 */
-    static setOptOutSpectateState(player, state) {
-        player.setDynamicProperty("murder_mystery:optOutSpectate", state === "none" ? void 0 : state);
-    }
     // #endregion
     // #region - 系统功能
     /** 获取游戏前信息板。 */
@@ -450,7 +441,7 @@ class MurderMysterySystem {
         const stateText = playerIsEnough
             ? { translate: "infoboard.countdown", with: [`${startCountdown}`] }
             : { translate: "infoboard.waiting" };
-        const optOutSpectateEnabled = MurderMysterySystem.getOptOutSpectateState(player) === "none"
+        const optOutSpectateEnabled = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") === "none"
             ? []
             : [{ text: "" }, { translate: "infoboard.optOutSpectate.enabled" }];
         const texts = [
@@ -562,14 +553,14 @@ class MurderMysterySystem {
                 playerData.player.sendMessage({ translate: "chat.murdererQuit.gameOver" });
         });
     }
-    /** 获取箭是否击中了方块。 */
-    static getArrowHitState(arrow) {
-        const state = arrow.getDynamicProperty("murder_mystery:hit");
-        return state ?? false;
+    /** 获取实体的状态。状态列表可在 {@link DynamicProperties} 检查或注册。 */
+    static getState(entity, state, defaultValue) {
+        const property = entity.getDynamicProperty(state);
+        return property ?? defaultValue;
     }
-    /** 设置箭是否击中了方块。 */
-    static setArrowHitState(arrow, state) {
-        arrow.setDynamicProperty("murder_mystery:hit", state);
+    /** 设置实体的状态。状态列表可在 {@link DynamicProperties} 检查或注册。 */
+    static setState(entity, state, value) {
+        entity.setDynamicProperty(state, value);
     }
 }
 /** 事件管理器。用于管理游戏中可能存在的事件。 */
@@ -1441,7 +1432,7 @@ class MurderMysterySettings {
     }
     /** 对玩家显示主动旁观 UI。 */
     static showOptOutSpectateUI(system, player) {
-        const currentState = MurderMysterySystem.getOptOutSpectateState(player);
+        const currentState = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
         lib.UIUtils.createAction(player, {
             type: "action",
             onCancel: () => this.showMainSettingsUI(system, player),
@@ -1459,7 +1450,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.none" },
                     onClick: () => {
-                        MurderMysterySystem.setOptOutSpectateState(player, "none");
+                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "none");
                         lib.PlayerUtils.notify(player, {
                             message: {
                                 translate: "chat.youChose",
@@ -1473,7 +1464,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.nextGame" },
                     onClick: () => {
-                        MurderMysterySystem.setOptOutSpectateState(player, "nextGame");
+                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "nextGame");
                         lib.PlayerUtils.notify(player, {
                             message: {
                                 translate: "chat.youChose",
@@ -1487,7 +1478,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.always" },
                     onClick: () => {
-                        MurderMysterySystem.setOptOutSpectateState(player, "always");
+                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "always");
                         lib.PlayerUtils.notify(player, {
                             message: {
                                 translate: "chat.youChose",
@@ -2588,7 +2579,7 @@ class MurderMysteryComponents {
             if (arrow.typeId !== "minecraft:arrow")
                 return;
             arrow.triggerEvent("murder_mystery:remove_player_arrow");
-            MurderMysterySystem.setArrowHitState(arrow, true);
+            MurderMysterySystem.setState(arrow, "murder_mystery:hit", true);
         });
     }
     /** 杀手飞刀组件。
@@ -3266,7 +3257,7 @@ class MurderMysteryPlayer {
             const location = knife.location;
             const dimension = knife.dimension;
             const knifeCollideArrowDistance = this.system.settings.murdererSword.knifeCollideArrowDistance;
-            const arrowNearby = lib.EntityUtils.getNearby("minecraft:arrow", location, knifeCollideArrowDistance).filter(arrow => !MurderMysterySystem.getArrowHitState(arrow))[0];
+            const arrowNearby = lib.EntityUtils.getNearby("minecraft:arrow", location, knifeCollideArrowDistance).filter(arrow => !MurderMysterySystem.getState(arrow, "murder_mystery:hit", false))[0];
             // ===== 刀箭相碰逻辑 =====
             // 若刀和未射中的箭相距规定范围内，则直接销毁刀和箭，播放粒子和音效，结束事件检查后终止运行
             if (!arrowNearby)

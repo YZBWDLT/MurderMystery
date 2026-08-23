@@ -34,3 +34,5 @@
 
 - 更新了主包的行为包和资源包版本为`1.0.16`
 - 现在在 GitHub 的仓库上上传了标准的地图格式，可直接通过下载源代码直接游玩地图，而不再需要通过微软的`just-scripts`编译
+- 新增了`DynamicProperties`接口，并为密室杀手系统新增了`getState()`、`setState()`静态方法，以设置玩家的动态属性，并记录代码中应用的所有动态属性，便于管理
+  - 因此，移除了上个版本的`getOptOutSpectateState()`静态方法、`setOptOutSpectateState()`静态方法、`getArrowHitState()`静态方法、`setArrowHitState()`静态方法

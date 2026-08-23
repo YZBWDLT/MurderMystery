@@ -97,6 +97,21 @@ interface MurderMysteryBeforeGameInfo {
     countdownStarted: boolean;
 }
 
+/** 全部的动态属性列表。 */
+interface DynamicProperties {
+    /** 箭是否已经击中方块。该属性将会影响是否和杀手飞刀相碰。 | 适用实体：箭。 */
+    "murder_mystery:hit": boolean;
+
+    /** 玩家启用的主动旁观状态。 | 适用实体：玩家。 */
+    "murder_mystery:optOutSpectate": "nextGame" | "always" | "none";
+
+    /** 世界启用的设置。 @warning 这是世界的动态属性，不要直接在相关方法中使用。 */
+    "murder_mystery:settings": string;
+
+    /** 世界使用的下一张地图。若为`false`则终止运行，若为`undefined`则为随机生成地图。 @warning 这是世界的动态属性，不要直接在相关方法中使用。 */
+    "murder_mystery:nextMap": string | false | undefined;
+}
+
 /** 游戏结束的原因。 */
 enum MurderMysteryGameOverReason {
     /** 所有玩家死了。 */
@@ -442,7 +457,7 @@ class MurderMysterySystem {
     getPlayersBeforeGame(includeOptOutSpectators = false) {
         // 若玩家的动态属性 "murder_mystery:optOutSpectate" 为 undefined，则为正常参与游戏，否则为主动旁观，不考虑该玩家
         const players = minecraft.world.getPlayers().filter(player => {
-            const isOptOutSpectator = MurderMysterySystem.getOptOutSpectateState(player) !== "none";
+            const isOptOutSpectator = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
             if (!includeOptOutSpectators && isOptOutSpectator) return false;
             return true;
         });
@@ -471,12 +486,12 @@ class MurderMysterySystem {
         // ===== 主动旁观玩家筛选 =====
         // 先筛掉主动旁观玩家，然后再分配玩家身份。
         players
-            .filter(player => MurderMysterySystem.getOptOutSpectateState(player) !== "none")
+            .filter(player => MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") !== "none")
             .forEach(player => {
-                const optOutSpectateState = MurderMysterySystem.getOptOutSpectateState(player);
+                const optOutSpectateState = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
                 if (optOutSpectateState !== "none") this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
                 // 如果玩家此时是仅下局旁观，则改回 none
-                if (optOutSpectateState === "nextGame") MurderMysterySystem.setOptOutSpectateState(player, "none");
+                if (optOutSpectateState === "nextGame") MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "none");
                 // 更改全部玩家列表，将该玩家弹出
                 players = players.filter(leftPlayer => leftPlayer.id !== player.id);
                 // 处理玩家
@@ -546,17 +561,6 @@ class MurderMysterySystem {
         player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
     }
 
-    /** 获取玩家的主动旁观状态。 */
-    static getOptOutSpectateState(player: minecraft.Entity) {
-        const state = player.getDynamicProperty("murder_mystery:optOutSpectate") as undefined | "nextGame" | "always";
-        return state ?? "none";
-    }
-
-    /** 设置玩家的主动旁观状态。 */
-    static setOptOutSpectateState(player: minecraft.Entity, state: "nextGame" | "always" | "none") {
-        player.setDynamicProperty("murder_mystery:optOutSpectate", state === "none" ? void 0 : state);
-    }
-
     // #endregion
     // #region - 系统功能
 
@@ -568,7 +572,7 @@ class MurderMysterySystem {
             ? { translate: "infoboard.countdown", with: [`${startCountdown}`] }
             : { translate: "infoboard.waiting" };
         const optOutSpectateEnabled: minecraft.RawMessage[] =
-            MurderMysterySystem.getOptOutSpectateState(player) === "none"
+            MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") === "none"
                 ? []
                 : [{ text: "" }, { translate: "infoboard.optOutSpectate.enabled" }];
         const texts: minecraft.RawMessage[] = [
@@ -685,15 +689,19 @@ class MurderMysterySystem {
         });
     }
 
-    /** 获取箭是否击中了方块。 */
-    static getArrowHitState(arrow: minecraft.Entity) {
-        const state = arrow.getDynamicProperty("murder_mystery:hit") as boolean | undefined;
-        return state ?? false;
+    /** 获取实体的状态。状态列表可在 {@link DynamicProperties} 检查或注册。 */
+    static getState<T extends keyof DynamicProperties>(
+        entity: minecraft.Entity,
+        state: T,
+        defaultValue: DynamicProperties[T],
+    ): DynamicProperties[T] {
+        const property = entity.getDynamicProperty(state) as undefined | DynamicProperties[T];
+        return property ?? defaultValue;
     }
 
-    /** 设置箭是否击中了方块。 */
-    static setArrowHitState(arrow: minecraft.Entity, state: boolean) {
-        arrow.setDynamicProperty("murder_mystery:hit", state);
+    /** 设置实体的状态。状态列表可在 {@link DynamicProperties} 检查或注册。 */
+    static setState<T extends keyof DynamicProperties>(entity: minecraft.Entity, state: T, value: DynamicProperties[T]) {
+        entity.setDynamicProperty(state, value);
     }
 
     // #endregion
@@ -1778,7 +1786,7 @@ class MurderMysterySettings {
 
     /** 对玩家显示主动旁观 UI。 */
     private static showOptOutSpectateUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const currentState = MurderMysterySystem.getOptOutSpectateState(player);
+        const currentState = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
         lib.UIUtils.createAction(player, {
             type: "action",
             onCancel: () => this.showMainSettingsUI(system, player),
@@ -1796,7 +1804,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.none" },
                     onClick: () => {
-                        MurderMysterySystem.setOptOutSpectateState(player, "none");
+                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "none");
                         lib.PlayerUtils.notify(player, {
                             message: {
                                 translate: "chat.youChose",
@@ -1810,7 +1818,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.nextGame" },
                     onClick: () => {
-                        MurderMysterySystem.setOptOutSpectateState(player, "nextGame");
+                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "nextGame");
                         lib.PlayerUtils.notify(player, {
                             message: {
                                 translate: "chat.youChose",
@@ -1824,7 +1832,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.always" },
                     onClick: () => {
-                        MurderMysterySystem.setOptOutSpectateState(player, "always");
+                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "always");
                         lib.PlayerUtils.notify(player, {
                             message: {
                                 translate: "chat.youChose",
@@ -2977,7 +2985,7 @@ class MurderMysteryComponents {
             if (!arrow.isValid) return;
             if (arrow.typeId !== "minecraft:arrow") return;
             arrow.triggerEvent("murder_mystery:remove_player_arrow");
-            MurderMysterySystem.setArrowHitState(arrow, true);
+            MurderMysterySystem.setState(arrow, "murder_mystery:hit", true);
         });
     }
 
@@ -3688,7 +3696,7 @@ class MurderMysteryPlayer {
             const dimension = knife.dimension;
             const knifeCollideArrowDistance = this.system.settings.murdererSword.knifeCollideArrowDistance;
             const arrowNearby = lib.EntityUtils.getNearby("minecraft:arrow", location, knifeCollideArrowDistance).filter(
-                arrow => !MurderMysterySystem.getArrowHitState(arrow),
+                arrow => !MurderMysterySystem.getState(arrow, "murder_mystery:hit", false),
             )[0];
 
             // ===== 刀箭相碰逻辑 =====
