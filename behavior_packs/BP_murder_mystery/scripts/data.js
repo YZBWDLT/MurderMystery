@@ -2121,7 +2121,9 @@ export const maps = {
             ],
             hasFullFunction: false,
         },
-        components: {},
+        components: {
+            interaction: [{ blocks: ["minecraft:spruce_door"] }],
+        },
         events: {},
     },
     // #endregion
@@ -8250,6 +8252,9 @@ export const maps = {
                 { x: -39.5, y: 112.5, z: -4072.5 },
             ],
             hasFullFunction: false,
+        },
+        components: {
+            interaction: [{ blocks: ["minecraft:dark_oak_door"] }],
         },
     },
     // #endregion
