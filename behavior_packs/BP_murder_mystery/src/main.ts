@@ -350,7 +350,7 @@ class MurderMysterySystem {
                 MurderMysterySettings.saveSettings(this); // 保存本局设置，以便下局应用
                 minecraft.world.setDynamicProperty("murder_mystery:nextMap"); // 随机设置一张新地图
             },
-            200
+            200,
         );
 
         // 提醒玩家游戏结束，并返回胜者信息
@@ -431,7 +431,7 @@ class MurderMysterySystem {
         this.livingPlayers.allPlayers = this.livingPlayers.allPlayers.filter(player => player.player.id !== playerData.player.id);
         if (playerData.role !== MurderMysteryPlayerRole.Spectator) {
             this.livingPlayers[playerData.role] = this.livingPlayers[playerData.role].filter(
-                player => player.player.id !== playerData.player.id
+                player => player.player.id !== playerData.player.id,
             );
         }
     }
@@ -817,7 +817,7 @@ class MurderMysteryEventManager {
                         lib.PlayerUtils.notify(player, {
                             message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consumeGold}`] },
                             sound: "random.anvil_land",
-                        })
+                        }),
                     );
                 }
                 return false;
@@ -961,7 +961,7 @@ class MurderMysteryEventManager {
      */
     private getMysteryPotion(
         getMysteryPotionEvent: gameData.MurderMysteryGetMysteryPotionEvent,
-        playerData: MurderMysteryPlayer
+        playerData: MurderMysteryPlayer,
     ): boolean {
         // ===== 条件检查 =====
 
@@ -1021,7 +1021,7 @@ class MurderMysteryEventManager {
             "murder_mystery:mystery_potion",
             lib.Vector3Utils.add(animationLocation, 0.5, 0, 0.5),
             player.dimension,
-            { initialRotation: player.getRotation().y + 180, spawnEvent: potionId }
+            { initialRotation: player.getRotation().y + 180, spawnEvent: potionId },
         );
 
         /** 给予玩家药水的槽位。这里只有 3 个槽位可用：6 号位 -> 8 号位 -> 1 号位。如果这些槽位有空缺，则依次顺延。 */
@@ -1185,7 +1185,7 @@ class MurderMysteryEventManager {
 
     private intoHauntedHouseDoor(
         intoHauntedHouseDoorEvent: gameData.MurderMysteryIntoHauntedHouseDoorEvent,
-        playerData: MurderMysteryPlayer
+        playerData: MurderMysteryPlayer,
     ): boolean {
         // ===== 变量准备 =====
         const { doorLocation, voidGlassLocation, lavaCaveGlassLocation, voidBarrierLocation } = intoHauntedHouseDoorEvent;
@@ -1336,7 +1336,7 @@ class MurderMysteryEventManager {
             () => {
                 // 检查还有哪些玩家正处于倒计时下，如果没有玩家则终止这个时间线
                 const inCooldownPlayers = this.system.livingPlayers.allPlayers.filter(
-                    playerData => Object.keys(playerData.eventCooldown).length > 0
+                    playerData => Object.keys(playerData.eventCooldown).length > 0,
                 );
                 if (inCooldownPlayers.length === 0) return false;
                 // 如果仍有玩家处于冷却，对每个玩家的每个冷却 -1 秒倒计时
@@ -1350,7 +1350,7 @@ class MurderMysteryEventManager {
                     });
                 });
             },
-            20
+            20,
         );
         return true;
     }
@@ -1554,7 +1554,7 @@ class MurderMysterySettings {
                     text: { translate: "ui.settings.main.sendMessage" },
                     icon: "textures/ui/chat_send",
                     onClick: () => this.showSendMessageToSpectatorUI(system, player),
-                }
+                },
             );
 
         /** 玩家设置选项。 */
@@ -1629,7 +1629,7 @@ class MurderMysterySettings {
                     text: { translate: "ui.settings.main.miscellaneous" },
                     icon: "textures/items/diamond_pickaxe",
                     onClick: () => this.showMiscellaneousUI(system, player),
-                }
+                },
             );
 
         /** 开发者设置选项。 */
@@ -1661,7 +1661,7 @@ class MurderMysterySettings {
                             sound: "random.orb",
                         });
                     },
-                }
+                },
             );
 
         // ===== 显示设置界面 =====
@@ -1683,7 +1683,7 @@ class MurderMysterySettings {
         player: minecraft.Player,
         settingsName: K,
         components: lib.ModalUIComponent[],
-        submitCallback?: () => void
+        submitCallback?: () => void,
     ) {
         lib.UIUtils.createModal(player, {
             type: "modal",
@@ -1941,7 +1941,7 @@ class MurderMysterySettings {
                 system.beforeGameInfo.startCountdown = system.settings.waiting.startCountdown;
                 system.beforeGameInfo.minPlayerCount = system.settings.waiting.minPlayerCount;
                 system.beforeGameInfo.maxPlayerCount = system.settings.waiting.maxPlayerCount;
-            }
+            },
         );
     }
 
@@ -2044,7 +2044,7 @@ class MurderMysterySettings {
                 else {
                     lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
                 }
-            }
+            },
         );
     }
 
@@ -2537,7 +2537,7 @@ class MurderMysteryComponents {
                         break;
                 }
             },
-            20
+            20,
         );
     }
 
@@ -2593,7 +2593,7 @@ class MurderMysteryComponents {
                 }
                 if (system.timeLeft <= 0) system.enterGameOverStage(MurderMysteryGameOverReason.TimeOut);
             },
-            20
+            20,
         );
     }
 
@@ -2636,7 +2636,7 @@ class MurderMysteryComponents {
                     return false;
                 }
             },
-            20
+            20,
         );
     }
 
@@ -2721,7 +2721,7 @@ class MurderMysteryComponents {
                 }
                 playerData.getBow();
             },
-            { entityFilter: { type: "minecraft:player" }, itemFilter: { includeTypes: [goldId] } }
+            { entityFilter: { type: "minecraft:player" }, itemFilter: { includeTypes: [goldId] } },
         );
     }
 
@@ -2817,7 +2817,7 @@ class MurderMysteryComponents {
                     // 令拾取者拾取弓
                     system.getPlayer(picker)?.pickupBow(bowEntity);
                 },
-                3
+                3,
             );
         if (pickupBowMethod === "rightClick")
             lib.gameSystem.subscribeEvent(
@@ -2831,7 +2831,7 @@ class MurderMysteryComponents {
                     if (!isAliveInnocentData(pickerData)) return;
                     // 令拾取者拾取弓
                     pickerData.pickupBow(bowEntity);
-                }
+                },
             );
     }
 
@@ -2852,7 +2852,7 @@ class MurderMysteryComponents {
                         const location = player.location;
                         const { direction: outOfDirection, distance: outOfDistance } = lib.Vector3Utils.getVolumeSector(
                             location,
-                            gameVolume
+                            gameVolume,
                         );
                         if (!outOfDirection) return;
                         // 出界后，反向拉回玩家，拉回的距离为出界距离 + 10
@@ -2876,7 +2876,7 @@ class MurderMysteryComponents {
                         }
                     });
             },
-            20
+            20,
         );
     }
 
@@ -2925,7 +2925,7 @@ class MurderMysteryComponents {
         }
         // 真实玩家退出
         lib.gameSystem.subscribeEvent("playerLeaveTest", minecraft.world.beforeEvents.playerLeave, event =>
-            playerLeaveLogic(event.player)
+            playerLeaveLogic(event.player),
         );
         // 虚拟玩家退出
         lib.gameSystem.subscribeEvent("fakePlayerLeaveTest", minecraft.world.beforeEvents.entityRemove, event => {
@@ -3010,7 +3010,7 @@ class MurderMysteryComponents {
                         MurderMysterySettings.showMainSettingsUI(system, player);
                     });
             },
-            5
+            5,
         );
     }
 
@@ -3050,7 +3050,7 @@ class MurderMysteryComponents {
                 // 为杀手添加速度效果
                 murdererData.player.addEffect("speed", 300, { showParticles: false });
             },
-            21
+            21,
         );
     }
 
@@ -3131,7 +3131,7 @@ class MurderMysteryComponents {
                         });
                 });
             },
-            5
+            5,
         );
     }
 
@@ -3148,7 +3148,7 @@ class MurderMysteryComponents {
             },
             {
                 itemFilter: { includeTypes: [goldId] },
-            }
+            },
         );
     }
 
@@ -3256,7 +3256,7 @@ class MurderMysteryPlayer {
         const isOutOfMap = gameData.deathTypeOutOfMap.includes(deathType);
         if (this.player.getEffect("resistance") && !isOutOfMap) {
             lib.PlayerUtils.getNearby(this.player.location, 10).forEach(player =>
-                player.playSound("mob.irongolem.death", { pitch: 2 })
+                player.playSound("mob.irongolem.death", { pitch: 2 }),
             );
             this.player.dimension.spawnParticle("murder_mystery:invincible", this.player.location);
             return false;
@@ -3314,7 +3314,7 @@ class MurderMysteryPlayer {
             if (isOutOfMap) {
                 const closestSpawnPoint = lib.Vector3Utils.getClosest(
                     this.player.location,
-                    this.system.mapData.description.spawnPoints
+                    this.system.mapData.description.spawnPoints,
                 );
                 this.dropBow(true, lib.Vector3Utils.up(closestSpawnPoint, 1));
             }
@@ -3558,7 +3558,7 @@ class MurderMysteryPlayer {
             event => {
                 if (event.player.id !== murderer.id) return;
                 stopThrowing();
-            }
+            },
         );
 
         // 如果玩家再次使用刀，终止投刀
@@ -3685,7 +3685,7 @@ class MurderMysteryPlayer {
             const dimension = knife.dimension;
             const knifeCollideArrowDistance = this.system.settings.murdererSword.knifeCollideArrowDistance;
             const arrowNearby = lib.EntityUtils.getNearby("minecraft:arrow", location, knifeCollideArrowDistance).filter(
-                arrow => !MurderMysterySystem.getArrowHitState(arrow)
+                arrow => !MurderMysterySystem.getArrowHitState(arrow),
             )[0];
 
             // ===== 刀箭相碰逻辑 =====
@@ -3715,7 +3715,7 @@ class MurderMysteryPlayer {
                 if (!direction) return;
                 stopTesting();
             },
-            20
+            20,
         );
     }
 
@@ -3808,7 +3808,7 @@ class MurderMysteryPlayer {
                         ],
                     },
                     { showDead: false, showInvisible: true, showSneaking: true },
-                    locatesMurderer ? { red: 1, green: 0, blue: 0 } : { red: 1, green: 1, blue: 1 }
+                    locatesMurderer ? { red: 1, green: 0, blue: 0 } : { red: 1, green: 1, blue: 1 },
                 );
                 player.locatorBar.addWaypoint(waypoint);
             });
@@ -3845,7 +3845,7 @@ class MurderMysteryPlayer {
                         },
                     ],
                 },
-                { red: 0.333, green: 1, blue: 1 }
+                { red: 0.333, green: 1, blue: 1 },
             );
             player.locatorBar.removeAllWaypoints();
             player.locatorBar.addWaypoint(waypoint);
@@ -3948,7 +3948,7 @@ minecraft.system.beforeEvents.startup.subscribe(event => {
 
             // 令玩家发送脚本消息
             minecraft.system.run(() => player.runCommand(`scriptevent murder_mystery:sendSpectatorMessage ${message}`));
-        }
+        },
     );
 });
 
