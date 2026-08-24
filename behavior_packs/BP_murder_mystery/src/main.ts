@@ -1386,7 +1386,7 @@ class MurderMysteryEventManager {
 
 // #endregion
 // #region 设置
-type MurderMysteryWaitingSettings = {
+interface MurderMysteryWaitingSettings {
     /** 要开始游戏至少需要多少名玩家。 */
     minPlayerCount: number;
 
@@ -1395,9 +1395,9 @@ type MurderMysteryWaitingSettings = {
 
     /** 玩家人数足够后，游戏开始倒计时。单位：秒。 */
     startCountdown: number;
-};
+}
 
-type MurderMysteryGameSettings = {
+interface MurderMysteryGameSettings {
     /** 一局的游戏时长。单位：秒。 */
     timePerGame: number;
 
@@ -1415,9 +1415,9 @@ type MurderMysteryGameSettings = {
 
     /** 是否对所有玩家施加夜视状态效果。 */
     applyNightVision: boolean;
-};
+}
 
-type MurderMysteryGoldSpawnSettings = {
+interface MurderMysteryGoldSpawnSettings {
     /** 在玩家附近多少格的金点会尝试生成。 */
     spawnRadius: number;
 
@@ -1429,9 +1429,9 @@ type MurderMysteryGoldSpawnSettings = {
 
     /** 对于每位玩家，金锭的平均生成间隔。单位：秒。 */
     spawnInterval: number;
-};
+}
 
-type MurderMysteryMurdererSwordSettings = {
+interface MurderMysteryMurdererSwordSettings {
     /** 杀手在飞刀之后，多久后重新装填飞刀。单位：秒。 */
     knifeCooldown: number;
 
@@ -1443,15 +1443,15 @@ type MurderMysteryMurdererSwordSettings = {
 
     /** 杀手飞刀需要蓄力多久才能投掷出去。单位：游戏刻。 */
     knifeThrowTime: number;
-};
+}
 
-type MurderMysteryMiscellaneousSettings = {
+interface MurderMysteryMiscellaneousSettings {
     /** 信息板最后一行的内容。默认为黄色字体。 */
     infoboardLastLine: string;
 
     /** 获取金锭时是否提示玩家。 */
     getGoldHint: boolean;
-};
+}
 
 /** 密室杀手设置。在设置内包含众多玩家可以调控的设置项。 */
 class MurderMysterySettings {
