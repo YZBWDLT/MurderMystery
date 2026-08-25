@@ -1,0 +1,32 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:block": {
+        "description": {
+            "identifier": "freeze_block:cactus",
+            "menu_category": {
+                "category": "construction",
+                "group": "freeze_block:itemGroup.name.freeze_block"
+            }
+        },
+        "components": {
+            "minecraft:geometry": "geometry.cactus",
+            "minecraft:material_instances": {
+                "*": { "texture": "cactus_side", "render_method": "alpha_test" },
+                "up": {
+                    "texture": "freeze_block_cactus_up",
+                    "render_method": "alpha_test"
+                },
+                "down": {
+                    "texture": "freeze_block_cactus_down",
+                    "render_method": "alpha_test"
+                }
+            },
+            "minecraft:display_name": "tile.cactus.name",
+            "minecraft:collision_box": {
+                "origin": [-7, 0, -7],
+                "size": [14, 16, 14]
+            },
+            "minecraft:selection_box": { "origin": [-7, 0, -7], "size": [14, 16, 14] }
+        }
+    }
+}

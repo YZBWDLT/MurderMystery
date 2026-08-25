@@ -1,6 +1,8 @@
 {
     "resource_pack_name": "freeze_block",
     "texture_data": {
-        "freeze_block_farm_land": { "textures": "textures/blocks/farmland_dry" }
+        "freeze_block_farm_land": { "textures": "textures/blocks/farmland_dry" },
+        "freeze_block_cactus_down": { "textures": "textures/blocks/cactus_bottom" },
+        "freeze_block_cactus_up": { "textures": "textures/blocks/cactus_top" }
     }
 }

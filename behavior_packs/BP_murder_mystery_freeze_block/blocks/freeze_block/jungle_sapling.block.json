@@ -1,0 +1,25 @@
+{
+    "format_version": "1.26.40",
+    "minecraft:block": {
+        "description": {
+            "identifier": "freeze_block:jungle_sapling",
+            "menu_category": {
+                "category": "construction",
+                "group": "freeze_block:itemGroup.name.freeze_block"
+            }
+        },
+        "components": {
+            "minecraft:geometry": "minecraft:geometry.cross",
+            "minecraft:material_instances": {
+                "*": {
+                    "texture": "jungle_sapling",
+                    "render_method": "alpha_test_single_sided",
+                    "ambient_occlusion": 0.0,
+                    "face_dimming": false
+                }
+            },
+            "minecraft:display_name": "tile.sapling.jungle.name",
+            "minecraft:collision_box": false
+        }
+    }
+}
