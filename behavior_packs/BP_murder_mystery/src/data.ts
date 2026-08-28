@@ -344,6 +344,9 @@ export interface MurderMysteryEvents {
     /** 设置冷却。当进入冷却状态后，系统将开始对冷却进入倒计时。 */
     readonly cooldown?: MurderMysteryCooldownEvent;
 
+    /** 事件时间线。当触发了该事件后，将会延时执行的事件。该事件的键代表的是时间，单位：游戏刻。 */
+    readonly timeline?: Record<number, string>;
+
     /** 获取神秘药水事件响应，为玩家添加神秘药水。 */
     readonly getMysteryPotion?: MurderMysteryGetMysteryPotionEvent;
 
@@ -386,7 +389,7 @@ export interface MurderMysteryEvents {
     /** 事件触发成功后，以触发玩家的名义触发另一个事件。可延迟触发事件。
      * @remarks 警告：禁止调用同一个事件，例如 A 事件调用 A 事件本身！
      */
-    readonly trigger?: MurderMysteryTriggerEvent;
+    readonly trigger?: string;
 }
 
 export interface MurderMysteryEventCondition {
@@ -1689,7 +1692,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     },
                 ],
                 notify: { sound: "item.firecharge.use" },
-                trigger: { id: "archives:openDoor" },
+                trigger: "archives:openDoor",
             },
             "archives:setFire2": {
                 consumeGold: { count: 1, notifyWhenGoldNotEnough: false },
@@ -1701,7 +1704,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     },
                 ],
                 notify: { sound: "item.firecharge.use" },
-                trigger: { id: "archives:openDoor" },
+                trigger: "archives:openDoor",
             },
             "archives:setFire3": {
                 consumeGold: { count: 1, notifyWhenGoldNotEnough: false },
@@ -1713,7 +1716,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     },
                 ],
                 notify: { sound: "item.firecharge.use" },
-                trigger: { id: "archives:openDoor" },
+                trigger: "archives:openDoor",
             },
             "archives:setFire4": {
                 consumeGold: { count: 1, notifyWhenGoldNotEnough: false },
@@ -1725,7 +1728,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     },
                 ],
                 notify: { sound: "item.firecharge.use" },
-                trigger: { id: "archives:openDoor" },
+                trigger: "archives:openDoor",
             },
             "archives:openDoor": {
                 condition: {
@@ -3660,7 +3663,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
             enableMysteryPotion: {},
             playerInArea: [
                 {
-                    area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 112, yMax: 36, zMax: 1884 },
+                    area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 113, yMax: 36, zMax: 1885 },
                     trigger: "darkfall:playerIntoTrap",
                 },
                 {
@@ -3738,7 +3741,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     location: { x: 106, y: 38, z: 1881.5 },
                 },
                 // 6 秒后连同拉杆一起复原
-                trigger: { id: "darkfall:recoverTrap", delay: 120 },
+                timeline: {
+                    120: "darkfall:recoverTrap",
+                },
             },
             "darkfall:playerIntoTrap": {
                 setPlayerDead: { deathType: MurderMysteryDeathType.DraggedByTheDead },
@@ -4255,7 +4260,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -166, y: 13, z: 3104 },
                     voidBarrierLocation: { from: { x: -165, y: 14, z: 3104 }, to: { x: -165, y: 16, z: 3104 } },
                 },
-                trigger: { id: "easterWorld:recoverDoor1", delay: 160 },
+                timeline: {
+                    160: "easterWorld:recoverDoor1",
+                },
             },
             "easterWorld:intoHauntedHouseDoor2": {
                 condition: {
@@ -4273,7 +4280,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -166, y: 13, z: 3101 },
                     voidBarrierLocation: { from: { x: -165, y: 14, z: 3101 }, to: { x: -165, y: 16, z: 3101 } },
                 },
-                trigger: { id: "easterWorld:recoverDoor2", delay: 160 },
+                timeline: {
+                    160: "easterWorld:recoverDoor2",
+                },
             },
             "easterWorld:intoHauntedHouseDoor3": {
                 condition: {
@@ -4291,7 +4300,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -166, y: 13, z: 3098 },
                     voidBarrierLocation: { from: { x: -165, y: 14, z: 3098 }, to: { x: -165, y: 16, z: 3098 } },
                 },
-                trigger: { id: "easterWorld:recoverDoor3", delay: 160 },
+                timeline: {
+                    160: "easterWorld:recoverDoor3",
+                },
             },
             "easterWorld:outOfHauntedHouseDoor": {
                 outOfHauntedHouseDoor: {},
@@ -6184,7 +6195,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -960, y: 38, z: 2883 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2883 }, to: { x: -959, y: 41, z: 2883 } },
                 },
-                trigger: { id: "hypixelWorld:recoverDoor1", delay: 160 },
+                timeline: {
+                    160: "hypixelWorld:recoverDoor1",
+                },
             },
             "hypixelWorld:intoHauntedHouseDoor2": {
                 condition: {
@@ -6202,7 +6215,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -960, y: 38, z: 2880 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2880 }, to: { x: -959, y: 41, z: 2880 } },
                 },
-                trigger: { id: "hypixelWorld:recoverDoor2", delay: 160 },
+                timeline: {
+                    160: "hypixelWorld:recoverDoor2",
+                },
             },
             "hypixelWorld:intoHauntedHouseDoor3": {
                 condition: {
@@ -6220,7 +6235,9 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     voidGlassLocation: { x: -960, y: 38, z: 2877 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2877 }, to: { x: -959, y: 41, z: 2877 } },
                 },
-                trigger: { id: "hypixelWorld:recoverDoor3", delay: 160 },
+                timeline: {
+                    160: "hypixelWorld:recoverDoor3",
+                },
             },
             "hypixelWorld:outOfHauntedHouseDoor": {
                 outOfHauntedHouseDoor: {},

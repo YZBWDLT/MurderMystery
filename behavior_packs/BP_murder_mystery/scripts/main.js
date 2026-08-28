@@ -96,7 +96,7 @@ class MurderMysterySystem {
     }
     // #region - 系统变量
     /** 系统版本。 */
-    version = "1.0 - Snapshot 8";
+    version = "1.0 - Exp 9";
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage;
     /** 游戏设置信息，获取管理员等输入的设置信息，并自动应用于设置中。 */
@@ -586,7 +586,7 @@ class MurderMysteryEventManager {
         if (!triggedEvent)
             return false;
         // ===== 变量准备 =====
-        const { condition, getMysteryPotion, intoHauntedHouseDoor, outOfHauntedHouseDoor, place, setPlayerDead, notify, broadcast, trigger, teleport, rideMinecart, cooldown, consumeGold, } = triggedEvent;
+        const { condition, getMysteryPotion, intoHauntedHouseDoor, outOfHauntedHouseDoor, place, setPlayerDead, notify, broadcast, trigger, teleport, rideMinecart, cooldown, consumeGold, timeline, } = triggedEvent;
         let consumeGoldCount = 0;
         let notifyPlayerWhenGoldNotEnough = true;
         // ===== 判断条件是否通过 =====
@@ -744,12 +744,12 @@ class MurderMysteryEventManager {
         // ===== 执行成功后，移除金锭，触发新的事件 =====
         if (consumeGoldCount && playerData?.player && isPlayer(playerData.player))
             lib.ItemUtils.removeItem(playerData.player, "murder_mystery:gold_ingot", -1, consumeGoldCount);
-        if (trigger) {
-            const { id, delay } = trigger;
-            if (!delay)
-                this.triggerEvent(id, playerData);
-            else
-                minecraft.system.runTimeout(() => this.triggerEvent(id, playerData), delay);
+        if (trigger)
+            this.triggerEvent(trigger, playerData);
+        if (timeline) {
+            Object.entries(timeline).forEach(([time, event]) => {
+                minecraft.system.runTimeout(() => this.triggerEvent(event, playerData), Number(time));
+            });
         }
         return true;
     }
@@ -3495,7 +3495,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
         // 在常加载区域加载完成后创立系统
         tickingArea.then(() => new MurderMysterySystem(nextMap));
     }, 20);
-    lib.gameSystem.showDebugMessage = false;
+    lib.gameSystem.showDebugMessage = true;
 });
 // 创建一条新命令 /s <message>，使旁观者在旁观者频道发言
 minecraft.system.beforeEvents.startup.subscribe(event => {

@@ -170,7 +170,7 @@ class MurderMysterySystem {
     // #region - 系统变量
 
     /** 系统版本。 */
-    readonly version = "1.0 - Snapshot 8";
+    readonly version = "1.0 - Exp 9";
 
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage: GameStage;
@@ -768,6 +768,7 @@ class MurderMysteryEventManager {
             rideMinecart,
             cooldown,
             consumeGold,
+            timeline,
         } = triggedEvent;
         let consumeGoldCount = 0;
         let notifyPlayerWhenGoldNotEnough = true;
@@ -925,10 +926,11 @@ class MurderMysteryEventManager {
         // ===== 执行成功后，移除金锭，触发新的事件 =====
         if (consumeGoldCount && playerData?.player && isPlayer(playerData.player))
             lib.ItemUtils.removeItem(playerData.player, "murder_mystery:gold_ingot", -1, consumeGoldCount);
-        if (trigger) {
-            const { id, delay } = trigger;
-            if (!delay) this.triggerEvent(id, playerData);
-            else minecraft.system.runTimeout(() => this.triggerEvent(id, playerData), delay);
+        if (trigger) this.triggerEvent(trigger, playerData);
+        if (timeline) {
+            Object.entries(timeline).forEach(([time, event]) => {
+                minecraft.system.runTimeout(() => this.triggerEvent(event, playerData), Number(time));
+            });
         }
 
         return true;
@@ -2692,6 +2694,7 @@ class MurderMysteryComponents {
             // 默认来讲，平均每位玩家有 16s（spawnInterval）的生成时间，这 16s 中所有玩家依次轮流生成。
             // 因此，每 spawnInterval/alivePlayersCount 秒尝试生成一次。
             const alivePlayersCount = system.livingPlayers.allPlayers.length;
+            if (alivePlayersCount === 0) return;
             const realSpawnInterval = Math.floor((20 * spawnInterval) / alivePlayersCount);
             if (minecraft.system.currentTick % realSpawnInterval !== 0) return;
             // 2. 确定生成时机后，判断对哪个玩家生成
@@ -2708,7 +2711,7 @@ class MurderMysteryComponents {
                     return true;
                 })
                 .filter((goldPoint, index) => {
-                    // 最多取 8 个金点
+                    // 默认情况下，最多取 8 个金点
                     if (index > maxGoldPointsPerTime) return false;
                     return true;
                 })
@@ -3078,7 +3081,7 @@ class MurderMysteryComponents {
     }
 
     /** 杀手速度组件。
-     * @description 仅在单挑模式下生效。
+     * @description 在单挑模式下不生效。
      * @description 当最后仅剩 1 人时，为杀手提供速度效果，直到游戏结束。
      */
     static murdererGetSpeed(system: MurderMysterySystem) {
@@ -3778,10 +3781,9 @@ class MurderMysteryPlayer {
         if (!isPlayer(player)) return;
 
         // 如果不是旁观者，终止运行
-        if (!this) return player.sendMessage({ translate: "command.s.error.notASpectator" });
         if (!this.isDead) return player.sendMessage({ translate: "command.s.error.notASpectator" });
 
-        // 对所有旁观者发送消息
+        // 对所有旁观者&死亡玩家发送消息
         this.system.players.allPlayers.forEach(spectatorData => {
             if (!spectatorData.isDead) return;
             if (!isPlayer(spectatorData.player)) return;
