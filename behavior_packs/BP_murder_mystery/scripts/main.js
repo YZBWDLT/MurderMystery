@@ -63,7 +63,7 @@ var MurderMysteryGameOverReason;
     MurderMysteryGameOverReason["TimeOut"] = "timeOut";
 })(MurderMysteryGameOverReason || (MurderMysteryGameOverReason = {}));
 /** 密室杀手系统，通过系统调控组件的运行，并获取游戏运行的方方面面。 */
-class MurderMysterySystem {
+export class MurderMysterySystem {
     constructor(mapData) {
         this.mapData = mapData ?? MurderMysterySystem.getMapData();
         this.settings = MurderMysterySettings.loadSettings();
@@ -573,9 +573,8 @@ class MurderMysteryEventManager {
     system;
     /** 地图使用的事件 */
     events;
-    /** 触发事件。
-     * @returns 返回是否成功地触发了事件。这会影响是否移除金锭等情况。
-     */
+    // #region - 触发事件
+    /** 触发事件。 */
     triggerEvent(id, playerData) {
         // ===== 条件检查 =====
         // 如果游戏已结束，直接终止
@@ -584,13 +583,16 @@ class MurderMysteryEventManager {
         // 如果不存在对应事件，直接终止
         const triggedEvent = this.events[id];
         if (!triggedEvent)
-            return false;
+            return;
+        if (!this.isEventConditionPassed(triggedEvent, playerData))
+            return;
+        this.executeEvent(triggedEvent, playerData);
+    }
+    /** 判断事件的条件是否通过。 */
+    isEventConditionPassed(event, playerData) {
         // ===== 变量准备 =====
-        const { condition, getMysteryPotion, intoHauntedHouseDoor, outOfHauntedHouseDoor, place, setPlayerDead, notify, broadcast, trigger, teleport, rideMinecart, cooldown, consumeGold, timeline, } = triggedEvent;
-        let consumeGoldCount = 0;
-        let notifyPlayerWhenGoldNotEnough = true;
+        const { condition, cooldown, consumeGold } = event;
         // ===== 判断条件是否通过 =====
-        // 如果这里的条件不通过，则直接返回 false，不触发后续的事件
         if (condition) {
             const { isBlock, playerBelowHeight, cooldownCompleted } = condition;
             // 检查方块条件是否通过，如果未指定则默认通过
@@ -606,21 +608,12 @@ class MurderMysteryEventManager {
             }
             // 检查玩家特定冷却是否仍在运行
             if (cooldownCompleted) {
-                if (!playerData)
+                const leftDuration = playerData?.getEventCooldownCountdown(cooldownCompleted.type, cooldownCompleted.itemName);
+                if (!leftDuration || leftDuration > 0)
                     return false;
-                const { type, itemName } = cooldownCompleted;
-                const leftDuration = playerData.eventCooldown[type] ?? 0;
-                if (leftDuration > 0) {
-                    if (isPlayer(playerData.player))
-                        playerData.player.sendMessage({
-                            translate: "chat.cooldown",
-                            with: { rawtext: [{ translate: itemName }, { text: `${leftDuration}` }] },
-                        });
-                    return false;
-                }
             }
         }
-        // 如果玩家金锭不足，则直接返回 false
+        // ===== 判断玩家金锭是否充足 =====
         if (consumeGold) {
             // 如果执行此事件时没有执行玩家，返回 false
             if (!playerData)
@@ -629,15 +622,17 @@ class MurderMysteryEventManager {
             if (!isPlayer(player))
                 return false;
             // 解析事件响应
+            let count = 0;
+            let notifyPlayerWhenGoldNotEnough = true;
             if (typeof consumeGold === "number")
-                consumeGoldCount = consumeGold;
+                count = consumeGold;
             else {
-                consumeGoldCount = consumeGold.count;
+                count = consumeGold.count;
                 notifyPlayerWhenGoldNotEnough = consumeGold.notifyWhenGoldNotEnough;
             }
             // 检查玩家的金锭数
             const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
-            if (playerGoldCount < consumeGoldCount) {
+            if (playerGoldCount < count) {
                 if (notifyPlayerWhenGoldNotEnough) {
                     minecraft.system.run(() => lib.PlayerUtils.notify(player, {
                         message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consumeGold}`] },
@@ -647,35 +642,36 @@ class MurderMysteryEventManager {
                 return false;
             }
         }
-        // ===== 执行神秘药水事件 =====
-        if (getMysteryPotion) {
-            // 如果执行此事件时没有执行玩家，返回 false
-            if (!playerData)
-                return false;
-            // 尝试执行神秘药水事件，若执行失败直接返回 false
-            const result = this.getMysteryPotion(getMysteryPotion, playerData);
-            if (!result)
+        // ===== 判断系统是否处于冷却期间 =====
+        if (cooldown && cooldown.target === "system") {
+            const leftDuration = this.getEventCooldownCountdown(cooldown.type, cooldown.itemName, playerData?.player);
+            if (leftDuration > 0)
                 return false;
         }
-        // ===== 执行鬼屋门事件 =====
-        if (intoHauntedHouseDoor) {
-            // 如果执行此事件时没有执行玩家，返回 false
-            if (!playerData)
-                return false;
-            // 尝试执行鬼屋门事件，若执行失败直接返回 false
-            const result = this.intoHauntedHouseDoor(intoHauntedHouseDoor, playerData);
-            if (!result)
-                return false;
-        }
-        // ===== 执行离开鬼屋门事件 =====
+        return true;
+    }
+    /** 执行事件。 */
+    executeEvent(event, playerData) {
+        const { getMysteryPotion, intoHauntedHouseDoor, outOfHauntedHouseDoor, place, setPlayerDead, notify, broadcast, trigger, teleport, rideMinecart, cooldown, consumeGold, run, } = event;
+        // ===== 执行函数 =====
+        if (run && run(this.system, playerData) === false)
+            return;
+        // ===== 神秘药水事件 =====
+        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
+        if (getMysteryPotion && (!playerData || !this.getMysteryPotion(getMysteryPotion, playerData)))
+            return;
+        // ===== 鬼屋门事件 =====
+        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
+        if (intoHauntedHouseDoor && (!playerData || !this.intoHauntedHouseDoor(intoHauntedHouseDoor, playerData)))
+            return;
+        // ===== 离开鬼屋门事件 =====
+        // 若执行此事件时没有执行玩家，则终止运行
         if (outOfHauntedHouseDoor) {
-            // 如果执行此事件时没有执行玩家，返回 false
             if (!playerData)
-                return false;
-            // 标记玩家离开鬼屋门
+                return;
             playerData.isInHauntedHouseDoor = false;
         }
-        // ===== 执行放置方块/结构事件 =====
+        // ===== 放置方块/结构事件 =====
         if (place) {
             // 如果有方块/结构未能放置，立刻判定为失败
             const hasPlaceFailed = place.some(data => {
@@ -696,63 +692,69 @@ class MurderMysteryEventManager {
             if (hasPlaceFailed)
                 return false;
         }
-        // ===== 触发处死玩家事件 =====
-        if (setPlayerDead) {
-            // 如果执行此事件时没有执行玩家，返回 false
-            if (!playerData)
-                return false;
-            // 尝试执行神秘药水事件，若执行失败直接返回 false
-            const result = this.setPlayerDead(setPlayerDead, playerData);
-            if (!result)
-                return false;
-        }
-        // ===== 触发乘坐矿车事件 =====
-        if (rideMinecart) {
-            // 如果执行此事件时没有执行玩家，返回 false
-            if (!playerData)
-                return false;
-            // 尝试执行乘坐矿车事件，若执行失败直接返回 false
-            const result = this.rideMinecart(rideMinecart, playerData);
-            if (!result)
-                return false;
-        }
-        // ===== 触发传送玩家事件 =====
-        if (teleport) {
-            // 如果执行此事件时没有执行玩家，返回 false
-            if (!playerData)
-                return false;
-            // 尝试执行传送玩家事件，若执行失败直接返回 false
-            const result = this.teleport(teleport, playerData);
-            if (!result)
-                return false;
-        }
-        // ===== 触发冷却事件 =====
+        // ===== 处死玩家事件 =====
+        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
+        if (setPlayerDead && (!playerData || !this.setPlayerDead(setPlayerDead, playerData)))
+            return;
+        // ===== 乘坐矿车事件 =====
+        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
+        if (rideMinecart && (!playerData || !this.rideMinecart(rideMinecart, playerData)))
+            return;
+        // ===== 传送玩家事件 =====
+        if (teleport && (!playerData || !this.teleport(teleport, playerData)))
+            return;
+        // ===== 冷却事件 =====
+        // 若执行此事件时没有执行玩家，则终止运行
         if (cooldown) {
-            // 如果执行此事件时没有执行玩家，返回 false
             if (!playerData)
-                return false;
-            // 尝试执行冷却事件，若执行失败直接返回 false
-            const result = this.cooldown(cooldown, playerData);
-            if (!result)
-                return false;
+                return;
+            if (cooldown.target === "player")
+                playerData.setEventCooldown(cooldown.type, cooldown.duration);
+            else
+                this.setEventCooldown(cooldown.type, cooldown.duration);
         }
-        // ===== 执行成功后，通告玩家/通知触发玩家 =====
+        // ===== 执行成功后 =====
+        // 通告玩家/通知触发玩家
         if (broadcast)
             lib.PlayerUtils.broadcast(broadcast);
         if (notify && playerData && isPlayer(playerData.player))
             lib.PlayerUtils.notify(playerData.player, notify);
-        // ===== 执行成功后，移除金锭，触发新的事件 =====
+        // 移除金锭
+        const consumeGoldCount = typeof consumeGold === "number" ? consumeGold : (consumeGold?.count ?? 0);
         if (consumeGoldCount && playerData?.player && isPlayer(playerData.player))
             lib.ItemUtils.removeItem(playerData.player, "murder_mystery:gold_ingot", -1, consumeGoldCount);
+        // 触发新的事件
         if (trigger)
             this.triggerEvent(trigger, playerData);
-        if (timeline) {
-            Object.entries(timeline).forEach(([time, event]) => {
-                minecraft.system.runTimeout(() => this.triggerEvent(event, playerData), Number(time));
-            });
-        }
-        return true;
     }
+    // #endregion
+    // #region - 系统事件冷却
+    /** 事件冷却列表。触发了特定事件后可能会导致特定类型的事件冷却，在冷却期内可指定为无法再次触发事件。冷却单位：秒。 */
+    eventCooldown = {};
+    /** 对玩家设置事件冷却状态。 */
+    setEventCooldown(type, duration) {
+        // 设置冷却
+        this.eventCooldown[type] = duration;
+        // 注册每秒 -1 的冷却时间线
+        lib.gameSystem.subscribeTimeline(`system${type}EventCooldown`, () => {
+            const currentDuration = this.eventCooldown[type] ?? 0;
+            if (currentDuration <= 1)
+                delete this.eventCooldown[type];
+            else
+                this.eventCooldown[type] = currentDuration - 1;
+        }, 20);
+    }
+    /** 返回玩家是否处于某个事件的冷却状态中。 */
+    getEventCooldownCountdown(type, itemName, notifyPlayer) {
+        const countdown = this.eventCooldown[type] ?? 0;
+        if (countdown > 0 && itemName && notifyPlayer && isPlayer(notifyPlayer))
+            notifyPlayer.sendMessage({
+                translate: "chat.cooldown",
+                with: { rawtext: [{ translate: itemName }, { text: `${countdown}` }] },
+            });
+        return countdown;
+    }
+    // #endregion
     // #region - 神秘药水
     /** 本局的神秘药水的排布。
      * - 游戏一共有 5 种神秘药水。当玩家喝下神秘药水后，触发一个随机效果。
@@ -1115,33 +1117,6 @@ class MurderMysteryEventManager {
                 return false;
             }
         });
-        return true;
-    }
-    // #endregion
-    // #region - 玩家进入冷却
-    cooldown(cooldownEvent, playerData) {
-        // 记录玩家的冷却
-        const { type, duration } = cooldownEvent;
-        playerData.eventCooldown[type] = duration;
-        // 注册时间线进行倒计时
-        lib.gameSystem.subscribeTimeline("eventCooldown", () => {
-            // 检查还有哪些玩家正处于倒计时下，如果没有玩家则终止这个时间线
-            const inCooldownPlayers = this.system.livingPlayers.allPlayers.filter(playerData => Object.keys(playerData.eventCooldown).length > 0);
-            if (inCooldownPlayers.length === 0)
-                return false;
-            // 如果仍有玩家处于冷却，对每个玩家的每个冷却 -1 秒倒计时
-            inCooldownPlayers.forEach(playerData => {
-                const cooldowns = Object.keys(playerData.eventCooldown);
-                cooldowns.forEach(cooldown => {
-                    const currentDuration = playerData.eventCooldown[cooldown] ?? 0;
-                    // 当前值 ≤ 1 时，下一秒归零，直接删除，否则减 1 秒
-                    if (currentDuration <= 1)
-                        delete playerData.eventCooldown[cooldown];
-                    else
-                        playerData.eventCooldown[cooldown] = currentDuration - 1;
-                });
-            });
-        }, 20);
         return true;
     }
 }
@@ -2276,6 +2251,8 @@ class MurderMysteryComponents {
             // 默认来讲，平均每位玩家有 16s（spawnInterval）的生成时间，这 16s 中所有玩家依次轮流生成。
             // 因此，每 spawnInterval/alivePlayersCount 秒尝试生成一次。
             const alivePlayersCount = system.livingPlayers.allPlayers.length;
+            if (alivePlayersCount === 0)
+                return;
             const realSpawnInterval = Math.floor((20 * spawnInterval) / alivePlayersCount);
             if (minecraft.system.currentTick % realSpawnInterval !== 0)
                 return;
@@ -2295,7 +2272,7 @@ class MurderMysteryComponents {
                 return true;
             })
                 .filter((goldPoint, index) => {
-                // 最多取 8 个金点
+                // 默认情况下，最多取 8 个金点
                 if (index > maxGoldPointsPerTime)
                     return false;
                 return true;
@@ -2662,7 +2639,7 @@ class MurderMysteryComponents {
         });
     }
     /** 杀手速度组件。
-     * @description 仅在单挑模式下生效。
+     * @description 在单挑模式下不生效。
      * @description 当最后仅剩 1 人时，为杀手提供速度效果，直到游戏结束。
      */
     static murdererGetSpeed(system) {
@@ -2776,7 +2753,7 @@ class MurderMysteryComponents {
 // #endregion
 // #region 玩家
 /** 代表一个密室杀手玩家，包含玩家的密室杀手信息和相关方法。 */
-class MurderMysteryPlayer {
+export class MurderMysteryPlayer {
     /** @remarks 这里的构造函数应当仅在游戏开始时执行。若要转换身份，应使用 {@link MurderMysterySystem} 的`transformRole`方法。 */
     constructor(system, playerData) {
         this.system = system;
@@ -3318,11 +3295,9 @@ class MurderMysteryPlayer {
         if (!isPlayer(player))
             return;
         // 如果不是旁观者，终止运行
-        if (!this)
-            return player.sendMessage({ translate: "command.s.error.notASpectator" });
         if (!this.isDead)
             return player.sendMessage({ translate: "command.s.error.notASpectator" });
-        // 对所有旁观者发送消息
+        // 对所有旁观者&死亡玩家发送消息
         this.system.players.allPlayers.forEach(spectatorData => {
             if (!spectatorData.isDead)
                 return;
@@ -3448,13 +3423,38 @@ class MurderMysteryPlayer {
         this.isShowingLocatorBar = false;
     }
     // #endregion
+    // #region - 事件冷却
+    /** 事件冷却列表。触发了特定事件后可能会导致特定类型的事件冷却，在冷却期内可指定为无法再次触发事件。冷却单位：秒。 */
+    eventCooldown = {};
+    /** 对玩家设置事件冷却状态。 */
+    setEventCooldown(type, duration) {
+        // 设置冷却
+        this.eventCooldown[type] = duration;
+        // 注册每秒 -1 的冷却时间线
+        lib.gameSystem.subscribeTimeline(`${this.player.id}${type}EventCooldown`, () => {
+            const currentDuration = this.eventCooldown[type] ?? 0;
+            if (currentDuration <= 1)
+                delete this.eventCooldown[type];
+            else
+                this.eventCooldown[type] = currentDuration - 1;
+        }, 20);
+    }
+    /** 返回玩家是否处于某个事件的冷却状态中。 */
+    getEventCooldownCountdown(type, itemName) {
+        const countdown = this.eventCooldown[type] ?? 0;
+        if (countdown > 0 && isPlayer(this.player) && itemName)
+            this.player.sendMessage({
+                translate: "chat.cooldown",
+                with: { rawtext: [{ translate: itemName }, { text: `${countdown}` }] },
+            });
+        return countdown;
+    }
+    // #endregion
     // #region - 特殊地图属性
     /** 神秘药水的解锁情况。 */
     mysteryPotionUnlocked = [false, false, false, false, false];
     /** 是否在鬼屋门内。 */
     isInHauntedHouseDoor = false;
-    /** 事件冷却列表。触发了特定事件后可能会导致特定类型的事件冷却，在冷却期内可指定为无法再次触发事件。 */
-    eventCooldown = {};
     /** 是否正在乘坐矿车。 */
     isRidingMinecart = false;
 }
@@ -3495,7 +3495,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
         // 在常加载区域加载完成后创立系统
         tickingArea.then(() => new MurderMysterySystem(nextMap));
     }, 20);
-    lib.gameSystem.showDebugMessage = true;
+    lib.gameSystem.showDebugMessage = false;
 });
 // 创建一条新命令 /s <message>，使旁观者在旁观者频道发言
 minecraft.system.beforeEvents.startup.subscribe(event => {

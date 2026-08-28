@@ -1381,13 +1381,9 @@ export const maps = {
                 setPlayerDead: { deathType: MurderMysteryDeathType.EndPortal },
             },
             "archives:recover": {
-                place: [
-                    {
-                        type: "setStructure",
-                        structure: "murder_mystery:archives/door",
-                        location: { x: 1035, y: 125, z: -188 },
-                    },
-                ],
+                run: () => {
+                    lib.StructureUtils.placeAsync("murder_mystery:archives/door", { x: 1035, y: 125, z: -188 });
+                },
             },
         },
     },
@@ -3351,9 +3347,11 @@ export const maps = {
                     sound: "random.lever_click",
                     location: { x: 106, y: 38, z: 1881.5 },
                 },
-                // 6 秒后连同拉杆一起复原
-                timeline: {
-                    120: "darkfall:recoverTrap",
+                run: system => {
+                    // 6 秒后连同拉杆一起复原
+                    minecraft.system.runTimeout(() => {
+                        system.eventManager.triggerEvent("darkfall:recoverTrap");
+                    }, 120);
                 },
             },
             "darkfall:playerIntoTrap": {
@@ -3385,82 +3383,35 @@ export const maps = {
                 },
             },
             "darkfall:recover": {
-                place: [
-                    // 设置亡魂实体
-                    {
-                        type: "setEntity",
-                        id: "murder_mystery:the_dead",
-                        location: { x: 108, y: 36, z: 1880 },
-                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
-                    },
-                    {
-                        type: "setEntity",
-                        id: "murder_mystery:the_dead",
-                        location: { x: 111, y: 36, z: 1880 },
-                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
-                    },
-                    {
-                        type: "setEntity",
-                        id: "murder_mystery:the_dead",
-                        location: { x: 109, y: 36, z: 1882 },
-                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
-                    },
-                    {
-                        type: "setEntity",
-                        id: "murder_mystery:the_dead",
-                        location: { x: 111, y: 36, z: 1882 },
-                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
-                    },
-                    {
-                        type: "setEntity",
-                        id: "murder_mystery:the_dead",
-                        location: { x: 107, y: 36, z: 1883 },
-                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
-                    },
-                    {
-                        type: "setEntity",
-                        id: "murder_mystery:the_dead",
-                        location: { x: 110, y: 36, z: 1884 },
-                        options: { initialRotation: lib.JSUtils.number.random(0, 360) },
-                    },
-                    // 设置神秘药水悬浮文本
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: 71, y: 38, z: 1946 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: 98, y: 44, z: 1941 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: 120, y: 40, z: 1913 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: 130, y: 39, z: 1922 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: 121, y: 39, z: 1892 },
-                    },
-                    // 设置陷阱悬浮文本
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.trap", with: [`2`] },
-                        location: { x: 106, y: 38, z: 1885 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.trap", with: [`2`] },
-                        location: { x: 106, y: 38, z: 1878 },
-                    },
-                ],
+                run: () => {
+                    // 生成亡魂实体
+                    const spawnTheDead = (location) => {
+                        lib.EntityUtils.add("murder_mystery:the_dead", location, "overworld", {
+                            initialRotation: lib.JSUtils.number.random(0, 360),
+                        });
+                    };
+                    spawnTheDead({ x: 108, y: 36, z: 1880 });
+                    spawnTheDead({ x: 111, y: 36, z: 1880 });
+                    spawnTheDead({ x: 109, y: 36, z: 1882 });
+                    spawnTheDead({ x: 111, y: 36, z: 1882 });
+                    spawnTheDead({ x: 107, y: 36, z: 1883 });
+                    spawnTheDead({ x: 110, y: 36, z: 1884 });
+                    // 生成悬浮文本
+                    const addMysteryPotionText = (location) => {
+                        lib.TextDisplayUtils.add({ translate: "textDisplay.mysteryPotion" }, location);
+                    };
+                    addMysteryPotionText({ x: 71, y: 38, z: 1946 });
+                    addMysteryPotionText({ x: 98, y: 44, z: 1941 });
+                    addMysteryPotionText({ x: 120, y: 40, z: 1913 });
+                    addMysteryPotionText({ x: 130, y: 39, z: 1922 });
+                    addMysteryPotionText({ x: 121, y: 39, z: 1892 });
+                    // 生成陷阱悬浮文本
+                    const addTrapText = (location) => {
+                        lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`2`] }, location);
+                    };
+                    addTrapText({ x: 106, y: 38, z: 1885 });
+                    addTrapText({ x: 106, y: 38, z: 1878 });
+                },
             },
             "darkfall:teleportToCave": {
                 teleport: { location: { x: 71, y: 37, z: 1957 }, facingLocation: { x: 71, y: 37, z: 1946 } },
@@ -3870,8 +3821,10 @@ export const maps = {
                     voidGlassLocation: { x: -166, y: 13, z: 3104 },
                     voidBarrierLocation: { from: { x: -165, y: 14, z: 3104 }, to: { x: -165, y: 16, z: 3104 } },
                 },
-                timeline: {
-                    160: "easterWorld:recoverDoor1",
+                run: system => {
+                    minecraft.system.runTimeout(() => {
+                        system.eventManager.triggerEvent("easterWorld:recoverDoor1");
+                    }, 160);
                 },
             },
             "easterWorld:intoHauntedHouseDoor2": {
@@ -3890,8 +3843,10 @@ export const maps = {
                     voidGlassLocation: { x: -166, y: 13, z: 3101 },
                     voidBarrierLocation: { from: { x: -165, y: 14, z: 3101 }, to: { x: -165, y: 16, z: 3101 } },
                 },
-                timeline: {
-                    160: "easterWorld:recoverDoor2",
+                run: system => {
+                    minecraft.system.runTimeout(() => {
+                        system.eventManager.triggerEvent("easterWorld:recoverDoor2");
+                    }, 160);
                 },
             },
             "easterWorld:intoHauntedHouseDoor3": {
@@ -3910,8 +3865,10 @@ export const maps = {
                     voidGlassLocation: { x: -166, y: 13, z: 3098 },
                     voidBarrierLocation: { from: { x: -165, y: 14, z: 3098 }, to: { x: -165, y: 16, z: 3098 } },
                 },
-                timeline: {
-                    160: "easterWorld:recoverDoor3",
+                run: system => {
+                    minecraft.system.runTimeout(() => {
+                        system.eventManager.triggerEvent("easterWorld:recoverDoor3");
+                    }, 160);
                 },
             },
             "easterWorld:outOfHauntedHouseDoor": {
@@ -3948,43 +3905,18 @@ export const maps = {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Void },
             },
             "easterWorld:setText": {
-                place: [
-                    {
-                        type: "setText",
-                        location: { x: -161, y: 22.9, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line1" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -161, y: 22.6, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line2" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -161, y: 22.3, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line3" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -161, y: 22.0, z: 3101 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line4" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -133, y: 25.5, z: 3141 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -76, y: 25.5, z: 3058 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -81, y: 23, z: 3034 },
-                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster" },
-                    },
-                ],
+                run: () => {
+                    // 鬼屋门文本展示
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line1" }, { x: -161, y: 22.9, z: 3101 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line2" }, { x: -161, y: 22.6, z: 3101 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line3" }, { x: -161, y: 22.3, z: 3101 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line4" }, { x: -161, y: 22.0, z: 3101 });
+                    // 单轨列车
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.monorail" }, { x: -133, y: 25.5, z: 3141 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.monorail" }, { x: -76, y: 25.5, z: 3058 });
+                    // 过山车
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.rollerCoaster" }, { x: -81, y: 23, z: 3034 });
+                },
             },
             "easterWorld:playerOnMonorail1": {
                 consumeGold: 1,
@@ -4023,7 +3955,7 @@ export const maps = {
                 },
             },
             "easterWorld:setRailCooldown": {
-                cooldown: { type: "rail", duration: 10 },
+                cooldown: { type: "rail", duration: 10, target: "player" },
             },
         },
     },
@@ -5801,8 +5733,10 @@ export const maps = {
                     voidGlassLocation: { x: -960, y: 38, z: 2883 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2883 }, to: { x: -959, y: 41, z: 2883 } },
                 },
-                timeline: {
-                    160: "hypixelWorld:recoverDoor1",
+                run: system => {
+                    minecraft.system.runTimeout(() => {
+                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor1");
+                    }, 160);
                 },
             },
             "hypixelWorld:intoHauntedHouseDoor2": {
@@ -5821,8 +5755,10 @@ export const maps = {
                     voidGlassLocation: { x: -960, y: 38, z: 2880 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2880 }, to: { x: -959, y: 41, z: 2880 } },
                 },
-                timeline: {
-                    160: "hypixelWorld:recoverDoor2",
+                run: system => {
+                    minecraft.system.runTimeout(() => {
+                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor1");
+                    }, 160);
                 },
             },
             "hypixelWorld:intoHauntedHouseDoor3": {
@@ -5841,8 +5777,10 @@ export const maps = {
                     voidGlassLocation: { x: -960, y: 38, z: 2877 },
                     voidBarrierLocation: { from: { x: -959, y: 39, z: 2877 }, to: { x: -959, y: 41, z: 2877 } },
                 },
-                timeline: {
-                    160: "hypixelWorld:recoverDoor3",
+                run: system => {
+                    minecraft.system.runTimeout(() => {
+                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor1");
+                    }, 160);
                 },
             },
             "hypixelWorld:outOfHauntedHouseDoor": {
@@ -5954,7 +5892,7 @@ export const maps = {
                 },
             },
             "hypixelWorld:setRailCooldown": {
-                cooldown: { type: "rail", duration: 10 },
+                cooldown: { type: "rail", duration: 10, target: "player" },
             },
         },
     },
@@ -9941,11 +9879,97 @@ export const maps = {
         },
         components: {
             playerHurt: [{ cause: minecraft.EntityDamageCause.fall, trigger: "towerFall:playerHitGround" }],
+            interaction: [
+                {
+                    at: [
+                        { x: 1122, y: 119, z: -4026 },
+                        { x: 1117, y: 113, z: -4026 },
+                        { x: 1112, y: 113, z: -4035 },
+                        { x: 1112, y: 113, z: -4017 },
+                    ],
+                    trigger: "towerfall:openTrap",
+                },
+            ],
+            onGameStart: { trigger: "towerfall:recover" },
         },
         events: {
             "towerFall:playerHitGround": {
                 condition: { playerBelowHeight: 70 },
                 setPlayerDead: { deathType: MurderMysteryDeathType.HitGround },
+            },
+            "towerfall:recover": {
+                run: () => {
+                    lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_full`, { x: 1099, y: 110, z: -4031 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1122, y: 118.5, z: -4026 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1117, y: 112.5, z: -4026 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1111, y: 112.5, z: -4017 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1111, y: 112.5, z: -4035 });
+                },
+            },
+            "towerfall:openTrap": {
+                consumeGold: 1,
+                run: (system, playerData) => {
+                    // 如果仍处于冷却，警告玩家
+                    if (system.eventManager.getEventCooldownCountdown("towerfall:trap", "trap.name", playerData?.player) > 0)
+                        return false;
+                    // 播放动画
+                    let time = 0;
+                    const setStructureStage = (stage) => {
+                        lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_stage${stage}`, { x: 1099, y: 110, z: -4031 });
+                        lib.PlayerUtils.broadcast({ sound: "tile.piston.in" });
+                    };
+                    lib.gameSystem.subscribeTimeline("towerfallTrapAnimation", () => {
+                        if (time === 1)
+                            setStructureStage(1);
+                        if (time === 2)
+                            setStructureStage(2);
+                        if (time === 3)
+                            setStructureStage(3);
+                        if (time === 4)
+                            setStructureStage(4);
+                        if (time === 101)
+                            setStructureStage(5);
+                        if (time === 102)
+                            setStructureStage(6);
+                        if (time === 103)
+                            setStructureStage(7);
+                        if (time === 104)
+                            setStructureStage(8);
+                        if (time >= 105) {
+                            lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_full`, { x: 1099, y: 110, z: -4031 });
+                            return false;
+                        }
+                        time++;
+                    });
+                    // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，10 秒后恢复原状
+                    const leverLocations = [
+                        { x: 1122, y: 119, z: -4026 },
+                        { x: 1117, y: 113, z: -4026 },
+                        { x: 1112, y: 113, z: -4035 },
+                        { x: 1112, y: 113, z: -4017 },
+                    ];
+                    const setLeverState = (state) => {
+                        leverLocations.forEach(location => {
+                            const lever = lib.BlockUtils.get(location);
+                            if (!lever)
+                                return;
+                            lib.BlockUtils.setState(lever, { open_bit: state });
+                        });
+                        lib.PlayerUtils.broadcast({ sound: "random.lever_click" });
+                    };
+                    setLeverState(true);
+                    lib.gameSystem.subscribeEvent("towerfallTrapBanLever", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
+                        if (leverLocations.some(leverLocation => lib.Vector3Utils.isEqual(leverLocation, event.block.location))) {
+                            event.cancel = true;
+                        }
+                    });
+                    lib.gameSystem.subscribeDelay("towerfallTrapRecoverLeverDelay", () => {
+                        setLeverState(false);
+                        lib.gameSystem.unsubscribeEvent("towerfallTrapBanLever");
+                    }, 200);
+                    // 进入冷却
+                    system.eventManager.setEventCooldown("towerfall:trap", 10);
+                },
             },
         },
     },

@@ -240,6 +240,7 @@ textDisplay.hypixelWorld.rollerCoaster=Roller Coaster - 1§6 Gold
 chat.hypixelWorld.rideTwoMinecarts=§cYou cannot ride another minecart while already riding one!
 
 ### Trap
+trap.name=Trap
 textDisplay.trap=Trap - %s§6 Golds
 
 ### Cooldown

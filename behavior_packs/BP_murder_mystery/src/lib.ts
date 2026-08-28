@@ -136,7 +136,7 @@ class GameSystem {
         id: string,
         event: S,
         callback: (arg0: gameEvent<S>) => void | boolean,
-        options?: gameEventOptions<S>
+        options?: gameEventOptions<S>,
     ) {
         // 检查事件是否重叠，若存在重叠则阻止运行
         if (this.getAllEventIds().includes(id)) return false;
@@ -195,7 +195,7 @@ export class StructureUtils {
         structure: string,
         location: minecraft.Vector3,
         options?: minecraft.StructurePlaceOptions,
-        dimension?: string | minecraft.Dimension
+        dimension?: string | minecraft.Dimension,
     ) {
         minecraft.world.structureManager.place(structure, DimensionUtils.getDefault(dimension), location, options);
         let animationSeconds = options?.animationSeconds ? options.animationSeconds : 0;
@@ -208,7 +208,7 @@ export class StructureUtils {
         dimension: string | minecraft.Dimension,
         from: minecraft.Vector3,
         to: minecraft.Vector3,
-        options?: minecraft.StructureCreateOptions
+        options?: minecraft.StructureCreateOptions,
     ) {
         return minecraft.world.structureManager.createFromWorld(structureId, DimensionUtils.getDefault(dimension), from, to, options);
     }
@@ -335,7 +335,7 @@ class ScoreboardObjectiveUtils {
     static display(
         displaySlot: minecraft.DisplaySlotId,
         id: string,
-        order: minecraft.ObjectiveSortOrder = minecraft.ObjectiveSortOrder.Descending
+        order: minecraft.ObjectiveSortOrder = minecraft.ObjectiveSortOrder.Descending,
     ) {
         const objective = this.get(id);
         /** 上一个记分项 */
@@ -356,7 +356,7 @@ class ScoreboardObjectiveUtils {
         id: string,
         displaySlot: minecraft.DisplaySlotId,
         displayName?: string,
-        order: minecraft.ObjectiveSortOrder = minecraft.ObjectiveSortOrder.Descending
+        order: minecraft.ObjectiveSortOrder = minecraft.ObjectiveSortOrder.Descending,
     ) {
         let newObjective = this.add(id, displayName);
         let lastDisplayed = this.display(displaySlot, id, order);
@@ -410,7 +410,7 @@ class ScoreboardPlayerUtils {
     /** 获取正在追踪特定追踪对象的所有记分项。 */
     static getObjective(participantName: string) {
         return ScoreboardObjectiveUtils.getAll().filter(obj =>
-            obj.getScores().some(info => info.participant.displayName === participantName)
+            obj.getScores().some(info => info.participant.displayName === participantName),
         );
     }
 
@@ -420,7 +420,7 @@ class ScoreboardPlayerUtils {
     static getOrSetDefault(
         objectiveId: string,
         participant: minecraft.Entity | minecraft.ScoreboardIdentity | string,
-        defaultScore: number
+        defaultScore: number,
     ) {
         return this.get(objectiveId, participant) ?? this.set(objectiveId, participant, defaultScore);
     }
@@ -540,7 +540,7 @@ export class DimensionUtils {
         };
         /** 最长轴 */
         const longestAxis = Object.keys(axisInfo).sort(
-            (axis1, axis2) => axisInfo[axis2 as Axes].length - axisInfo[axis1 as Axes].length
+            (axis1, axis2) => axisInfo[axis2 as Axes].length - axisInfo[axis1 as Axes].length,
         )[0] as Axes;
         const longestAxisInfo = axisInfo[longestAxis];
         /** 非最长轴的截面积 */
@@ -580,7 +580,7 @@ export class DimensionUtils {
 
         const hollowedVolume = new minecraft.BlockVolume(
             { x: minX + 1, y: minY + 1, z: minZ + 1 },
-            { x: maxX - 1, y: maxY - 1, z: maxZ - 1 }
+            { x: maxX - 1, y: maxY - 1, z: maxZ - 1 },
         );
         const borderVolume = [
             new minecraft.BlockVolume({ x: minX, y: minY, z: minZ }, { x: minX, y: maxY, z: maxZ }),
@@ -671,7 +671,7 @@ export class BlockUtils {
         const volumes: minecraft.ListBlockVolume[] = [];
         const { from, to, id, states } = blockData;
         DimensionUtils.divideVolume(new minecraft.BlockVolume(from, to)).forEach(volume =>
-            volumes.push(DimensionUtils.getDefault(dimension).fillBlocks(volume, id, options))
+            volumes.push(DimensionUtils.getDefault(dimension).fillBlocks(volume, id, options)),
         );
         if (states) {
             volumes
@@ -679,12 +679,7 @@ export class BlockUtils {
                 .forEach(location => {
                     const block = DimensionUtils.getOverworld().getBlock(location);
                     if (!block) return;
-                    let permutation = block.permutation;
-                    Object.entries(states).forEach(([state, value]) => {
-                        // @ts-ignore
-                        permutation = permutation.withState(state, value);
-                    });
-                    block.setPermutation(permutation);
+                    this.setState(block, states);
                 });
         }
 
@@ -713,14 +708,8 @@ export class BlockUtils {
         const { id, location, states } = blockData;
         DimensionUtils.getDefault(dimension).setBlockType(location, id);
         // 设定方块的方块状态
-        if (states)
-            Object.entries(states).forEach(([state, value]) => {
-                const placedBlock = this.get(location, dimension);
-                if (!placedBlock) return;
-                const oldPermutation = placedBlock.permutation;
-                // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
-                placedBlock.setPermutation(oldPermutation.withState(state, value));
-            });
+        const placedBlock = this.get(location, dimension);
+        if (states && placedBlock) this.setState(placedBlock, states);
         return this.get(location, dimension);
     }
 
@@ -759,6 +748,14 @@ export class BlockUtils {
             if (hasUnmatchedState) return false;
         }
         return true;
+    }
+
+    /** 将方块设定为特定的方块状态。 */
+    static setState(block: minecraft.Block, states: Record<string, boolean | number | string | undefined>) {
+        Object.entries(states).forEach(([state, value]) => {
+            // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
+            block.setPermutation(block.permutation.withState(state, value));
+        });
     }
 }
 
@@ -994,7 +991,7 @@ export class EntityUtils {
         typeId: string,
         location: minecraft.Vector3,
         dimension?: string | minecraft.Dimension,
-        options?: minecraft.SpawnEntityOptions
+        options?: minecraft.SpawnEntityOptions,
     ) {
         return DimensionUtils.getDefault(dimension).spawnEntity(typeId, location, options);
     }
@@ -1025,7 +1022,7 @@ export class EntityUtils {
         entity: minecraft.Entity,
         location: minecraft.Vector3,
         distance: number,
-        dimension?: string | minecraft.Dimension
+        dimension?: string | minecraft.Dimension,
     ) {
         const executeDimension = dimension ? DimensionUtils.getDefault(dimension) : entity.dimension;
         return executeDimension
@@ -1261,7 +1258,7 @@ class InventoryUtils {
         itemId: string,
         options?: ItemOptions,
         playSound: "no" | "player" | "world" = "player",
-        spawnItemWhenOverflow = true
+        spawnItemWhenOverflow = true,
     ) {
         // 如果该实体不存在物品栏，终止运行
         const inventory = this.get(entity);
@@ -1375,7 +1372,7 @@ class InventoryUtils {
         return JSUtils.number.sum(
             this.getValidItems(entity)
                 .filter(itemData => ItemUtils.match(itemData.item, options))
-                .map(itemData => itemData.item.amount)
+                .map(itemData => itemData.item.amount),
         );
     }
 
@@ -1384,7 +1381,7 @@ class InventoryUtils {
         return JSUtils.number.sum(
             this.getValidItems(entity)
                 .filter(itemData => itemData.item.typeId === id)
-                .map(itemData => itemData.item.amount)
+                .map(itemData => itemData.item.amount),
         );
     }
 }
@@ -1597,7 +1594,7 @@ export class ItemUtils {
         quantity?: number | string,
         location?: string,
         slot?: number | string,
-        data?: number
+        data?: number,
     ) {
         const quantityStr = quantity ? `,quantity=${quantity}` : ``;
         const locationStr = location ? `,location=${location}` : ``;
@@ -1624,7 +1621,7 @@ export class ItemUtils {
         itemId: string,
         options: ItemOptions = {},
         clearVelocity: boolean = false,
-        dimension?: string | minecraft.Dimension
+        dimension?: string | minecraft.Dimension,
     ) {
         return this.generate(itemId, options).map(itemStack => {
             const item = DimensionUtils.getDefault(dimension).spawnItem(itemStack, location);
@@ -1732,7 +1729,7 @@ export interface ModalUIData extends UIDataBase {
     /** UI 被提交后执行的事件，该事件会在各组件的数据处理完后执行。 */
     readonly onSubmit?: (
         result?: (string | number | boolean | undefined)[],
-        thisForm?: ActionUIData | ModalUIData
+        thisForm?: ActionUIData | ModalUIData,
     ) => void | OpenNewFormOptions;
 }
 
@@ -1876,7 +1873,7 @@ export class UIUtils {
         thisFormData: UIData,
         showPlayer: minecraft.Player,
         parentForm: UIData | undefined,
-        newFormData: void | OpenNewFormOptions
+        newFormData: void | OpenNewFormOptions,
     ) {
         // 如果没有指定新界面，则直接终止
         if (!newFormData) return;
@@ -2044,7 +2041,7 @@ export class UIUtils {
                                         | FormDropdownComponent
                                         | FormSliderComponent
                                         | FormTextFieldComponent
-                                        | FormToggleComponent
+                                        | FormToggleComponent,
                                 );
                                 values.push(formValues[index]);
                             }
@@ -2098,6 +2095,28 @@ export class UIUtils {
     /** 关闭所有 UI。 */
     static close(player: minecraft.Player) {
         ui.uiManager.closeAllForms(player);
+    }
+}
+
+// #endregion
+// #region 文本展示管理器
+
+export class TextDisplayUtils {
+    /** 添加一个悬浮文本。 */
+    static add(text: minecraft.RawMessage | string, location: minecraft.Vector3) {
+        const textDisplay = new minecraft.TextPrimitive(Vector3Utils.add(location, 0.5, 0, 0.5), text);
+        minecraft.world.primitiveShapesManager.addText(textDisplay);
+        return textDisplay;
+    }
+
+    /** 移除一个悬浮文本。 */
+    static remove(textDisplay: minecraft.TextPrimitive) {
+        minecraft.world.primitiveShapesManager.removeText(textDisplay);
+    }
+
+    /** 移除全部悬浮文本。 */
+    static removeAll() {
+        minecraft.world.primitiveShapesManager.removeAll();
     }
 }
 

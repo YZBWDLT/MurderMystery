@@ -545,12 +545,7 @@ export class BlockUtils {
                 const block = DimensionUtils.getOverworld().getBlock(location);
                 if (!block)
                     return;
-                let permutation = block.permutation;
-                Object.entries(states).forEach(([state, value]) => {
-                    // @ts-ignore
-                    permutation = permutation.withState(state, value);
-                });
-                block.setPermutation(permutation);
+                this.setState(block, states);
             });
         }
         return volumes;
@@ -576,15 +571,9 @@ export class BlockUtils {
         const { id, location, states } = blockData;
         DimensionUtils.getDefault(dimension).setBlockType(location, id);
         // 设定方块的方块状态
-        if (states)
-            Object.entries(states).forEach(([state, value]) => {
-                const placedBlock = this.get(location, dimension);
-                if (!placedBlock)
-                    return;
-                const oldPermutation = placedBlock.permutation;
-                // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
-                placedBlock.setPermutation(oldPermutation.withState(state, value));
-            });
+        const placedBlock = this.get(location, dimension);
+        if (states && placedBlock)
+            this.setState(placedBlock, states);
         return this.get(location, dimension);
     }
     /** 获取和方块交互后，实际放置的方块位置。
@@ -624,6 +613,13 @@ export class BlockUtils {
                 return false;
         }
         return true;
+    }
+    /** 将方块设定为特定的方块状态。 */
+    static setState(block, states) {
+        Object.entries(states).forEach(([state, value]) => {
+            // @ts-ignore 因为原版的补全文件发疯，没有考虑附加包自定义的状态，所以这里必须忽略报错
+            block.setPermutation(block.permutation.withState(state, value));
+        });
     }
 }
 /** Vector2 的操作方法 */
@@ -1492,6 +1488,24 @@ export class UIUtils {
     /** 关闭所有 UI。 */
     static close(player) {
         ui.uiManager.closeAllForms(player);
+    }
+}
+// #endregion
+// #region 文本展示管理器
+export class TextDisplayUtils {
+    /** 添加一个悬浮文本。 */
+    static add(text, location) {
+        const textDisplay = new minecraft.TextPrimitive(Vector3Utils.add(location, 0.5, 0, 0.5), text);
+        minecraft.world.primitiveShapesManager.addText(textDisplay);
+        return textDisplay;
+    }
+    /** 移除一个悬浮文本。 */
+    static remove(textDisplay) {
+        minecraft.world.primitiveShapesManager.removeText(textDisplay);
+    }
+    /** 移除全部悬浮文本。 */
+    static removeAll() {
+        minecraft.world.primitiveShapesManager.removeAll();
     }
 }
 /** 数值工具。 */
