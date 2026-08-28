@@ -148,7 +148,6 @@ function formatUpdateLog(lines) {
 /** 更新日志。 */
 export const updateLog = formatUpdateLog(updateLogRaw);
 // #endregion
-// #endregion
 // #region 地图数据
 /** 地图数据。 */
 export const maps = {
@@ -1347,13 +1346,19 @@ export const maps = {
                 trigger: "archives:openDoor",
             },
             "archives:openDoor": {
-                condition: {
-                    isBlock: [
-                        { location: { x: 1038, y: 126, z: -184 }, id: "minecraft:fire" },
-                        { location: { x: 1038, y: 126, z: -188 }, id: "minecraft:fire" },
-                        { location: { x: 1041, y: 136, z: -184 }, id: "minecraft:fire" },
-                        { location: { x: 1041, y: 136, z: -188 }, id: "minecraft:fire" },
-                    ],
+                condition: () => {
+                    const isFire = (location) => {
+                        return lib.BlockUtils.match({ id: "minecraft:fire", location });
+                    };
+                    if (!isFire({ x: 1038, y: 126, z: -184 }))
+                        return false;
+                    if (!isFire({ x: 1038, y: 126, z: -188 }))
+                        return false;
+                    if (!isFire({ x: 1041, y: 136, z: -184 }))
+                        return false;
+                    if (!isFire({ x: 1041, y: 136, z: -188 }))
+                        return false;
+                    return true;
                 },
                 place: [
                     {
@@ -3264,7 +3269,6 @@ export const maps = {
                         { x: 106, y: 38, z: 1878 },
                     ],
                     trigger: "darkfall:openTrap",
-                    stillCancelEvent: true,
                 },
             ],
             enableMysteryPotion: {},
@@ -3306,48 +3310,31 @@ export const maps = {
                 getMysteryPotion: { animationLocation: { x: 121, y: 38, z: 1892 } },
             },
             "darkfall:openTrap": {
-                consumeGold: 2,
-                // 拉杆必须均为关闭状态
-                condition: {
-                    isBlock: [
-                        {
-                            id: "minecraft:lever",
-                            location: { x: 106, y: 38, z: 1878 },
-                            states: { open_bit: false },
-                        },
-                        {
-                            id: "minecraft:lever",
-                            location: { x: 106, y: 38, z: 1885 },
-                            states: { open_bit: false },
-                        },
-                    ],
-                },
-                // 若检测成功，两个拉杆都改为拉下状态
-                place: [
-                    {
-                        type: "fillBlock",
-                        id: "minecraft:air",
-                        from: { x: 112, y: 36, z: 1884 },
-                        to: { x: 107, y: 36, z: 1879 },
+                consumeGold: {
+                    count: 2,
+                    onInsufficient: () => {
+                        setLeverState([
+                            { x: 106, y: 38, z: 1885 },
+                            { x: 106, y: 38, z: 1878 },
+                        ], false);
                     },
-                    {
-                        type: "setBlock",
-                        id: "minecraft:lever",
-                        location: { x: 106, y: 38, z: 1878 },
-                        states: { open_bit: true, lever_direction: "north" },
-                    },
-                    {
-                        type: "setBlock",
-                        id: "minecraft:lever",
-                        location: { x: 106, y: 38, z: 1885 },
-                        states: { open_bit: true, lever_direction: "south" },
-                    },
-                ],
-                broadcast: {
-                    sound: "random.lever_click",
-                    location: { x: 106, y: 38, z: 1881.5 },
                 },
                 run: system => {
+                    // 开启陷阱
+                    lib.BlockUtils.fill({ id: "minecraft:air", from: { x: 112, y: 36, z: 1884 }, to: { x: 107, y: 36, z: 1879 } });
+                    // 将两个拉杆都改为拉下状态
+                    const lever1 = lib.BlockUtils.get({ x: 106, y: 38, z: 1878 });
+                    if (lever1)
+                        lib.BlockUtils.setState(lever1, { open_bit: true });
+                    const lever2 = lib.BlockUtils.get({ x: 106, y: 38, z: 1885 });
+                    if (lever2)
+                        lib.BlockUtils.setState(lever2, { open_bit: true });
+                    lib.PlayerUtils.broadcast({ sound: "random.lever_click", location: { x: 106, y: 38, z: 1881.5 } });
+                    // 禁止玩家此时与拉杆交互
+                    banLever([
+                        { x: 106, y: 38, z: 1885 },
+                        { x: 106, y: 38, z: 1878 },
+                    ], 6, "darkfall");
                     // 6 秒后连同拉杆一起复原
                     minecraft.system.runTimeout(() => {
                         system.eventManager.triggerEvent("darkfall:recoverTrap");
@@ -3363,18 +3350,6 @@ export const maps = {
                         type: "setStructure",
                         structure: "murder_mystery:darkfall/trap",
                         location: { x: 107, y: 36, z: 1879 },
-                    },
-                    {
-                        type: "setBlock",
-                        id: "minecraft:lever",
-                        location: { x: 106, y: 38, z: 1878 },
-                        states: { open_bit: false, lever_direction: "north" },
-                    },
-                    {
-                        type: "setBlock",
-                        id: "minecraft:lever",
-                        location: { x: 106, y: 38, z: 1885 },
-                        states: { open_bit: false, lever_direction: "south" },
                     },
                 ],
                 broadcast: {
@@ -3396,21 +3371,15 @@ export const maps = {
                     spawnTheDead({ x: 111, y: 36, z: 1882 });
                     spawnTheDead({ x: 107, y: 36, z: 1883 });
                     spawnTheDead({ x: 110, y: 36, z: 1884 });
-                    // 生成悬浮文本
-                    const addMysteryPotionText = (location) => {
-                        lib.TextDisplayUtils.add({ translate: "textDisplay.mysteryPotion" }, location);
-                    };
-                    addMysteryPotionText({ x: 71, y: 38, z: 1946 });
-                    addMysteryPotionText({ x: 98, y: 44, z: 1941 });
-                    addMysteryPotionText({ x: 120, y: 40, z: 1913 });
-                    addMysteryPotionText({ x: 130, y: 39, z: 1922 });
-                    addMysteryPotionText({ x: 121, y: 39, z: 1892 });
+                    // 生成神秘药水的悬浮文本
+                    addConsumeGoldTextDisplay({ x: 71, y: 38, z: 1946 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: 98, y: 44, z: 1941 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: 120, y: 40, z: 1913 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: 130, y: 39, z: 1922 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: 121, y: 39, z: 1892 }, "mysteryPotion.name", 1);
                     // 生成陷阱悬浮文本
-                    const addTrapText = (location) => {
-                        lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`2`] }, location);
-                    };
-                    addTrapText({ x: 106, y: 38, z: 1885 });
-                    addTrapText({ x: 106, y: 38, z: 1878 });
+                    addConsumeGoldTextDisplay({ x: 106, y: 38, z: 1885 }, "trap.name", 2);
+                    addConsumeGoldTextDisplay({ x: 106, y: 38, z: 1878 }, "trap.name", 2);
                 },
             },
             "darkfall:teleportToCave": {
@@ -3806,14 +3775,10 @@ export const maps = {
         },
         events: {
             "easterWorld:intoHauntedHouseDoor1": {
-                condition: {
-                    isBlock: [
-                        {
-                            id: "minecraft:wooden_door",
-                            location: { x: -165, y: 21, z: 3104 },
-                            states: { open_bit: true },
-                        },
-                    ],
+                condition: () => {
+                    if (!isOpenedWoodenDoor({ x: -165, y: 21, z: 3104 }))
+                        return false;
+                    return true;
                 },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -165, y: 21, z: 3104 },
@@ -3828,14 +3793,10 @@ export const maps = {
                 },
             },
             "easterWorld:intoHauntedHouseDoor2": {
-                condition: {
-                    isBlock: [
-                        {
-                            id: "minecraft:wooden_door",
-                            location: { x: -165, y: 21, z: 3101 },
-                            states: { open_bit: true },
-                        },
-                    ],
+                condition: () => {
+                    if (!isOpenedWoodenDoor({ x: -165, y: 21, z: 3101 }))
+                        return false;
+                    return true;
                 },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -165, y: 21, z: 3101 },
@@ -3850,14 +3811,10 @@ export const maps = {
                 },
             },
             "easterWorld:intoHauntedHouseDoor3": {
-                condition: {
-                    isBlock: [
-                        {
-                            id: "minecraft:wooden_door",
-                            location: { x: -165, y: 21, z: 3098 },
-                            states: { open_bit: true },
-                        },
-                    ],
+                condition: () => {
+                    if (!isOpenedWoodenDoor({ x: -165, y: 21, z: 3098 }))
+                        return false;
+                    return true;
                 },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -165, y: 21, z: 3098 },
@@ -3912,16 +3869,19 @@ export const maps = {
                     lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line3" }, { x: -161, y: 22.3, z: 3101 });
                     lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line4" }, { x: -161, y: 22.0, z: 3101 });
                     // 单轨列车
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.monorail" }, { x: -133, y: 25.5, z: 3141 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.monorail" }, { x: -76, y: 25.5, z: 3058 });
+                    addConsumeGoldTextDisplay({ x: -133, y: 25.5, z: 3141 }, "monorail.name", 1);
+                    addConsumeGoldTextDisplay({ x: -76, y: 25.5, z: 3058 }, "monorail.name", 1);
                     // 过山车
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.rollerCoaster" }, { x: -81, y: 23, z: 3034 });
+                    addConsumeGoldTextDisplay({ x: -81, y: 23, z: 3034 }, "rollerCoaster.name", 1);
                 },
             },
             "easterWorld:playerOnMonorail1": {
                 consumeGold: 1,
-                condition: {
-                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                condition: (system, playerData) => {
+                    const leftDuration = playerData?.getEventCooldownCountdown("rail", "monorail.name");
+                    if (!leftDuration || leftDuration > 0)
+                        return false;
+                    return true;
                 },
                 rideMinecart: {
                     from: { x: -133, y: 25, z: 3140 },
@@ -3932,8 +3892,11 @@ export const maps = {
             },
             "easterWorld:playerOnMonorail2": {
                 consumeGold: 1,
-                condition: {
-                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                condition: (system, playerData) => {
+                    const leftDuration = playerData?.getEventCooldownCountdown("rail", "monorail.name");
+                    if (!leftDuration || leftDuration > 0)
+                        return false;
+                    return true;
                 },
                 rideMinecart: {
                     from: { x: -76, y: 25, z: 3059 },
@@ -3944,8 +3907,11 @@ export const maps = {
             },
             "easterWorld:playerOnRollerCoaster": {
                 consumeGold: 1,
-                condition: {
-                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.rollerCoaster" },
+                condition: (system, playerData) => {
+                    const leftDuration = playerData?.getEventCooldownCountdown("rail", "rollerCoaster.name");
+                    if (!leftDuration || leftDuration > 0)
+                        return false;
+                    return true;
                 },
                 rideMinecart: {
                     from: { x: -82, y: 22, z: 3032 },
@@ -5718,14 +5684,10 @@ export const maps = {
         },
         events: {
             "hypixelWorld:intoHauntedHouseDoor1": {
-                condition: {
-                    isBlock: [
-                        {
-                            id: "minecraft:wooden_door",
-                            location: { x: -959, y: 46, z: 2883 },
-                            states: { open_bit: true },
-                        },
-                    ],
+                condition: () => {
+                    if (!isOpenedWoodenDoor({ x: -959, y: 46, z: 2883 }))
+                        return false;
+                    return true;
                 },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -959, y: 46, z: 2883 },
@@ -5740,14 +5702,10 @@ export const maps = {
                 },
             },
             "hypixelWorld:intoHauntedHouseDoor2": {
-                condition: {
-                    isBlock: [
-                        {
-                            id: "minecraft:wooden_door",
-                            location: { x: -959, y: 46, z: 2880 },
-                            states: { open_bit: true },
-                        },
-                    ],
+                condition: () => {
+                    if (!isOpenedWoodenDoor({ x: -959, y: 46, z: 2880 }))
+                        return false;
+                    return true;
                 },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -959, y: 46, z: 2880 },
@@ -5762,14 +5720,10 @@ export const maps = {
                 },
             },
             "hypixelWorld:intoHauntedHouseDoor3": {
-                condition: {
-                    isBlock: [
-                        {
-                            id: "minecraft:wooden_door",
-                            location: { x: -959, y: 46, z: 2877 },
-                            states: { open_bit: true },
-                        },
-                    ],
+                condition: () => {
+                    if (!isOpenedWoodenDoor({ x: -959, y: 46, z: 2877 }))
+                        return false;
+                    return true;
                 },
                 intoHauntedHouseDoor: {
                     doorLocation: { x: -959, y: 46, z: 2877 },
@@ -5817,48 +5771,26 @@ export const maps = {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Void },
             },
             "hypixelWorld:setText": {
-                place: [
-                    {
-                        type: "setText",
-                        location: { x: -955, y: 47.9, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line1" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -955, y: 47.6, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line2" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -955, y: 47.3, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line3" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -955, y: 47.0, z: 2880 },
-                        text: { translate: "textDisplay.hypixelWorld.doors.line4" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -927, y: 50.5, z: 2920 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -870, y: 50.5, z: 2837 },
-                        text: { translate: "textDisplay.hypixelWorld.monorail" },
-                    },
-                    {
-                        type: "setText",
-                        location: { x: -875, y: 48, z: 2813 },
-                        text: { translate: "textDisplay.hypixelWorld.rollerCoaster" },
-                    },
-                ],
+                run: () => {
+                    // 鬼屋门文本展示
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line1" }, { x: -955, y: 47.9, z: 2880 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line2" }, { x: -955, y: 47.6, z: 2880 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line3" }, { x: -955, y: 47.3, z: 2880 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.hypixelWorld.doors.line4" }, { x: -955, y: 47.0, z: 2880 });
+                    // 单轨列车
+                    addConsumeGoldTextDisplay({ x: -927, y: 50.5, z: 2920 }, "monorail.name", 1);
+                    addConsumeGoldTextDisplay({ x: -870, y: 50.5, z: 2837 }, "monorail.name", 1);
+                    // 过山车
+                    addConsumeGoldTextDisplay({ x: -875, y: 48, z: 2813 }, "rollerCoaster.name", 1);
+                },
             },
             "hypixelWorld:playerOnMonorail1": {
                 consumeGold: 1,
-                condition: {
-                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                condition: (system, playerData) => {
+                    const leftDuration = playerData?.getEventCooldownCountdown("rail", "monorail.name");
+                    if (!leftDuration || leftDuration > 0)
+                        return false;
+                    return true;
                 },
                 rideMinecart: {
                     from: { x: -927, y: 50, z: 2919 },
@@ -5869,8 +5801,11 @@ export const maps = {
             },
             "hypixelWorld:playerOnMonorail2": {
                 consumeGold: 1,
-                condition: {
-                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.monorail" },
+                condition: (system, playerData) => {
+                    const leftDuration = playerData?.getEventCooldownCountdown("rail", "monorail.name");
+                    if (!leftDuration || leftDuration > 0)
+                        return false;
+                    return true;
                 },
                 rideMinecart: {
                     from: { x: -870, y: 50, z: 2838 },
@@ -5881,8 +5816,11 @@ export const maps = {
             },
             "hypixelWorld:playerOnRollerCoaster": {
                 consumeGold: 1,
-                condition: {
-                    cooldownCompleted: { type: "rail", itemName: "hypixelWorld.rollerCoaster" },
+                condition: (system, playerData) => {
+                    const leftDuration = playerData?.getEventCooldownCountdown("rail", "rollerCoaster.name");
+                    if (!leftDuration || leftDuration > 0)
+                        return false;
+                    return true;
                 },
                 rideMinecart: {
                     from: { x: -876, y: 47, z: 2811 },
@@ -6257,61 +6195,20 @@ export const maps = {
                 setPlayerDead: { deathType: MurderMysteryDeathType.Void },
             },
             "library:recover": {
-                place: [
+                run: () => {
                     // 恢复神秘药水酿造台和栅栏门
-                    {
-                        type: "setStructure",
-                        structure: "murder_mystery:library/mystery_potion",
-                        location: { x: -927, y: 102, z: 1934 },
-                    },
-                    {
-                        type: "setStructure",
-                        structure: "murder_mystery:library/mystery_potion",
-                        location: { x: -884, y: 102, z: 1922 },
-                    },
-                    {
-                        type: "setStructure",
-                        structure: "murder_mystery:library/mystery_potion",
-                        location: { x: -907, y: 102, z: 1908 },
-                    },
-                    {
-                        type: "setStructure",
-                        structure: "murder_mystery:library/mystery_potion",
-                        location: { x: -853, y: 102, z: 1952 },
-                    },
-                    {
-                        type: "setStructure",
-                        structure: "murder_mystery:library/mystery_potion",
-                        location: { x: -885, y: 111, z: 1966 },
-                        options: { rotation: minecraft.StructureRotation.Rotate90 },
-                    },
+                    lib.StructureUtils.placeAsync("murder_mystery:library/mystery_potion", { x: -927, y: 102, z: 1934 });
+                    lib.StructureUtils.placeAsync("murder_mystery:library/mystery_potion", { x: -884, y: 102, z: 1922 });
+                    lib.StructureUtils.placeAsync("murder_mystery:library/mystery_potion", { x: -907, y: 102, z: 1908 });
+                    lib.StructureUtils.placeAsync("murder_mystery:library/mystery_potion", { x: -853, y: 102, z: 1952 });
+                    lib.StructureUtils.placeAsync("murder_mystery:library/mystery_potion", { x: -885, y: 111, z: 1966 }, { rotation: minecraft.StructureRotation.Rotate90 });
                     // 设置神秘药水悬浮文本
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: -884, y: 103, z: 1923 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: -907, y: 103, z: 1909 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: -927, y: 103, z: 1935 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: -853, y: 103, z: 1953 },
-                    },
-                    {
-                        type: "setText",
-                        text: { translate: "textDisplay.mysteryPotion" },
-                        location: { x: -884, y: 112, z: 1966 },
-                    },
-                ],
+                    addConsumeGoldTextDisplay({ x: -884, y: 103, z: 1923 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: -907, y: 103, z: 1909 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: -927, y: 103, z: 1935 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: -853, y: 103, z: 1953 }, "mysteryPotion.name", 1);
+                    addConsumeGoldTextDisplay({ x: -884, y: 112, z: 1966 }, "mysteryPotion.name", 1);
+                },
             },
         },
     },
@@ -9894,20 +9791,43 @@ export const maps = {
         },
         events: {
             "towerFall:playerHitGround": {
-                condition: { playerBelowHeight: 70 },
-                setPlayerDead: { deathType: MurderMysteryDeathType.HitGround },
+                condition: (system, playerData) => {
+                    const playerY = playerData?.player.location.y;
+                    if (!playerY || playerY > 70)
+                        return false;
+                    return true;
+                },
+                run: (system, playerData) => {
+                    const result = playerData?.setDead(MurderMysteryDeathType.HitGround);
+                    if (!result)
+                        return false;
+                    return true;
+                },
             },
             "towerfall:recover": {
                 run: () => {
                     lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_full`, { x: 1099, y: 110, z: -4031 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1122, y: 118.5, z: -4026 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1117, y: 112.5, z: -4026 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1111, y: 112.5, z: -4017 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.trap", with: [`1`] }, { x: 1111, y: 112.5, z: -4035 });
+                    addConsumeGoldTextDisplay({ x: 1122, y: 118.5, z: -4026 }, "trap.name", 1);
+                    addConsumeGoldTextDisplay({ x: 1117, y: 112.5, z: -4026 }, "trap.name", 1);
+                    addConsumeGoldTextDisplay({ x: 1111, y: 112.5, z: -4017 }, "trap.name", 1);
+                    addConsumeGoldTextDisplay({ x: 1111, y: 112.5, z: -4035 }, "trap.name", 1);
                 },
             },
             "towerfall:openTrap": {
-                consumeGold: 1,
+                consumeGold: {
+                    count: 1,
+                    onInsufficient: system => {
+                        // 陷阱未在冷却状态时，恢复回未拉下状态
+                        if (system.eventManager.getEventCooldownCountdown("towerfall:trap") > 0)
+                            return;
+                        setLeverState([
+                            { x: 1122, y: 119, z: -4026 },
+                            { x: 1117, y: 113, z: -4026 },
+                            { x: 1112, y: 113, z: -4035 },
+                            { x: 1112, y: 113, z: -4017 },
+                        ], false);
+                    },
+                },
                 run: (system, playerData) => {
                     // 如果仍处于冷却，警告玩家
                     if (system.eventManager.getEventCooldownCountdown("towerfall:trap", "trap.name", playerData?.player) > 0)
@@ -9942,31 +9862,12 @@ export const maps = {
                         time++;
                     });
                     // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，10 秒后恢复原状
-                    const leverLocations = [
+                    banLever([
                         { x: 1122, y: 119, z: -4026 },
                         { x: 1117, y: 113, z: -4026 },
                         { x: 1112, y: 113, z: -4035 },
                         { x: 1112, y: 113, z: -4017 },
-                    ];
-                    const setLeverState = (state) => {
-                        leverLocations.forEach(location => {
-                            const lever = lib.BlockUtils.get(location);
-                            if (!lever)
-                                return;
-                            lib.BlockUtils.setState(lever, { open_bit: state });
-                        });
-                        lib.PlayerUtils.broadcast({ sound: "random.lever_click" });
-                    };
-                    setLeverState(true);
-                    lib.gameSystem.subscribeEvent("towerfallTrapBanLever", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
-                        if (leverLocations.some(leverLocation => lib.Vector3Utils.isEqual(leverLocation, event.block.location))) {
-                            event.cancel = true;
-                        }
-                    });
-                    lib.gameSystem.subscribeDelay("towerfallTrapRecoverLeverDelay", () => {
-                        setLeverState(false);
-                        lib.gameSystem.unsubscribeEvent("towerfallTrapBanLever");
-                    }, 200);
+                    ], 10, "towerfall");
                     // 进入冷却
                     system.eventManager.setEventCooldown("towerfall:trap", 10);
                 },
@@ -11161,4 +11062,40 @@ export const maps = {
     },
     // #endregion
 };
+// #endregion
+// #region 常用方法
+/** 添加消耗金锭的文本展示。 */
+function addConsumeGoldTextDisplay(location, itemName, consume) {
+    const mainText = consume === 1 ? "textDisplay.consumeGold.1gold" : "textDisplay.consumeGold";
+    lib.TextDisplayUtils.add({ translate: mainText, with: { rawtext: [{ translate: itemName }, { text: `${consume}` }] } }, location);
+}
+/** 设置拉杆状态。 */
+function setLeverState(leverLocations, state) {
+    leverLocations.forEach(location => {
+        const lever = lib.BlockUtils.get(location);
+        if (!lever)
+            return;
+        lib.BlockUtils.setState(lever, { open_bit: state });
+    });
+    lib.PlayerUtils.broadcast({ sound: "random.lever_click" });
+}
+/** 暂时禁用拉杆。
+ * @param reopenDelay 在多久之后重新启用拉杆。单位：秒。
+ * @param id 一个阻止和其他禁用拉杆的进程相冲突的参数。通常设置为地图的 ID。
+ */
+function banLever(leverLocations, reopenDelay, id) {
+    setLeverState(leverLocations, true);
+    lib.gameSystem.subscribeEvent(`${id}TrapBanLever`, minecraft.world.beforeEvents.playerInteractWithBlock, event => {
+        if (leverLocations.some(leverLocation => lib.Vector3Utils.isEqual(leverLocation, event.block.location))) {
+            event.cancel = true;
+        }
+    });
+    lib.gameSystem.subscribeDelay(`${id}TrapRecoverLeverDelay`, () => {
+        setLeverState(leverLocations, false);
+        lib.gameSystem.unsubscribeEvent(`${id}TrapBanLever`);
+    }, 20 * reopenDelay);
+}
+function isOpenedWoodenDoor(location) {
+    return lib.BlockUtils.match({ id: "minecraft:wooden_door", location, states: { open_bit: true } });
+}
 // #endregion

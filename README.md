@@ -36,3 +36,5 @@
   - 同时，移除了`trigger`事件响应的`delay`参数，现在需要使用`run`替代
   - 因为`run`的功能性明显更强，灵活性显著提升，未来将会逐步废除更多的事件响应
 - 为`cooldown`事件响应添加了`target`和`itemName`参数
+- 更改了`condition`事件响应的类型，现在接受一个返回值为`boolean`的函数
+- 为`data.ts`新增了若干工具函数

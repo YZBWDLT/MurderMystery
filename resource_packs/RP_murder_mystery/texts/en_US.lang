@@ -189,8 +189,13 @@ chat.detective=§7Detective: §a%s
 chat.murderer=§7Murderer: §a%s §7(§a%s§7 Kills)
 chat.hero=§7Hero: §a%s
 
+### Consume Gold
+chat.consumeGold.insufficient=§cYou need at least §6%s gold§c to use this!
+textDisplay.consumeGold=%s - %s§6 Golds
+textDisplay.consumeGold.1gold=%s - %s§6 Gold
+
 ### Mystery Potion
-chat.mysteryPotion.goldNotEnough=§cYou need at least §6%s gold§c to use this!
+mysteryPotion.name=Mystery Potion
 chat.mysteryPotion.occupied=§cSomeone is already using it!
 chat.mysteryPotion.inventoryFull=§cYour inventory is full!
 chat.mysteryPotion.onlyOneEffect=§cYou can only have one effect at the same time!
@@ -199,7 +204,6 @@ subtitle.mysteryPotion.slowness=§c10S OF SLOWNESS
 subtitle.mysteryPotion.speed=§a20S OF SPEED
 subtitle.mysteryPotion.invisibility=§a14S OF INVISIBILITY
 subtitle.mysteryPotion.resistance=§a20S OF INVINCIBILITY
-textDisplay.mysteryPotion=Mystery Potion - 1§6 Gold
 
 ### Spectator Leave Gaming Area
 subtitle.spectatorOutOfBorder=§cYou ran too far!
@@ -233,15 +237,12 @@ textDisplay.hypixelWorld.doors.line3=§eBut be careful, it might
 textDisplay.hypixelWorld.doors.line4=§ebe a TRAP!
 
 ### Rail in Hypixel World
-hypixelWorld.monorail=Monorail
-hypixelWorld.rollerCoaster=Roller Coaster
-textDisplay.hypixelWorld.monorail=Monorail - 1§6 Gold
-textDisplay.hypixelWorld.rollerCoaster=Roller Coaster - 1§6 Gold
+monorail.name=Monorail
+rollerCoaster.name=Roller Coaster
 chat.hypixelWorld.rideTwoMinecarts=§cYou cannot ride another minecart while already riding one!
 
 ### Trap
 trap.name=Trap
-textDisplay.trap=Trap - %s§6 Golds
 
 ### Cooldown
 chat.cooldown=§cThe %s has %s seconds to cool down!

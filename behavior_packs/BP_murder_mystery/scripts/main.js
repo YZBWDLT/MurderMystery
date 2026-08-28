@@ -593,26 +593,8 @@ class MurderMysteryEventManager {
         // ===== 变量准备 =====
         const { condition, cooldown, consumeGold } = event;
         // ===== 判断条件是否通过 =====
-        if (condition) {
-            const { isBlock, playerBelowHeight, cooldownCompleted } = condition;
-            // 检查方块条件是否通过，如果未指定则默认通过
-            const hasBlockUnmatched = isBlock?.some(data => !lib.BlockUtils.match(data)) ?? false;
-            if (hasBlockUnmatched)
-                return false;
-            // 检查玩家高度条件是否通过
-            if (playerBelowHeight) {
-                if (!playerData)
-                    return false;
-                if (playerData.player.location.y >= playerBelowHeight)
-                    return false;
-            }
-            // 检查玩家特定冷却是否仍在运行
-            if (cooldownCompleted) {
-                const leftDuration = playerData?.getEventCooldownCountdown(cooldownCompleted.type, cooldownCompleted.itemName);
-                if (!leftDuration || leftDuration > 0)
-                    return false;
-            }
-        }
+        if (condition && !condition(this.system, playerData))
+            return false;
         // ===== 判断玩家金锭是否充足 =====
         if (consumeGold) {
             // 如果执行此事件时没有执行玩家，返回 false
@@ -624,21 +606,25 @@ class MurderMysteryEventManager {
             // 解析事件响应
             let count = 0;
             let notifyPlayerWhenGoldNotEnough = true;
+            let onInsufficient;
             if (typeof consumeGold === "number")
                 count = consumeGold;
             else {
                 count = consumeGold.count;
-                notifyPlayerWhenGoldNotEnough = consumeGold.notifyWhenGoldNotEnough;
+                notifyPlayerWhenGoldNotEnough = consumeGold.notifyWhenGoldNotEnough ?? true;
+                onInsufficient = consumeGold.onInsufficient;
             }
             // 检查玩家的金锭数
             const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
             if (playerGoldCount < count) {
                 if (notifyPlayerWhenGoldNotEnough) {
                     minecraft.system.run(() => lib.PlayerUtils.notify(player, {
-                        message: { translate: "chat.mysteryPotion.goldNotEnough", with: [`${consumeGold}`] },
+                        message: { translate: "chat.consumeGold.insufficient", with: [`${count}`] },
                         sound: "random.anvil_land",
                     }));
                 }
+                if (onInsufficient)
+                    onInsufficient(this.system, playerData);
                 return false;
             }
         }
