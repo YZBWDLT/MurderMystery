@@ -194,10 +194,12 @@ chat.consumeGold.insufficient=§cYou need at least §6%s gold§c to use this!
 textDisplay.consumeGold=%s - %s§6 Golds
 textDisplay.consumeGold.1gold=%s - %s§6 Gold
 
+### 背包已满
+chat.inventoryFull=§cYour inventory is full!
+
 ### Mystery Potion
 mysteryPotion.name=Mystery Potion
 chat.mysteryPotion.occupied=§cSomeone is already using it!
-chat.mysteryPotion.inventoryFull=§cYour inventory is full!
 chat.mysteryPotion.onlyOneEffect=§cYou can only have one effect at the same time!
 subtitle.mysteryPotion.blindness=§c10S OF BLINDNESS
 subtitle.mysteryPotion.slowness=§c10S OF SLOWNESS
@@ -228,6 +230,21 @@ chat.murdererGetLocator.murderer=§eYou've got a locator! Hold it to find the re
 ### Passage in Map Archives
 subtitle.archives.passageOpened=§aA secret passage has been opened!
 
+### Trap
+trap.name=Trap
+
+### Cooldown
+chat.cooldown=§cThe %s has %s seconds to cool down!
+
+### Errors
+chat.error.noValidMaps=§cWarning: No valid maps found. Please contact an admin to check the enabled map settings and enable at least one map. To ensure the game runs properly, a new map has been randomly enabled.
+chat.error.areaToLarge=§cWarning: Invalid map – the area is too large to initialize a tickingarea. Please contact an admin to disable map %s. To ensure the game runs properly, a new map has been randomly enabled.
+
+### No Full Function Warning
+chat.hasNoFullFunction=§cNote: This map has not yet been fully adapted. Only the most basic features are available. Full adaptation will come in future updates.
+
+## ===== Map Features =====
+
 ### Doors in Hypixel World
 chat.hypixelWorld.doors.right=§aYou chose the right door! But beware—next time, grave dangers may be waiting behind it...
 chat.hypixelWorld.doors.wrong=§cWrong door!
@@ -241,18 +258,15 @@ monorail.name=Monorail
 rollerCoaster.name=Roller Coaster
 chat.hypixelWorld.rideTwoMinecarts=§cYou cannot ride another minecart while already riding one!
 
-### Trap
-trap.name=Trap
-
-### Cooldown
-chat.cooldown=§cThe %s has %s seconds to cool down!
-
-### Errors
-chat.error.noValidMaps=§cWarning: No valid maps found. Please contact an admin to check the enabled map settings and enable at least one map. To ensure the game runs properly, a new map has been randomly enabled.
-chat.error.areaToLarge=§cWarning: Invalid map – the area is too large to initialize a tickingarea. Please contact an admin to disable map %s. To ensure the game runs properly, a new map has been randomly enabled.
-
-### No Full Function Warning
-chat.hasNoFullFunction=§cNote: This map has not yet been fully adapted. Only the most basic features are available. Full adaptation will come in future updates.
+### Tanks in Aquarium
+textDisplay.aquarium.pufferfishTank=§6Pufferfish Tank
+textDisplay.aquarium.octopusTank=§5Octopus Tank
+textDisplay.aquarium.tank.line1=§7§oPress Button to exchange
+textDisplay.aquarium.tank.line2=§7§oGold for valuables
+chat.aquarium.tank.blindness=§cThe mighty sea creature has poisoned you with Blindness! §7(30 seconds)
+chat.aquarium.tank.giftSplashPotion=§cThe mighty sea creature has gifted you a %s!
+chat.aquarium.tank.giftDrinkableSpeedPotion=§cThe mighty sea creature has gifted you a Drinkable Speed Potion!
+chat.aquarium.tank.giftBow=§cThe mighty sea creature has gifted you a bow!
 
 ## ===== Settings UI =====
 

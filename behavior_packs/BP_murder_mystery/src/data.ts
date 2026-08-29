@@ -929,17 +929,325 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 932.5, y: 68.5, z: 2945.5 },
                 { x: 932.5, y: 67.5, z: 2953.5 },
             ],
-            hasFullFunction: false,
         },
         components: {
             playerInArea: [
                 { area: { xMin: 861, xMax: 869, yMin: 48, yMax: 57, zMin: 2928, zMax: 2936 }, trigger: "aquarium:ateByPiranhas" },
                 { area: { xMin: 891, xMax: 911, yMin: 35, yMax: 65, zMin: 2951, zMax: 2972 }, trigger: "aquarium:ateByShark" },
             ],
+            interaction: [
+                { at: [{ x: 857, y: 61, z: 2934 }], trigger: "aquarium:piranhaTrap" },
+                {
+                    at: [
+                        { x: 890, y: 69, z: 2966 },
+                        { x: 890, y: 69, z: 2962 },
+                        { x: 912, y: 69, z: 2966 },
+                        { x: 912, y: 69, z: 2962 },
+                        { x: 899, y: 69, z: 2974 },
+                        { x: 903, y: 69, z: 2974 },
+                    ],
+                    trigger: "aquarium:sharkTrap",
+                    type: "button",
+                },
+                {
+                    at: [
+                        { x: 907, y: 69, z: 2947 },
+                        { x: 907, y: 69, z: 2945 },
+                        { x: 895, y: 69, z: 2947 },
+                        { x: 895, y: 69, z: 2945 },
+                        { x: 900, y: 69, z: 2940 },
+                        { x: 902, y: 69, z: 2940 },
+                    ],
+                    trigger: "aquarium:bridgeTrap",
+                },
+                {
+                    at: [
+                        { x: 861, y: 61, z: 2951 },
+                        { x: 870, y: 69, z: 2932 },
+                        { x: 901, y: 69, z: 2982 },
+                    ],
+                    trigger: "aquarium:potionTrap",
+                    type: "button",
+                },
+            ],
+            onGameStart: { trigger: "aquarium:recover" },
         },
         events: {
             "aquarium:ateByPiranhas": { setPlayerDead: { deathType: MurderMysteryDeathType.Piranhas } },
             "aquarium:ateByShark": { setPlayerDead: { deathType: MurderMysteryDeathType.Shark } },
+            "aquarium:piranhaTrap": {
+                consumeGold: {
+                    count: 1,
+                    onInsufficient: system => {
+                        // 陷阱未在冷却状态时，恢复回未拉下状态
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap") > 0) return;
+                        setLeverState([{ x: 857, y: 61, z: 2934 }], false);
+                    },
+                },
+                run: (system, playerData) => {
+                    // 如果仍处于冷却，警告玩家
+                    if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap", "trap.name", playerData?.player) > 0)
+                        return false;
+                    // 播放动画
+                    let time = 0;
+                    const trapLocation: minecraft.Vector3 = { x: 861, y: 59, z: 2928 };
+                    const setStructureStage = (stage: number) => {
+                        lib.StructureUtils.placeAsync(`murder_mystery:aquarium/piranha_trap_stage${stage}`, trapLocation);
+                        lib.PlayerUtils.broadcast({ sound: "random.glass" });
+                    };
+                    lib.gameSystem.subscribeTimeline("aquariumPiranhaTrapAnimation", () => {
+                        if (time === 5) setStructureStage(1);
+                        if (time === 20) setStructureStage(2);
+                        if (time === 35) setStructureStage(3);
+                        if (time === 235) setStructureStage(2);
+                        if (time === 250) setStructureStage(1);
+                        if (time >= 265) {
+                            lib.StructureUtils.placeAsync(`murder_mystery:aquarium/piranha_trap_full`, trapLocation);
+                            lib.PlayerUtils.broadcast({ sound: "random.glass" });
+                            return false;
+                        }
+                        time++;
+                    });
+                    // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，15 秒后恢复原状
+                    banLever([{ x: 857, y: 61, z: 2934 }], 15, "aquarium");
+                    // 进入冷却
+                    system.eventManager.setEventCooldown("aquarium:piranhaTrap", 15);
+                },
+            },
+            "aquarium:sharkTrap": {
+                consumeGold: 2,
+                run: (system, playerData) => {
+                    // 如果当前鲨鱼陷阱处于冷却，终止运行
+                    if (system.eventManager.getEventCooldownCountdown("aquarium:sharkTrap", "trap.name", playerData?.player) > 0)
+                        return false;
+
+                    // 获取当前鲨鱼陷阱的状态
+                    // - `0`：当前处于完整桥状态，下一次激活改为状态 1。
+                    // - `1`：当前处于半完整桥状态，下一次激活改为状态 2。
+                    // - `2`：当前处于空桥状态，在 9 秒后自动改为状态 1，再在 1 秒后改回状态 0。
+
+                    const currentTrapStage =
+                        (minecraft.world.getDynamicProperty("murder_mystery:aquarium:shark_trap_stage") as number | undefined) ?? 0;
+                    const setTrapStage = (stage: number) => {
+                        const structureId =
+                            stage === 0
+                                ? `murder_mystery:aquarium/shark_trap_full`
+                                : `murder_mystery:aquarium/shark_trap_stage${stage}`;
+                        lib.StructureUtils.placeAsync(structureId, { x: 897, y: 67, z: 2963 });
+                        minecraft.world.setDynamicProperty("murder_mystery:aquarium:shark_trap_stage", stage);
+                        lib.PlayerUtils.broadcast({
+                            location: { x: 901, y: 68, z: 2964 },
+                            sound: "block.mob_spawner.break",
+                            soundOptions: { pitch: 0.8 },
+                        });
+                    };
+
+                    if (currentTrapStage === 0) {
+                        setTrapStage(1);
+                    } else if (currentTrapStage === 1) {
+                        setTrapStage(2);
+                        lib.gameSystem.subscribeDelay("aquariumSharkTrapToStage1", () => setTrapStage(1), 180);
+                        lib.gameSystem.subscribeDelay("aquariumSharkTrapToStage0", () => setTrapStage(0), 200);
+                    }
+
+                    // 设置鲨鱼陷阱的冷却
+                    system.eventManager.setEventCooldown("aquarium:sharkTrap", 15);
+                },
+            },
+            "aquarium:bridgeTrap": {
+                consumeGold: {
+                    count: 1,
+                    onInsufficient: system => {
+                        // 陷阱未在冷却状态时，恢复回未拉下状态
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap") > 0) return;
+                        setLeverState(
+                            [
+                                { x: 907, y: 69, z: 2947 },
+                                { x: 907, y: 69, z: 2945 },
+                                { x: 895, y: 69, z: 2947 },
+                                { x: 895, y: 69, z: 2945 },
+                                { x: 900, y: 69, z: 2940 },
+                                { x: 902, y: 69, z: 2940 },
+                            ],
+                            false,
+                        );
+                    },
+                },
+                run: (system, playerData) => {
+                    // 如果仍处于冷却，警告玩家
+                    if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap", "trap.name", playerData?.player) > 0)
+                        return false;
+                    // 播放动画
+                    let time = 0;
+                    const trapLocation: minecraft.Vector3 = { x: 899, y: 67, z: 2944 };
+                    const setStructureStage = (stage: number) => {
+                        lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_stage${stage}`, trapLocation);
+                        lib.PlayerUtils.broadcast({ sound: "random.glass", location: { x: 901, y: 68, z: 2946 } });
+                    };
+                    lib.gameSystem.subscribeTimeline("aquariumBridgeTrapAnimation", () => {
+                        if (time === 4) setStructureStage(1);
+                        if (time === 12) setStructureStage(2);
+                        if (time === 172) setStructureStage(1);
+                        if (time >= 180) {
+                            lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_full`, trapLocation);
+                            lib.PlayerUtils.broadcast({ sound: "random.glass", location: { x: 901, y: 68, z: 2946 } });
+                            return false;
+                        }
+                        time++;
+                    });
+                    // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，15 秒后恢复原状
+                    banLever(
+                        [
+                            { x: 907, y: 69, z: 2947 },
+                            { x: 907, y: 69, z: 2945 },
+                            { x: 895, y: 69, z: 2947 },
+                            { x: 895, y: 69, z: 2945 },
+                            { x: 900, y: 69, z: 2940 },
+                            { x: 902, y: 69, z: 2940 },
+                        ],
+                        15,
+                        "aquarium",
+                    );
+                    // 进入冷却
+                    system.eventManager.setEventCooldown("aquarium:bridgeTrap", 15);
+                },
+            },
+            "aquarium:potionTrap": {
+                run: (system, playerData) => {
+                    if (!playerData) return false;
+                    // 获取玩家的金锭，决定玩家使用哪种兑换组合
+                    const goldCount = lib.ItemUtils.inventory.getTypeAmount(playerData.player, "murder_mystery:gold_ingot");
+                    const eventManager = system.eventManager;
+
+                    if (goldCount >= 8) eventManager.triggerEvent("aquarium:potionTrapFor8Golds", playerData);
+                    else if (goldCount >= 5) eventManager.triggerEvent("aquarium:potionTrapFor5Golds", playerData);
+                    else if (goldCount >= 1) eventManager.triggerEvent("aquarium:potionTrapFor1Gold", playerData);
+                    else if (lib.PlayerUtils.isPlayer(playerData.player)) {
+                        lib.PlayerUtils.notify(playerData.player, {
+                            message: { translate: "chat.consumeGold.insufficient", with: [`1`] },
+                            sound: "random.anvil_land",
+                        });
+                    }
+                },
+            },
+            "aquarium:potionTrapFor1Gold": {
+                consumeGold: 1,
+                run: (system, playerData) => {
+                    if (!playerData) return false;
+                    const player = playerData.player;
+                    // 选项 1：失明
+                    if (Math.random() > 0.5) {
+                        player.addEffect("blindness", 600);
+                        if (lib.PlayerUtils.isPlayer(player))
+                            lib.PlayerUtils.notify(player, {
+                                message: { translate: "chat.aquarium.tank.blindness" },
+                                sound: "mob.endermen.portal",
+                            });
+                    }
+                    // 选项 2：给予一瓶喷溅型夜视药水
+                    else {
+                        if (!playerData.canGiveItem()) return false;
+                        const nextSlot = playerData.getNextItemSlot();
+                        const potion = minecraft.Potions.resolve("minecraft:nightvision", "ThrownSplash");
+                        potion.lockMode = minecraft.ItemLockMode.slot;
+                        lib.ItemUtils.inventory.get(playerData.player)?.container.setItem(nextSlot, potion);
+                        if (lib.PlayerUtils.isPlayer(player))
+                            lib.PlayerUtils.notify(player, {
+                                message: {
+                                    translate: "chat.aquarium.tank.giftSplashPotion",
+                                    with: { rawtext: [{ translate: "potion.nightVision.splash.name" }] },
+                                },
+                                sound: "mob.villager.yes",
+                            });
+                    }
+                },
+            },
+            "aquarium:potionTrapFor5Golds": {
+                consumeGold: 5,
+                run: (system, playerData) => {
+                    if (!playerData) return false;
+                    if (!playerData.canGiveItem()) return false;
+                    const giveSplashPotion = (potionEffectType: string, potionRawtext: string) => {
+                        const player = playerData.player;
+                        const nextSlot = playerData.getNextItemSlot();
+                        const potion = minecraft.Potions.resolve(potionEffectType, "ThrownSplash");
+                        potion.lockMode = minecraft.ItemLockMode.slot;
+                        lib.ItemUtils.inventory.get(playerData.player)?.container.setItem(nextSlot, potion);
+                        if (lib.PlayerUtils.isPlayer(player))
+                            lib.PlayerUtils.notify(player, {
+                                message: {
+                                    translate: "chat.aquarium.tank.giftSplashPotion",
+                                    with: { rawtext: [{ translate: potionRawtext }] },
+                                },
+                                sound: "mob.villager.yes",
+                            });
+                    };
+                    // 选项 1：给予一瓶喷溅型虚弱药水
+                    if (Math.random() > 0.5) giveSplashPotion("minecraft:weakness", "potion.weakness.splash.name");
+                    // 选项 2：给予一瓶喷溅型缓慢药水
+                    else giveSplashPotion("minecraft:slowness", "potion.moveSlowdown.splash.name");
+                },
+            },
+            "aquarium:potionTrapFor8Golds": {
+                consumeGold: 8,
+                run: (system, playerData) => {
+                    if (!playerData) return false;
+                    const player = playerData.player;
+                    // 选项 1：给予弓
+                    if (Math.random() > 0.5) {
+                        playerData.getBow();
+                        if (playerData.role === "detective") playerData.chargingTime = 0;
+                        if (lib.PlayerUtils.isPlayer(player))
+                            lib.PlayerUtils.notify(player, {
+                                message: { translate: "chat.aquarium.tank.giftBow" },
+                                sound: "mob.villager.yes",
+                            });
+                    }
+                    // 选项 2：给予一瓶可饮用的迅捷药水
+                    else {
+                        if (!playerData.canGiveItem()) return false;
+                        const nextSlot = playerData.getNextItemSlot();
+                        const potion = minecraft.Potions.resolve("minecraft:swiftness", "Consume");
+                        potion.lockMode = minecraft.ItemLockMode.slot;
+                        lib.ItemUtils.inventory.get(playerData.player)?.container.setItem(nextSlot, potion);
+                        if (lib.PlayerUtils.isPlayer(player))
+                            lib.PlayerUtils.notify(player, {
+                                message: { translate: "chat.aquarium.tank.giftDrinkableSpeedPotion" },
+                                sound: "mob.villager.yes",
+                            });
+                        // 同时，注册一个玩家喝完药就立刻清除玻璃瓶的事件
+                        lib.gameSystem.subscribeEvent(
+                            "aquariumPlayerDrinkPotion",
+                            minecraft.world.afterEvents.itemCompleteUse,
+                            event => {
+                                lib.ItemUtils.removeItem(event.source, "minecraft:glass_bottle");
+                            },
+                        );
+                    }
+                },
+            },
+            "aquarium:recover": {
+                run: () => {
+                    // 重置陷阱
+                    lib.StructureUtils.placeAsync(`murder_mystery:aquarium/piranha_trap_full`, { x: 861, y: 59, z: 2928 });
+                    lib.StructureUtils.placeAsync(`murder_mystery:aquarium/shark_trap_full`, { x: 897, y: 67, z: 2963 });
+                    lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_full`, { x: 899, y: 67, z: 2944 });
+                    // 重置鲨鱼陷阱的状态
+                    minecraft.world.setDynamicProperty("murder_mystery:aquarium:shark_trap_stage", 0);
+                    // 重置文字
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.pufferfishTank" }, { x: 861, y: 63.7, z: 2952 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.tank.line1" }, { x: 861, y: 63.4, z: 2952 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.tank.line2" }, { x: 861, y: 63.1, z: 2952 });
+
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.octopusTank" }, { x: 870, y: 71.7, z: 2932 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.tank.line1" }, { x: 870, y: 71.4, z: 2932 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.tank.line2" }, { x: 870, y: 71.1, z: 2932 });
+
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.pufferfishTank" }, { x: 901, y: 71.7, z: 2983 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.tank.line1" }, { x: 901, y: 71.4, z: 2983 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.aquarium.tank.line2" }, { x: 901, y: 71.1, z: 2983 });
+                },
+            },
         },
     },
     // #endregion
@@ -10185,7 +10493,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1123.5, y: 112.5, z: -4008.5 },
                 { x: 1126.5, y: 115.5, z: -4015.5 },
             ],
-            hasFullFunction: false,
         },
         components: {
             playerHurt: [{ cause: minecraft.EntityDamageCause.fall, trigger: "towerFall:playerHitGround" }],
@@ -10201,6 +10508,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
             ],
             onGameStart: { trigger: "towerfall:recover" },
+            time: 1000,
         },
         events: {
             "towerFall:playerHitGround": {

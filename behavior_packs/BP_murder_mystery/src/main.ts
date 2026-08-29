@@ -985,22 +985,7 @@ class MurderMysteryEventManager {
         }
 
         // 如果玩家拥有超过 3 瓶药水，提示玩家后终止运行
-        const playerPotionCount = lib.ItemUtils.inventory.getAmount(player, {
-            includeTypeId: [
-                "murder_mystery:mystery_potion_0",
-                "murder_mystery:mystery_potion_1",
-                "murder_mystery:mystery_potion_2",
-                "murder_mystery:mystery_potion_3",
-                "murder_mystery:mystery_potion_4",
-            ],
-        });
-        if (playerPotionCount >= 3) {
-            lib.PlayerUtils.notify(player, {
-                message: { translate: "chat.mysteryPotion.inventoryFull" },
-                sound: "random.anvil_land",
-            });
-            return false;
-        }
+        if (!playerData.canGiveItem()) return false;
 
         // ===== ↓ 可以成功购买神秘药水 =====
 
@@ -1028,16 +1013,9 @@ class MurderMysteryEventManager {
             { initialRotation: player.getRotation().y + 180, spawnEvent: potionId },
         );
 
-        /** 给予玩家药水的槽位。这里只有 3 个槽位可用：6 号位 -> 8 号位 -> 1 号位。如果这些槽位有空缺，则依次顺延。 */
-        let replaceSlot = 0;
-        const playerContainer = player.getComponent("inventory")?.container;
-        if (!playerContainer?.getItem(5)) replaceSlot = 5;
-        else if (!playerContainer?.getItem(7)) replaceSlot = 7;
-        else replaceSlot = 0;
-
         // 在 1.5 秒后，销毁动画实体并给予玩家药水
         minecraft.system.runTimeout(() => {
-            lib.ItemUtils.inventory.set(player, replaceSlot, potionId, {
+            playerData.giveItem(potionId, {
                 itemLock: minecraft.ItemLockMode.slot,
                 name: potionUnlocked ? `§r§a${potionName}药水` : void 0,
                 lore: potionUnlocked
@@ -3915,6 +3893,57 @@ export class MurderMysteryPlayer {
                 with: { rawtext: [{ translate: itemName }, { text: `${countdown}` }] },
             });
         return countdown;
+    }
+
+    // #endregion
+    // #region - 设置物品
+
+    /** 检查是否能给予玩家物品。 */
+    canGiveItem(maxItemCount: 1 | 2 | 3 = 3): boolean {
+        // ===== 变量准备 =====
+        const player = this.player;
+        const playerContainer = player.getComponent("inventory")?.container;
+        const itemInSlot0 = playerContainer?.getItem(0);
+        const itemInSlot5 = playerContainer?.getItem(5);
+        const itemInSlot7 = playerContainer?.getItem(7);
+
+        /** 当前已有的物品数。 */
+        let currentItemCount = 0;
+        if (itemInSlot0) currentItemCount++;
+        if (itemInSlot5) currentItemCount++;
+        if (itemInSlot7) currentItemCount++;
+
+        // ===== 检查玩家的背包是否已满 =====
+        if (currentItemCount >= maxItemCount) {
+            if (isPlayer(player))
+                lib.PlayerUtils.notify(player, { message: { translate: "chat.inventoryFull" }, sound: "random.anvil_land" });
+            return false;
+        }
+
+        return true;
+    }
+
+    /** 获取该玩家下一次将要放置物品的槽位。 */
+    getNextItemSlot() {
+        // ===== 变量准备 =====
+        const player = this.player;
+        const playerContainer = player.getComponent("inventory")?.container;
+        const itemInSlot5 = playerContainer?.getItem(5);
+        const itemInSlot7 = playerContainer?.getItem(7);
+
+        /** 将要替换的槽位。替换槽位的顺序为 5 号位 -> 7 号位 -> 0 号位。 */
+        let replaceSlot: 0 | 5 | 7 = 0;
+        if (!itemInSlot5) replaceSlot = 5;
+        else if (!itemInSlot7) replaceSlot = 7;
+
+        return replaceSlot;
+    }
+
+    /** 给予玩家物品。
+     * @remarks 请提前使用`canGiveItem()`方法判断是否应该给予玩家物品。
+     */
+    giveItem(itemId: string, options: lib.ItemOptions) {
+        lib.ItemUtils.inventory.set(this.player, this.getNextItemSlot(), itemId, options);
     }
 
     // #endregion

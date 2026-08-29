@@ -190,14 +190,16 @@ chat.murderer=§7杀手：§a%s§7（§a%s§7击杀）
 chat.hero=§7英雄：§a%s
 
 ### 消耗金锭
-chat.consumeGold.insufficient=§c你需要§6%s个金锭§c才能使用它！
+chat.consumeGold.insufficient=§c你需要至少§6%s个金锭§c才能使用它！
 textDisplay.consumeGold=%s - %s§6块金锭
 textDisplay.consumeGold.1gold=%s - %s§6块金锭
+
+### 背包已满
+chat.inventoryFull=§c你的背包满了！
 
 ### 神秘药水
 mysteryPotion.name=神秘药水
 chat.mysteryPotion.occupied=§c已经有人在使用了！
-chat.mysteryPotion.inventoryFull=§c你的背包满了！
 chat.mysteryPotion.onlyOneEffect=§c你同时只能拥有一种药水效果！
 subtitle.mysteryPotion.blindness=§c10秒失明效果
 subtitle.mysteryPotion.slowness=§c10秒缓慢效果
@@ -228,6 +230,21 @@ chat.murdererGetLocator.murderer=§e你的定位器现在可以指向其他玩�
 ### 档案馆秘密通道
 subtitle.archives.passageOpened=§a一个秘密通道开启了！
 
+### 陷阱
+trap.name=陷阱
+
+### 冷却
+chat.cooldown=§c%s还有%s秒冷却时间！
+
+### 报错
+chat.error.noValidMaps=§c警告：未找到有效地图。请联系管理员检查启用地图设置，并至少打开一张地图。为确保游戏正常运行，目前已随机开启一张新地图。
+chat.error.areaToLarge=§c警告：无效的地图，该地图区域过大，无法完成常加载区域初始化。请联系管理员禁用地图 %s。为确保游戏正常运行，目前已随机开启一张新地图。
+
+### 无完整功能警告
+chat.hasNoFullFunction=§c请注意：该地图尚未完成功能适配，只有最基础的功能，在后续版本我们会进行适配。
+
+## ===== 地图特色功能 =====
+
 ### Hypixel游乐园的门
 chat.hypixelWorld.doors.right=§a你选择了正确的门！但是请注意，下次门后等待着你的可能是重重危机……
 chat.hypixelWorld.doors.wrong=§c错误选项！
@@ -241,18 +258,15 @@ monorail.name=单轨列车
 rollerCoaster.name=过山车
 chat.hypixelWorld.rideTwoMinecarts=§c你不能在乘坐矿车时再乘坐另一辆矿车！
 
-### 陷阱
-trap.name=陷阱
-
-### 冷却
-chat.cooldown=§c%s还有%s秒冷却时间！
-
-### 报错
-chat.error.noValidMaps=§c警告：未找到有效地图。请联系管理员检查启用地图设置，并至少打开一张地图。为确保游戏正常运行，目前已随机开启一张新地图。
-chat.error.areaToLarge=§c警告：无效的地图，该地图区域过大，无法完成常加载区域初始化。请联系管理员禁用地图 %s。为确保游戏正常运行，目前已随机开启一张新地图。
-
-### 无完整功能警告
-chat.hasNoFullFunction=§c请注意：该地图尚未完成功能适配，只有最基础的功能，在后续版本我们会进行适配。
+### 水族馆的缸
+textDisplay.aquarium.pufferfishTank=§6河豚缸
+textDisplay.aquarium.octopusTank=§5章鱼缸
+textDisplay.aquarium.tank.line1=§7§o点击按钮以兑换
+textDisplay.aquarium.tank.line2=§7§o用金锭兑换
+chat.aquarium.tank.blindness=§c神圣的海洋生物用失明毒害了你！§7（持续30秒）
+chat.aquarium.tank.giftSplashPotion=§c神圣的海洋生物赠予你一瓶%s！
+chat.aquarium.tank.giftDrinkableSpeedPotion=§c神圣的海洋生物赠予你一瓶可饮用的迅捷药水！
+chat.aquarium.tank.giftBow=§c神圣的海洋生物赠予你一把弓！
 
 ## ===== 设置 UI =====
 
