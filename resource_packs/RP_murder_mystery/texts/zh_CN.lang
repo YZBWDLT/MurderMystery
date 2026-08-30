@@ -53,6 +53,7 @@ map.goldRush=淘金热
 map.headquarters=总部
 map.hollywood=好莱坞
 map.hypixelWorld=Hypixel游乐园
+map.mountainV1=山脉 V1
 map.mountain=山脉
 map.library=图书馆
 map.sanPeraticoV1=港口小镇 V1
@@ -66,7 +67,8 @@ map.subway=地铁
 map.towerFall=高坠塔
 map.transportV1=运输塔 V1
 map.transport=运输塔
-map.villa=Villa
+map.villaV1=乡间别墅 V1
+map.villa=乡间别墅
 map.widowsDen=黑寡妇巢穴
 
 ### 模式名

@@ -1320,7 +1320,7 @@ class InventoryUtils {
     }
 
     /** 对实体物品栏特定位置新增特定数量的物品。
-     * @param itemId 当指定的位置不存在物品时，新增该物品，否则不会新增任何物品。
+     * @param itemId 当指定的位置不存在物品时，或指定的位置不为该物品时，新增该物品，否则不会新增任何物品。
      * @param options 若新增物品，新增何种物品。
      * @returns 返回已添加的物品数量。
      */
@@ -1328,9 +1328,9 @@ class InventoryUtils {
         // 如果实体不存在物品栏，直接终止程序
         const inventory = this.get(entity);
         if (!inventory) return 0;
-        // 获取原本的物品，如果不存在则……
+        // 获取原本的物品，如果不存在，或物品存在但和指定的物品 ID 不一致，则……
         const oldItem = inventory.container.getItem(slot);
-        if (!oldItem) {
+        if (!oldItem || (itemId && oldItem.typeId !== itemId)) {
             // 如果没有设定默认物品，直接终止
             if (!itemId) return 0;
             // 如果设定了默认物品，则设定之，返回成功设定的数量

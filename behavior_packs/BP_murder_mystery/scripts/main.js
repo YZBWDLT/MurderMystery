@@ -2813,10 +2813,14 @@ export class MurderMysteryPlayer {
                 initialRotation: this.player.getRotation().y,
             });
         if (isPlayer(this.player)) {
-            // 设置为旁观
-            this.player.setGameMode(minecraft.GameMode.Spectator);
+            const player = this.player;
+            // 这里，急眼版有一个非常幽默的 bug，如果玩家着火时设置旁观就会一直显示着火粒子，哪怕是其他玩家也能看见
+            // 并且通过脚本直接设置 extinguishFire 也是无效的，脚本层也判定玩家未着火，但就是会显示着火粒子
+            // 无敌了基岩版
+            // 尝试了多种办法均无果，只能放弃修复。未来等天杀的 ojng 自己解决吧。
+            player.setGameMode(minecraft.GameMode.Spectator);
             // 对玩家显示死因
-            lib.PlayerUtils.notify(this.player, {
+            lib.PlayerUtils.notify(player, {
                 title: { translate: "title.youDied" },
                 subtitle: { translate: `deathMessage.${deathType}`, with: [killDistance.toFixed(2)] },
                 titleOptions: instantTitleDisplay,
@@ -2827,12 +2831,12 @@ export class MurderMysteryPlayer {
                 sound: "mob.skeleton.death",
                 soundDelay: 3,
             });
-            this.player.sendMessage({ translate: "chat.spectatorTeleport.tip" });
+            player.sendMessage({ translate: "chat.spectatorTeleport.tip" });
             // 恢复玩家的输入权限
-            this.player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
-            this.player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
+            player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
+            player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
             // 设置失明
-            this.player.addEffect("minecraft:blindness", 60);
+            player.addEffect("minecraft:blindness", 60);
         }
         else {
             // 传送假玩家到出生点
