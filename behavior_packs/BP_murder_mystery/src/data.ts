@@ -6404,7 +6404,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
                 run: system => {
                     minecraft.system.runTimeout(() => {
-                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor1");
+                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor2");
                     }, 160);
                 },
             },
@@ -6421,7 +6421,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 },
                 run: system => {
                     minecraft.system.runTimeout(() => {
-                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor1");
+                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor3");
                     }, 160);
                 },
             },
