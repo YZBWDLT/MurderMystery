@@ -689,6 +689,11 @@ export class MurderMysterySystem {
         });
     }
 
+    /** 获取游戏已开始的时长。单位：秒。 */
+    getGameStartedTime() {
+        return this.settings.gaming.timePerGame - this.timeLeft;
+    }
+
     /** 获取实体的状态。状态列表可在 {@link DynamicProperties} 检查或注册。 */
     static getState<T extends keyof DynamicProperties>(
         entity: minecraft.Entity,
@@ -2606,8 +2611,7 @@ class MurderMysteryComponents {
         lib.gameSystem.subscribeTimeline(
             "getSpecialItem",
             () => {
-                const getSpecialItemTimeLeft =
-                    system.settings.gaming.getSpecialItemDelay - (system.settings.gaming.timePerGame - system.timeLeft);
+                const getSpecialItemTimeLeft = system.settings.gaming.getSpecialItemDelay - system.getGameStartedTime();
 
                 // 对玩家提示
                 if (getSpecialItemTimeLeft <= 5) murdererGetSwordNotice(getSpecialItemTimeLeft);
@@ -2798,6 +2802,8 @@ class MurderMysteryComponents {
                 () => {
                     const bowEntity = lib.EntityUtils.getType(bowEntityId)[0];
                     if (!bowEntity) return;
+                    // 如果仍未给予道具，阻止玩家捡弓，终止运行
+                    if (!system.getSpecialItem) return;
                     // 获取拾取者（必须为存活的平民）
                     const picker = [
                         ...lib.EntityUtils.getNearby("minecraft:player", bowEntity.location, 1.5),
@@ -2816,6 +2822,8 @@ class MurderMysteryComponents {
                 event => {
                     const { player: picker, target: bowEntity } = event;
                     if (bowEntity.typeId !== bowEntityId) return;
+                    // 如果仍未给予道具，阻止玩家捡弓，终止运行
+                    if (!system.getSpecialItem) return;
                     // 获取拾取者（必须为存活的平民）
                     const pickerData = system.getPlayer(picker);
                     if (!isAliveInnocentData(pickerData)) return;
@@ -3403,15 +3411,16 @@ export class MurderMysteryPlayer {
     }
 
     /** 获取弓箭。 */
-    getBow() {
+    getBow(giveArrow = true) {
         // 新增箭并移除金锭，并提示玩家
         lib.ItemUtils.inventory.set(this.player, this.role === MurderMysteryPlayerRole.Murderer ? 2 : 1, "minecraft:bow", {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,
         });
-        lib.ItemUtils.inventory.addSlot(this.player, 3, 1, "minecraft:arrow", {
-            itemLock: minecraft.ItemLockMode.slot,
-        });
+        if (giveArrow)
+            lib.ItemUtils.inventory.addSlot(this.player, 3, 1, "minecraft:arrow", {
+                itemLock: minecraft.ItemLockMode.slot,
+            });
     }
 
     // #region - 平民

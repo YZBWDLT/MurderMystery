@@ -6006,7 +6006,7 @@ export const maps = {
                 },
                 run: system => {
                     minecraft.system.runTimeout(() => {
-                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor1");
+                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor2");
                     }, 160);
                 },
             },
@@ -6024,7 +6024,7 @@ export const maps = {
                 },
                 run: system => {
                     minecraft.system.runTimeout(() => {
-                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor1");
+                        system.eventManager.triggerEvent("hypixelWorld:recoverDoor3");
                     }, 160);
                 },
             },
