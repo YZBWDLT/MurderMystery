@@ -935,6 +935,11 @@ export class Vector3Utils {
 
         return { x, y, z };
     }
+
+    /** 将一个坐标转换为字符串格式。 */
+    static toString(location: minecraft.Vector3): string {
+        return `${location.x} ${location.y} ${location.z}`;
+    }
 }
 
 // #endregion

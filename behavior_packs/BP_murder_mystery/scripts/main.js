@@ -96,7 +96,7 @@ export class MurderMysterySystem {
     }
     // #region - 系统变量
     /** 系统版本。 */
-    version = "1.0 - Exp 9";
+    version = "1.0 - Pre 1";
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage;
     /** 游戏设置信息，获取管理员等输入的设置信息，并自动应用于设置中。 */

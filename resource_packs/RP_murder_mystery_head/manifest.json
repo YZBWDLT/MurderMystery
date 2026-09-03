@@ -4,7 +4,7 @@
         "name": "量筒的密室杀手：自定义头颅包",
         "description": "存储地图内所有自定义头颅的包",
         "uuid": "de6a672e-585c-4fa2-9fe9-832963485d5a",
-        "version": [1, 0, 17],
+        "version": [1, 0, 19],
         "min_engine_version": [1, 26, 40]
     },
     "modules": [
@@ -20,7 +20,7 @@
     "dependencies": [
         {
             "uuid": "f9d13050-a65d-4bff-9029-28b9dad04064",
-            "version": [1, 0, 17]
+            "version": [1, 0, 19]
         }
     ],
     "capabilities": ["pbr", "raytraced"]

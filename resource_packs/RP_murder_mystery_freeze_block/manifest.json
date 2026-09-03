@@ -4,7 +4,7 @@
         "name": "量筒的密室杀手：冻结方块包",
         "description": "存储地图内所有冻结方块的包",
         "uuid": "b08198ad-629d-4499-9579-7aad251c6247",
-        "version": [1, 0, 17],
+        "version": [1, 0, 19],
         "min_engine_version": [1, 26, 40]
     },
     "modules": [
@@ -20,7 +20,7 @@
     "dependencies": [
         {
             "uuid": "3a2bedee-b509-4ab6-8da4-3f2fbdb31e40",
-            "version": [1, 0, 17]
+            "version": [1, 0, 19]
         }
     ],
     "capabilities": ["pbr", "raytraced"]

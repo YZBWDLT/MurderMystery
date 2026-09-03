@@ -773,6 +773,10 @@ export class Vector3Utils {
             throw new Error(`Invalid numeric value in location string: "${location}"`);
         return { x, y, z };
     }
+    /** 将一个坐标转换为字符串格式。 */
+    static toString(location) {
+        return `${location.x} ${location.y} ${location.z}`;
+    }
 }
 /** 实体操作工具。
  * @remarks 在该工具中的多数方法都接收一个可选的 dimension。在未额外声明的前提下，若不指定则默认使用主世界。
