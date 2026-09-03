@@ -1,3 +1,9 @@
+import type { Vector3 } from "@minecraft/server";
+
+export const mapOffset: Record<string, { origin: string; real: string }> = {
+    archivesTopFloor: { origin: "0 0 0", real: "646 -1 495" },
+};
+
 /** 地上头颅的数据。 */
 export interface GroundHeadData {
     /** 头颅 ID，不含命名空间。 */

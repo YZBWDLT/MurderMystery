@@ -1,3 +1,6 @@
+export const mapOffset = {
+    archivesTopFloor: { origin: "0 0 0", real: "646 -1 495" },
+};
 /** 所有地图的所有头颅数据。 */
 export const headData = {
     ancientTomb: [
