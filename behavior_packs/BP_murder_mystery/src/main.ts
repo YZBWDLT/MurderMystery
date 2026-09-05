@@ -744,7 +744,7 @@ class MurderMysteryEventManager {
     private readonly system: MurderMysterySystem;
 
     /** 地图使用的事件 */
-    readonly events: Record<string, gameData.MurderMysteryEvents>;
+    readonly events: Record<string, (system: MurderMysterySystem, playerData?: MurderMysteryPlayer) => void>;
 
     // #region - 触发事件
 
@@ -758,146 +758,8 @@ class MurderMysteryEventManager {
         const triggedEvent = this.events[id];
         if (!triggedEvent) return;
 
-        if (!this.isEventConditionPassed(triggedEvent, playerData)) return;
-        this.executeEvent(triggedEvent, playerData);
-    }
-
-    /** 判断事件的条件是否通过。 */
-    private isEventConditionPassed(event: gameData.MurderMysteryEvents, playerData?: MurderMysteryPlayer): boolean {
-        // ===== 变量准备 =====
-        const { condition, cooldown, consumeGold } = event;
-
-        // ===== 判断条件是否通过 =====
-        if (condition && !condition(this.system, playerData)) return false;
-
-        // ===== 判断玩家金锭是否充足 =====
-        if (consumeGold) {
-            // 如果执行此事件时没有执行玩家，返回 false
-            if (!playerData) return false;
-            const player = playerData.player;
-            if (!isPlayer(player)) return false;
-
-            // 解析事件响应
-            let count = 0;
-            let notifyPlayerWhenGoldNotEnough = true;
-            let onInsufficient;
-            if (typeof consumeGold === "number") count = consumeGold;
-            else {
-                count = consumeGold.count;
-                notifyPlayerWhenGoldNotEnough = consumeGold.notifyWhenGoldNotEnough ?? true;
-                onInsufficient = consumeGold.onInsufficient;
-            }
-
-            // 检查玩家的金锭数
-            const playerGoldCount = lib.ItemUtils.inventory.getTypeAmount(player, goldId);
-            if (playerGoldCount < count) {
-                if (notifyPlayerWhenGoldNotEnough) {
-                    minecraft.system.run(() =>
-                        lib.PlayerUtils.notify(player, {
-                            message: { translate: "chat.consumeGold.insufficient", with: [`${count}`] },
-                            sound: "random.anvil_land",
-                        }),
-                    );
-                }
-                if (onInsufficient) onInsufficient(this.system, playerData);
-                return false;
-            }
-        }
-
-        // ===== 判断系统是否处于冷却期间 =====
-        if (cooldown && cooldown.target === "system") {
-            const leftDuration = this.getEventCooldownCountdown(cooldown.type, cooldown.itemName, playerData?.player);
-            if (leftDuration > 0) return false;
-        }
-
-        return true;
-    }
-
-    /** 执行事件。 */
-    private executeEvent(event: gameData.MurderMysteryEvents, playerData?: MurderMysteryPlayer) {
-        const {
-            getMysteryPotion,
-            intoHauntedHouseDoor,
-            outOfHauntedHouseDoor,
-            place,
-            setPlayerDead,
-            notify,
-            broadcast,
-            trigger,
-            teleport,
-            rideMinecart,
-            cooldown,
-            consumeGold,
-            run,
-        } = event;
-
-        // ===== 执行函数 =====
-        if (run && run(this.system, playerData) === false) return;
-
-        // ===== 神秘药水事件 =====
-        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
-        if (getMysteryPotion && (!playerData || !this.getMysteryPotion(getMysteryPotion, playerData))) return;
-
-        // ===== 鬼屋门事件 =====
-        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
-        if (intoHauntedHouseDoor && (!playerData || !this.intoHauntedHouseDoor(intoHauntedHouseDoor, playerData))) return;
-
-        // ===== 离开鬼屋门事件 =====
-        // 若执行此事件时没有执行玩家，则终止运行
-        if (outOfHauntedHouseDoor) {
-            if (!playerData) return;
-            playerData.isInHauntedHouseDoor = false;
-        }
-
-        // ===== 放置方块/结构事件 =====
-        if (place) {
-            // 如果有方块/结构未能放置，立刻判定为失败
-            const hasPlaceFailed = place.some(data => {
-                let result = true;
-
-                if (data.type === "setBlock") result = this.setBlock(data);
-                else if (data.type === "fillBlock") result = this.fillBlock(data);
-                else if (data.type === "setStructure") result = this.setStructure(data);
-                else if (data.type === "setEntity") result = this.setEntity(data);
-                else result = this.setText(data);
-
-                if (!result) return true;
-            });
-            if (hasPlaceFailed) return false;
-        }
-
-        // ===== 处死玩家事件 =====
-        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
-        if (setPlayerDead && (!playerData || !this.setPlayerDead(setPlayerDead, playerData))) return;
-
-        // ===== 乘坐矿车事件 =====
-        // 若执行此事件时没有执行玩家，或执行失败，则终止运行
-        if (rideMinecart && (!playerData || !this.rideMinecart(rideMinecart, playerData))) return;
-
-        // ===== 传送玩家事件 =====
-        if (teleport && (!playerData || !this.teleport(teleport, playerData))) return;
-
-        // ===== 冷却事件 =====
-        // 若执行此事件时没有执行玩家，则终止运行
-        if (cooldown) {
-            if (!playerData) return;
-            if (cooldown.target === "player") playerData.setEventCooldown(cooldown.type, cooldown.duration);
-            else this.setEventCooldown(cooldown.type, cooldown.duration);
-        }
-
-        // ===== 执行成功后 =====
-
-        // 通告玩家/通知触发玩家
-        if (broadcast) lib.PlayerUtils.broadcast(broadcast);
-        if (notify && playerData && isPlayer(playerData.player)) lib.PlayerUtils.notify(playerData.player, notify);
-
-        // 移除金锭
-        const consumeGoldCount = typeof consumeGold === "number" ? consumeGold : (consumeGold?.count ?? 0);
-        if (consumeGoldCount && playerData?.player && isPlayer(playerData.player))
-            lib.ItemUtils.removeItem(playerData.player, "murder_mystery:gold_ingot", -1, consumeGoldCount);
-
-        // 触发新的事件
-        if (trigger) this.triggerEvent(trigger, playerData);
+        // ===== 触发事件 =====
+        triggedEvent(this.system, playerData);
     }
 
     // #endregion
@@ -968,10 +830,7 @@ class MurderMysteryEventManager {
     /** 令玩家试图获取神秘药水。
      * @returns 返回是否成功获得了药水。
      */
-    private getMysteryPotion(
-        getMysteryPotionEvent: gameData.MurderMysteryGetMysteryPotionEvent,
-        playerData: MurderMysteryPlayer,
-    ): boolean {
+    getMysteryPotion(animationLocation: minecraft.Vector3, playerData: MurderMysteryPlayer): boolean {
         // ===== 条件检查 =====
 
         // 如果玩家不是 Player，终止运行
@@ -979,7 +838,6 @@ class MurderMysteryEventManager {
         if (!isPlayer(player)) return false;
 
         // 如果已有人在使用（附近有药水动画时），提示玩家后终止运行
-        const animationLocation = getMysteryPotionEvent.animationLocation;
         const nearbyAnimationEntities = lib.EntityUtils.getNearby("murder_mystery:mystery_potion", animationLocation, 2);
         if (nearbyAnimationEntities.length !== 0) {
             lib.PlayerUtils.notify(player, {
@@ -1092,167 +950,119 @@ class MurderMysteryEventManager {
     }
 
     // #endregion
-    // #region - 放置方块/结构
-
-    /** 在特定位置试图放置方块。
-     * @returns 返回是否成功放置了方块。
-     */
-    private setBlock(setBlockEvent: gameData.MurderMysterySetBlockEvent): boolean {
-        // 如果该方块已放置过，则终止运行
-        if (lib.BlockUtils.match(setBlockEvent)) return false;
-
-        // 放置方块
-        // 这里 setBlockEvent 的类型是继承自 lib.BlockData 的，所以直接用了
-        lib.BlockUtils.set(setBlockEvent, lib.DimensionUtils.getOverworld());
-        return true;
-    }
-
-    /** 在特定位置试图填充方块。
-     * @returns 返回是否成功填充了方块。
-     */
-    private fillBlock(fillBlockEvent: gameData.MurderMysteryFillBlockEvent): boolean {
-        // 填充方块
-        // 这里 fillBlockEvent 的类型是继承自 lib.BlockFillData 的，所以直接用了
-        lib.BlockUtils.fill(fillBlockEvent, {}, lib.DimensionUtils.getOverworld());
-        return true;
-    }
-
-    /** 在特定位置试图填充方块。
-     * @returns 返回是否成功填充了方块。
-     */
-    private setStructure(setStructureEvent: gameData.MurderMysterySetStructureEvent): boolean {
-        const { structure, location, options } = setStructureEvent;
-        lib.StructureUtils.placeAsync(structure, location, options);
-        return true;
-    }
-
-    /** 在特定位置试图填充方块。
-     * @returns 返回是否成功填充了方块。
-     */
-    private setEntity(setEntityEvent: gameData.MurderMysterySetEntityEvent): boolean {
-        const { id, location, options } = setEntityEvent;
-        lib.EntityUtils.add(id, location, "overworld", options);
-        return true;
-    }
-
-    /** 在特定位置试图填充方块。
-     * @returns 返回是否成功填充了方块。
-     */
-    private setText(setTextEvent: gameData.MurderMysterySetTextEvent): boolean {
-        const { text, location } = setTextEvent;
-        minecraft.world.primitiveShapesManager.addText(new minecraft.TextPrimitive(lib.Vector3Utils.add(location, 0.5, 0, 0.5), text));
-        return true;
-    }
-
-    // #endregion
-    // #region - 处死玩家
-
-    /** 设置玩家为死亡状态。
-     * @returns 返回是否成功处死了玩家。
-     */
-    setPlayerDead(setPlayerDeadEvent: gameData.MurderMysterySetPlayerDeadEvent, playerData: MurderMysteryPlayer): boolean {
-        const result = playerData.setDead(setPlayerDeadEvent.deathType);
-        return result;
-    }
-
-    // #endregion
-    // #region - 传送玩家
-
-    /** 传送玩家到指定位置。
-     * @returns 返回是否成功传送了玩家。
-     */
-    private teleport(teleportEvent: gameData.MurderMysteryTeleportEvent, playerData: MurderMysteryPlayer): boolean {
-        const { location, facingLocation } = teleportEvent;
-        playerData.player.teleport(location, { facingLocation });
-        return true;
-    }
-
-    // #endregion
     // #region - 鬼屋门
 
-    private intoHauntedHouseDoor(
-        intoHauntedHouseDoorEvent: gameData.MurderMysteryIntoHauntedHouseDoorEvent,
+    /** 玩家进入鬼屋门。进入门时有 1/3 的概率发生：
+     * - 进入正确的门，玩家获得 3 个金锭；
+     * - 进入错误的门，玩家掉进下面的跑酷逃生区域；
+     * - 进入错误的门，玩家掉进虚空。
+     * @param doorLocation 门的位置。当玩家进入到鬼屋门时，关闭何位置的门。
+     * @param lavaCaveGlassLocation 岩浆跑酷房通道的玻璃位置。
+     * @param voidGlassLocation 虚空通道的玻璃位置。
+     * @param voidBarrierLocation 虚空通道的屏障位置，强制令玩家跌到虚空。
+     * @returns 返回一个`Promise`，若执行失败则返回`Promise<false>`，否则在 7 秒后返回`Promise<true>`。
+     */
+    intoHauntedHouseDoor(
         playerData: MurderMysteryPlayer,
-    ): boolean {
+        doorLocation: minecraft.Vector3,
+        lavaCaveGlassLocation: minecraft.Vector3,
+        voidGlassLocation: minecraft.Vector3,
+        voidBarrierLocation: { from: minecraft.Vector3; to: minecraft.Vector3 },
+    ): Promise<boolean> {
         // ===== 变量准备 =====
-        const { doorLocation, voidGlassLocation, lavaCaveGlassLocation, voidBarrierLocation } = intoHauntedHouseDoorEvent;
         const player = playerData.player;
 
         // ===== 条件判断 =====
         // 如果没有方块，则终止运行
         const door = lib.BlockUtils.get(doorLocation);
-        if (!door) return false;
+        if (!door) return Promise.resolve(false);
         // 如果不是玩家，则终止运行
-        if (!isPlayer(player)) return false;
+        if (!isPlayer(player)) return Promise.resolve(false);
         // 如果玩家已在鬼屋门内，则终止运行
-        if (playerData.isInHauntedHouseDoor) return false;
+        if (playerData.isInHauntedHouseDoor) return Promise.resolve(false);
 
-        // ===== 开启鬼屋门的判断 =====
-        // 关门
-        door.setPermutation(door.permutation.withState("open_bit", false));
-        lib.PlayerUtils.notify(player, { sound: "close.wooden_door" });
+        // ===== 进入鬼屋门 =====
+        return new Promise(resolve => {
+            lib.gameSystem.subscribeTimeline(
+                `${player.id}IntoHauntedHouseDoor`,
+                time => {
+                    if (time === 0) {
+                        // 关门
+                        door.setPermutation(door.permutation.withState("open_bit", false));
+                        lib.PlayerUtils.notify(player, { sound: "close.wooden_door" });
 
-        // 标记玩家进入鬼屋门
-        playerData.isInHauntedHouseDoor = true;
+                        // 标记玩家进入鬼屋门
+                        playerData.isInHauntedHouseDoor = true;
+                    }
+                    // 播放音效
+                    if (time >= 1 && time <= 5) lib.PlayerUtils.notify(player, { sound: "note.bass" });
+                    // 第 6 秒时随机一个结果
+                    if (time === 6) {
+                        const randomResult = lib.JSUtils.number.randomInt(1, 3) as 1 | 2 | 3;
+                        switch (randomResult) {
+                            // 1. 正确的门，给予玩家 3 个金锭并放行
+                            case 1:
+                                lib.ItemUtils.addEntity(player.location, goldId, { amount: 3 });
+                                lib.PlayerUtils.notify(player, {
+                                    message: { translate: "chat.hypixelWorld.doors.right" },
+                                    sound: "random.pop",
+                                });
+                                break;
 
-        // 播放音效
-        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 20 });
-        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 40 });
-        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 60 });
-        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 80 });
-        lib.PlayerUtils.notify(player, { sound: "note.bass", soundDelay: 100 });
-        // 6 秒后随机一个结果
-        minecraft.system.runTimeout(() => {
-            // 随机结果
-            const randomResult = lib.JSUtils.number.randomInt(1, 3) as 1 | 2 | 3;
-            switch (randomResult) {
-                // 1. 正确的门，给予玩家 3 个金锭并放行
-                case 1:
-                    lib.ItemUtils.addEntity(player.location, goldId, { amount: 3 });
-                    lib.PlayerUtils.notify(player, {
-                        message: { translate: "chat.hypixelWorld.doors.right" },
-                        sound: "random.pop",
-                    });
-                    break;
+                            // 2. 错误的门，但不把玩家送到虚空
+                            case 2:
+                                lib.BlockUtils.set({ id: "minecraft:air", location: lavaCaveGlassLocation });
+                                lib.PlayerUtils.notify(player, {
+                                    message: { translate: "chat.hypixelWorld.doors.wrong" },
+                                    sound: "mob.enderdragon.flap",
+                                });
+                                break;
 
-                // 2. 错误的门，但不把玩家送到虚空
-                case 2:
-                    lib.BlockUtils.set({ id: "minecraft:air", location: lavaCaveGlassLocation });
-                    lib.PlayerUtils.notify(player, {
-                        message: { translate: "chat.hypixelWorld.doors.wrong" },
-                        sound: "mob.enderdragon.flap",
-                    });
-                    break;
-
-                // 3. 错误的门，且把玩家送到虚空
-                case 3:
-                    lib.BlockUtils.set({ id: "minecraft:air", location: lavaCaveGlassLocation });
-                    lib.BlockUtils.set({ id: "minecraft:air", location: voidGlassLocation });
-                    lib.BlockUtils.fill({ id: "minecraft:barrier", ...voidBarrierLocation });
-                    lib.PlayerUtils.notify(player, {
-                        message: { translate: "chat.hypixelWorld.doors.wrong" },
-                        sound: "mob.enderdragon.flap",
-                    });
-                    break;
-            }
-        }, 120);
-        // 7 秒后开门
-        minecraft.system.runTimeout(() => {
-            door.setPermutation(door.permutation.withState("open_bit", true));
-            lib.PlayerUtils.notify(player, { sound: "open.wooden_door" });
-        }, 140);
-        return true;
+                            // 3. 错误的门，且把玩家送到虚空
+                            case 3:
+                                lib.BlockUtils.set({ id: "minecraft:air", location: lavaCaveGlassLocation });
+                                lib.BlockUtils.set({ id: "minecraft:air", location: voidGlassLocation });
+                                lib.BlockUtils.fill({ id: "minecraft:barrier", ...voidBarrierLocation });
+                                lib.PlayerUtils.notify(player, {
+                                    message: { translate: "chat.hypixelWorld.doors.wrong" },
+                                    sound: "mob.enderdragon.flap",
+                                });
+                                break;
+                        }
+                    }
+                    // 第 7 秒时，开门
+                    if (time === 7) {
+                        door.setPermutation(door.permutation.withState("open_bit", true));
+                        lib.PlayerUtils.notify(player, { sound: "open.wooden_door" });
+                        resolve(true);
+                        return false;
+                    }
+                },
+                20,
+            );
+        });
     }
 
     // #endregion
     // #region - 玩家乘坐矿车
-    private rideMinecart(rideMinecartEvent: gameData.MurderMysteryRideMinecartEvent, playerData: MurderMysteryPlayer): boolean {
-        // ===== 变量准备&条件检查 =====
-        const { from, to, initVelocity, onArrival } = rideMinecartEvent;
 
+    /** 玩家乘坐矿车，令玩家乘坐矿车到达指定位置。
+     * @param from 矿车从何位置始发。
+     * @param to 矿车到达何位置。
+     * @param initVelocity 矿车的初始速度方向。
+     * @returns 返回玩家是否成功乘坐矿车。如果玩家正在乘坐矿车，则会返回`false`。
+     */
+    rideMinecart(
+        playerData: MurderMysteryPlayer,
+        consumeGold = 1,
+        from: minecraft.Vector3,
+        to: minecraft.Vector3,
+        initVelocity: minecraft.Vector3,
+    ): Promise<boolean> {
+        // ===== 变量准备&条件检查 =====
         // 如果不是玩家，阻止触发此事件
         const player = playerData.player;
-        if (!isPlayer(player)) return false;
+        if (!isPlayer(player)) return Promise.resolve(false);
 
         // 如果玩家正在乘坐矿车，阻止重复触发此事件
         if (playerData.isRidingMinecart) {
@@ -1260,7 +1070,7 @@ class MurderMysteryEventManager {
                 message: { translate: "chat.hypixelWorld.rideTwoMinecarts" },
                 sound: "random.anvil_land",
             });
-            return false;
+            return Promise.resolve(false);
         }
 
         // ===== 生成矿车并锁定玩家 =====
@@ -1275,11 +1085,14 @@ class MurderMysteryEventManager {
 
         // 令玩家坐在矿车上
         const rideableComp = minecart.getComponent("rideable");
-        if (!rideableComp) return false;
+        if (!rideableComp) return Promise.resolve(false);
         rideableComp.addRider(player);
 
         // 标记玩家正在乘坐矿车
         playerData.isRidingMinecart = true;
+
+        // 移除玩家的金锭
+        playerData.consumeGold(consumeGold);
 
         // 如果玩家的矿车坏掉了，则立刻补充一个新的矿车
         lib.gameSystem.subscribeEvent(`prevent${player.id}MinecartDestroyed`, minecraft.world.beforeEvents.entityRemove, event => {
@@ -1305,29 +1118,30 @@ class MurderMysteryEventManager {
         });
 
         // 当矿车到达终点时，移除矿车，启用玩家的下车权限并终止时间线
-        lib.gameSystem.subscribeTimeline(`${player.id}RideMinecart`, () => {
-            if (!minecart.isValid) return; // 因为这里矿车可能会被移除，故而矿车可能会无效化
-            const location = minecart.location;
-            if (lib.Vector3Utils.distance(location, to, true) <= 1) {
-                // 恢复玩家的权限
-                player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
-                player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
+        return new Promise(resolve => {
+            lib.gameSystem.subscribeTimeline(`${player.id}RideMinecart`, () => {
+                if (!minecart.isValid) return; // 因为这里矿车可能会被移除，故而矿车可能会无效化
+                const location = minecart.location;
+                if (lib.Vector3Utils.distance(location, to, true) <= 1) {
+                    // 恢复玩家的权限
+                    player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
+                    player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
 
-                // 注销玩家乘坐中的矿车
-                playerData.isRidingMinecart = false;
+                    // 注销玩家乘坐中的矿车
+                    playerData.isRidingMinecart = false;
 
-                // 先解除矿车无法被破坏的状态，再强制移除
-                lib.gameSystem.unsubscribeEvent(`prevent${player.id}MinecartDestroyed`);
-                minecart.remove();
+                    // 先解除矿车无法被破坏的状态，再强制移除
+                    lib.gameSystem.unsubscribeEvent(`prevent${player.id}MinecartDestroyed`);
+                    minecart.remove();
 
-                // 触发事件
-                this.triggerEvent(onArrival, playerData);
+                    // 触发事件
+                    resolve(true);
 
-                // 最后终止时间线
-                return false;
-            }
+                    // 最后终止时间线
+                    return false;
+                }
+            });
         });
-        return true;
     }
 
     // #endregion
@@ -2326,12 +2140,9 @@ class MurderMysteryComponents {
             // ===== 特殊伤害处理 =====
             minecraft.system.run(() => {
                 // 如果受到岩浆伤害，立刻处死
-                if (thisCause === minecraft.EntityDamageCause.lava)
-                    eventManager.setPlayerDead({ deathType: gameData.MurderMysteryDeathType.Lava }, playerData);
-
+                if (thisCause === minecraft.EntityDamageCause.lava) playerData.setDead(gameData.MurderMysteryDeathType.Lava);
                 // 如果受到溺水伤害，立刻处死
-                if (thisCause === minecraft.EntityDamageCause.drowning)
-                    eventManager.setPlayerDead({ deathType: gameData.MurderMysteryDeathType.Drowned }, playerData);
+                if (thisCause === minecraft.EntityDamageCause.drowning) playerData.setDead(gameData.MurderMysteryDeathType.Drowned);
             });
 
             // ===== 触发系统事件 =====
@@ -3906,6 +3717,33 @@ export class MurderMysteryPlayer {
                 with: { rawtext: [{ translate: itemName }, { text: `${countdown}` }] },
             });
         return countdown;
+    }
+
+    // #endregion
+    // #region - 金锭检查
+
+    /** 获取玩家金锭是否充足。当金锭不充足时会提醒玩家。 */
+    haveEnoughGold(count: number, notify = true): boolean {
+        const goldCount = lib.ItemUtils.inventory.getTypeAmount(this.player, goldId);
+        const isEnough = goldCount >= count;
+        if (!isEnough && notify) {
+            if (isPlayer(this.player)) {
+                lib.PlayerUtils.notify(this.player, {
+                    message: { translate: "chat.consumeGold.insufficient", with: [`${count}`] },
+                    sound: "random.anvil_land",
+                });
+            }
+        }
+        return isEnough;
+    }
+
+    /** 消耗玩家的金锭。
+     * @returns 返回是否成功消耗金锭。若玩家金锭不足，则返回`false`。
+     */
+    consumeGold(count: number) {
+        if (!this.haveEnoughGold(count)) return false;
+        if (isPlayer(this.player)) lib.ItemUtils.removeItem(this.player, goldId, -1, count);
+        return true;
     }
 
     // #endregion

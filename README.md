@@ -34,3 +34,8 @@
 
 - 更新了行为包和资源包的版本为`1.0.19`
 - 为`lib`新增了一个`Vector3Utils.toString()`静态方法，以将坐标转换为`"X Y Z"`的字符串形式
+- 彻底移除了事件的数据驱动，现在事件的类型为`Record<string, (system: MurderMysterySystem, playerData?: MurderMysteryPlayer) => void>`，而不再是`Record<string, MurderMysteryEvents>`
+- 令事件管理器对`data.ts`开放了多个函数：`getMysteryPotion`、`intoHauntedHouseDoor`、`rideMinecart`
+- 现在事件管理器的`intoHauntedHouseDoor`、`rideMinecart`是异步的，会返回`Promise<boolean>`，在对应事件结束后返回
+- 移除了事件管理器的多个函数：`setBlock`、`fillBlock`、`setStructure`、`setEntity`、`setText`、`setPlayerDead`、`teleport`，它们都可以用脚本系统的其他函数代替
+- 更改了`lib.gameSystem.subscribeTimeline`方法，现在其回调函数支持传入一个`time`参数，以代表时间线执行的时间

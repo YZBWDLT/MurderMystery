@@ -37,16 +37,18 @@ class GameSystem {
     // ===== 时间线管理器 =====
 
     /** 订阅特定 ID 的时间线。
-     * @param callback 若为 false 则终止时间线的运行
+     * @param callback 接受一个回调函数，参数`time`：该函数执行的次数。若返回`false`则终止时间线的运行，
      * @returns 返回是否成功订阅时间线。
      */
-    subscribeTimeline(id: string, callback: () => boolean | void, interval = 1) {
+    subscribeTimeline(id: string, callback: (time: number) => boolean | void, interval = 1) {
         // 检查时间线是否重叠，若存在重叠则阻止运行
         if (this.getAllTimelineIds().includes(id)) return false;
         // 订阅时间线，并记录到时间线列表中，同时追踪该时间线
         const numberId = minecraft.system.runInterval(() => {
-            const shouldExist = callback();
+            let time = 0;
+            const shouldExist = callback(time);
             if (shouldExist === false) this.unsubscribeTimeline(id);
+            time++;
         }, interval);
         this.gameTimeline[id] = numberId;
         if (this.showDebugMessage) minecraft.world.sendMessage(`§a+ 时间线 ${id}`);
