@@ -722,7 +722,6 @@ export const maps = {
                     return;
                 }
                 // ===== 开启陷阱 =====
-                // 播放动画
                 const trapLocation = { x: 899, y: 67, z: 2944 };
                 const setStructureStage = (stage) => {
                     lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_stage${stage}`, trapLocation);
@@ -3596,7 +3595,7 @@ export const maps = {
                     trigger: "darkfall:teleportToHouse",
                 },
             ],
-            onGameStart: { trigger: ["darkfall:recover", "darkfall:recoverTrap"] },
+            onGameStart: { trigger: "darkfall:recover" },
         },
         events: {
             "darkfall:getMysteryPotion1": (system, playerData) => {
@@ -3620,25 +3619,32 @@ export const maps = {
                     { x: 106, y: 38, z: 1885 },
                     { x: 106, y: 38, z: 1878 },
                 ];
+                // 如果当前陷阱处于冷却，终止运行
+                if (system.eventManager.getEventCooldownCountdown("darkfall:trap", "trap.name", playerData?.player) > 0)
+                    return;
+                // 如果没有玩家执行，终止运行
                 if (!playerData)
                     return;
-                if (!playerData.haveEnoughGold(2)) {
+                // 如果玩家金锭不足，终止运行
+                if (!playerData.consumeGold(2)) {
                     setLeverState(leverLocations, false);
                     return;
                 }
                 // ===== 开启陷阱 =====
                 lib.BlockUtils.fill({ id: "minecraft:air", from: { x: 112, y: 36, z: 1884 }, to: { x: 107, y: 36, z: 1879 } });
-                // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，6 秒后恢复原状
-                banLever(leverLocations, 6, "darkfall");
-                minecraft.system.runTimeout(() => {
-                    system.eventManager.triggerEvent("darkfall:recoverTrap");
-                }, 120);
+                lib.gameSystem.subscribeTimeline("darkfallTrapAnimation", time => {
+                    if (time === 6) {
+                        lib.StructureUtils.placeAsync("murder_mystery:darkfall/trap", { x: 107, y: 36, z: 1879 });
+                        return false;
+                    }
+                }, 20);
+                // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，15 秒后恢复原状
+                banLever(leverLocations, 15, "darkfall");
+                // 进入冷却
+                system.eventManager.setEventCooldown("darkfall:trap", 15);
             },
             "darkfall:playerIntoTrap": (system, playerData) => {
                 playerData?.setDead(MurderMysteryDeathType.DraggedByTheDead);
-            },
-            "darkfall:recoverTrap": () => {
-                lib.StructureUtils.placeAsync("murder_mystery:darkfall/trap", { x: 107, y: 36, z: 1879 });
             },
             "darkfall:recover": () => {
                 // 生成亡魂实体
@@ -3662,6 +3668,8 @@ export const maps = {
                 // 生成陷阱悬浮文本
                 addConsumeGoldTextDisplay({ x: 106, y: 38, z: 1885 }, "trap.name", 2);
                 addConsumeGoldTextDisplay({ x: 106, y: 38, z: 1878 }, "trap.name", 2);
+                // 恢复陷阱
+                lib.StructureUtils.placeAsync("murder_mystery:darkfall/trap", { x: 107, y: 36, z: 1879 });
             },
             "darkfall:teleportToCave": (system, playerData) => {
                 if (!playerData)
@@ -3690,7 +3698,7 @@ export const maps = {
                 facingLocation: { x: -96, y: 18, z: 3163 },
             },
             range: {
-                from: { x: -171, y: 10, z: 3193 }, // -171 10 3193
+                from: { x: -171, y: -5, z: 3193 }, // -171 -5 3193
                 to: { x: -22, y: 64, z: 3018 }, // -22 64 3018
             },
             spawnPoints: [
@@ -5570,7 +5578,7 @@ export const maps = {
                 facingLocation: { x: -890, y: 43, z: 2942 },
             },
             range: {
-                from: { x: -968, y: 34, z: 2969 }, // -968 34 2969
+                from: { x: -968, y: 15, z: 2969 }, // -968 15 2969
                 to: { x: -815, y: 92, z: 2795 }, // -815 92 2795
             },
             spawnPoints: [
@@ -5921,7 +5929,7 @@ export const maps = {
                     area: { xMin: -958, xMax: -956, yMin: 46, yMax: 50, zMin: 2875, zMax: 2885 },
                     trigger: "hypixelWorld:outOfHauntedHouseDoor",
                 },
-                { area: { yMax: 20 }, trigger: "hypixelWorld:playerIntoVoid" },
+                { area: { yMax: 30 }, trigger: "hypixelWorld:playerIntoVoid" },
             ],
             onGameStart: {
                 trigger: [

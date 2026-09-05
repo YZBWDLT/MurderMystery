@@ -645,6 +645,18 @@ class MurderMysteryEventManager {
         // 将捕获的字符串转为数字
         return Number(match[1]);
     }
+    getMysteryPotionData(playerData, potionIndex) {
+        const potionData = this.mysteryPotionData[potionIndex];
+        const potionName = potionData?.name ?? "失明";
+        const potionUnlocked = playerData.mysteryPotionUnlocked[potionIndex];
+        return {
+            itemLock: minecraft.ItemLockMode.slot,
+            name: potionUnlocked ? `§r§a${potionName}药水` : void 0,
+            lore: potionUnlocked
+                ? [`§r§7这瓶药水将会使你获得${potionName}效果！`]
+                : MurderMysteryEventManager.mysteryPotionDefaultLore,
+        };
+    }
     /** 令玩家试图获取神秘药水。
      * @returns 返回是否成功获得了药水。
      */
@@ -679,20 +691,11 @@ class MurderMysteryEventManager {
             }
         });
         const potionId = `murder_mystery:mystery_potion_${potionIndex}`;
-        const potionData = this.mysteryPotionData[potionIndex];
-        const potionName = potionData?.name ?? "失明";
-        const potionUnlocked = playerData.mysteryPotionUnlocked[potionIndex];
         // 展示药水对应的动画
         const mysteryPotionAnimationEntity = lib.EntityUtils.add("murder_mystery:mystery_potion", lib.Vector3Utils.add(animationLocation, 0.5, 0, 0.5), player.dimension, { initialRotation: player.getRotation().y + 180, spawnEvent: potionId });
         // 在 1.5 秒后，销毁动画实体并给予玩家药水
         minecraft.system.runTimeout(() => {
-            playerData.giveItem(potionId, {
-                itemLock: minecraft.ItemLockMode.slot,
-                name: potionUnlocked ? `§r§a${potionName}药水` : void 0,
-                lore: potionUnlocked
-                    ? [`§r§7这瓶药水将会使你获得${potionName}效果！`]
-                    : MurderMysteryEventManager.mysteryPotionDefaultLore,
-            });
+            playerData.giveItem(potionId, this.getMysteryPotionData(playerData, potionIndex));
             mysteryPotionAnimationEntity.remove();
         }, 30);
         return true;
@@ -715,9 +718,7 @@ class MurderMysteryEventManager {
             return false;
         // 如果玩家正受神秘药水效果影响，则不给予药效，重新给予药水并提示玩家
         if (this.inPotionEffect[player.id]) {
-            lib.ItemUtils.equipment.set(player, potionId, minecraft.EquipmentSlot.Mainhand, {
-                itemLock: minecraft.ItemLockMode.slot,
-            });
+            lib.ItemUtils.equipment.set(player, potionId, minecraft.EquipmentSlot.Mainhand, this.getMysteryPotionData(playerData, potionIndex));
             player.sendMessage({ translate: "chat.mysteryPotion.onlyOneEffect" });
             return false;
         }
@@ -778,15 +779,13 @@ class MurderMysteryEventManager {
         if (playerData.isInHauntedHouseDoor)
             return Promise.resolve(false);
         // ===== 进入鬼屋门 =====
+        // 关门
+        door.setPermutation(door.permutation.withState("open_bit", false));
+        lib.PlayerUtils.notify(player, { sound: "close.wooden_door" });
+        // 标记玩家进入鬼屋门
+        playerData.isInHauntedHouseDoor = true;
         return new Promise(resolve => {
             lib.gameSystem.subscribeTimeline(`${player.id}IntoHauntedHouseDoor`, time => {
-                if (time === 0) {
-                    // 关门
-                    door.setPermutation(door.permutation.withState("open_bit", false));
-                    lib.PlayerUtils.notify(player, { sound: "close.wooden_door" });
-                    // 标记玩家进入鬼屋门
-                    playerData.isInHauntedHouseDoor = true;
-                }
                 // 播放音效
                 if (time >= 1 && time <= 5)
                     lib.PlayerUtils.notify(player, { sound: "note.bass" });

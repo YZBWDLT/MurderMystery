@@ -44,8 +44,8 @@ class GameSystem {
         // 检查时间线是否重叠，若存在重叠则阻止运行
         if (this.getAllTimelineIds().includes(id)) return false;
         // 订阅时间线，并记录到时间线列表中，同时追踪该时间线
+        let time = 1;
         const numberId = minecraft.system.runInterval(() => {
-            let time = 0;
             const shouldExist = callback(time);
             if (shouldExist === false) this.unsubscribeTimeline(id);
             time++;
