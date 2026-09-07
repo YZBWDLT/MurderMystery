@@ -185,6 +185,97 @@ function tryGetMysteryPotion(system, animationLocation, playerData, consumeGold 
     playerData.consumeGold(consumeGold);
     return true;
 }
+/** 全部的临终遗言。遗言需要在语言文件中声明，包括：
+ * - `lastWords.(ID).title`：临终遗言的标题。
+ * - `lastWords.(ID).description`：临终遗言的简介，在选择 UI 中显示。
+ * - `lastWords.(ID).phrase(x)`：第 x 条临终遗言。
+ */
+export const lastWords = {
+    /** 吃货。 */
+    glutton: {
+        logo: "textures/items/chicken_cooked",
+        count: 6,
+    },
+    /** 死亡统计。 */
+    deathCount: {
+        logo: "textures/items/bone",
+        count: 1,
+        replacer: (system, playerData) => `${playerData?.player.getDynamicProperty("murder_mystery:deathCount.total") ?? 0}`,
+    },
+    /** 愤怒。 */
+    rage: {
+        logo: "textures/items/fireball",
+        count: 4,
+    },
+    /** 海盗。 */
+    pirate: {
+        logo: "textures/items/stone_axe",
+        count: 4,
+    },
+    /** 哲学。 */
+    philosophy: {
+        logo: "textures/items/glowstone_dust",
+        count: 4,
+        replacer: system => `${system.players.innocent.length + system.players.detective.length}`,
+    },
+    /** 废话先生。 */
+    mrObvious: {
+        logo: "textures/blocks/redstone_torch_on",
+        count: 4,
+    },
+    /** 时尚。 */
+    fashion: {
+        logo: "textures/items/diamond_chestplate",
+        count: 4,
+    },
+    /** 傲慢。 */
+    condescending: {
+        logo: "textures/items/fish_pufferfish_raw",
+        count: 4,
+    },
+    /** 专业提示。 */
+    protips: {
+        logo: "textures/items/nether_star",
+        count: 4,
+    },
+    /** 无所谓。 */
+    dontCare: {
+        logo: "textures/items/brick",
+        count: 1,
+    },
+    /** 汪。 */
+    woof: {
+        logo: "textures/items/bone",
+        count: 4,
+    },
+    /** 身临其境。 */
+    relatable: {
+        logo: "textures/items/sign",
+        count: 4,
+    },
+    /** 爱哭宝宝。 */
+    cryBaby: {
+        logo: "textures/items/bucket_milk",
+        count: 4,
+    },
+    /** 喵。 */
+    meow: {
+        logo: "textures/items/bowl",
+        count: 4,
+    },
+    /** 新三国。 */
+    newThreeKingdom: {
+        logo: "textures/ui/last_words/new_three_kingdom",
+        count: 50,
+        replacer: (system, playerData) => `${playerData?.getName()}`,
+    },
+    /** 幻想乡。 */
+    Gensokyo: {
+        logo: "textures/ui/last_words/gensokyo",
+        count: 12,
+        replacer: (system, playerData) => `${playerData?.getName()}`,
+    },
+};
 // #endregion
 // #region 地图数据
 /** 地图数据。 */

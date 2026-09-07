@@ -28,6 +28,13 @@
 - 现在地图暗景秋色的陷阱有了 15 秒的冷却
 - 扩大了复活节游乐园和 Hypixel 游乐园的底部范围
 
+### 临终遗言
+
+- #3 正式引入临终遗言！
+- 现在玩家可以选择临终遗言，在被杀死后会在尸体上方显示特定内容
+- 临终遗言会在 20 秒后消失
+- 一共添加了 16 种临终遗言，其中有 14 种为 Hypixel 的原版临终遗言，另 2 种为原创
+
 ### 漏洞修复
 
 - 修复了头颅顶面错误旋转的问题
@@ -42,3 +49,6 @@
 - 现在事件管理器的`intoHauntedHouseDoor`、`rideMinecart`是异步的，会返回`Promise<boolean>`，在对应事件结束后返回
 - 移除了事件管理器的多个函数：`setBlock`、`fillBlock`、`setStructure`、`setEntity`、`setText`、`setPlayerDead`、`teleport`，它们都可以用脚本系统的其他函数代替
 - 更改了`lib.gameSystem.subscribeTimeline`方法，现在其回调函数支持传入一个`time`参数，以代表时间线执行的时间
+- 将密室杀手系统的静态方法`getState`和`setState`更名为`getEntityState`和`setEntityState`，将接口`DynamicProperties`更名为`EntityDynamicProperties`
+- 新增了密室杀手系统的静态方法`getWorldState`和`setWorldState`，新增了`WorldDynamicProperties`接口
+- 为`data.ts`新增了`LastWordData`接口和`lastWords`数据

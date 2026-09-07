@@ -401,10 +401,13 @@ ui.settings.sendMessage.tip=§7You can also use §b/s§7 to bring up this UI.
 ui.settings.defaultSettings.title=Change to Default
 
 ui.settings.confirm=Confirm
+ui.settings.cancel=Cancel
+
+ui.settings.currentlySelected=Currently Selected: §a%s
 
 chat.settings.applyNextGame=These settings will apply in next game
 
-chat.youChose=§eYou chose §c%s§e.
+chat.youChose=§aYou chose §6%s
 
 ## ===== Infoboard Message =====
 
@@ -424,3 +427,190 @@ infoboard.bowDropped=Bow: §cDropped§r
 infoboard.throwing=Throwing: §a%ss§r
 infoboard.charging=Charging: §a%ss§r
 infoboard.optOutSpectate.enabled=§cOpt-Out Spectate Enabled
+
+## ===== Last Words =====
+
+lastWords.title=Last Words
+lastWords.description=Change the words that display above your corpse on death.
+lastWords.none.title=None
+lastWords.random.title=Random
+ui.lastWords.preview.title=Last Word Preview: %s
+lastWords.inGame=§6%s§e's Last Words:
+
+### Glutton
+lastWords.glutton.title=Glutton
+lastWords.glutton.description=Remind everyone how much you like food.
+lastWords.glutton.phrase1=§o"I like pizza"
+lastWords.glutton.phrase2=§o"I like corndogs"
+lastWords.glutton.phrase3=§o"I like burgers"
+lastWords.glutton.phrase4=§o"I like donuts"
+lastWords.glutton.phrase5=§o"I like fries"
+lastWords.glutton.phrase6=§o"I like cake"
+
+### Death Count
+lastWords.deathCount.title=Death Count
+lastWords.deathCount.description=Proudly display how many times you died in Murder Mystery.
+lastWords.deathCount.phrase1=§o"I died %s times. :("
+
+### RAGE
+lastWords.rage.title=RAGE
+lastWords.rage.description=PICK THIS IF YOU NEVER RAGE.
+lastWords.rage.phrase1=§o"WHY ME WTH??"
+lastWords.rage.phrase2=§o"WHO KILLED ME!?!"
+lastWords.rage.phrase3=§o"I DIDN'T DIE I RAGEQUITTED"
+lastWords.rage.phrase4=§o"FIGHT ME IRL"
+
+### Pirate
+lastWords.pirate.title=Pirate
+lastWords.pirate.description=Yarrrrrrrrrrrrrrrrrrrrrmatey
+lastWords.pirate.phrase1=§o"Some scallywag hit me"
+lastWords.pirate.phrase2=§o"Now in a meeting with Davy Jones"
+lastWords.pirate.phrase3=§o"The Black Spot in claimed aye"
+lastWords.pirate.phrase4=§o"Stay safe me hearties"
+
+### Philosophy
+lastWords.philosophy.title=Philosophy
+lastWords.philosophy.description=To use or not to use.
+lastWords.philosophy.phrase1=§o"I'd rather die a meaningful death than to live a meaningless life"
+lastWords.philosophy.phrase2=§o"Everybody wants to go to heaven, but nobody wants to die"
+lastWords.philosophy.phrase3=§o"One death is a tragedy, %s is a murderer win"
+lastWords.philosophy.phrase4=§o"Don't send me flowers when I'm dead. If you like me, send them while I'm alive"
+
+### Mr. Obvious
+lastWords.mrObvious.title=Mr. Obvious
+lastWords.mrObvious.description=State the obvious.
+lastWords.mrObvious.phrase1=§o"I died"
+lastWords.mrObvious.phrase2=§o"I'm not alive"
+lastWords.mrObvious.phrase3=§o"Someone killed me"
+lastWords.mrObvious.phrase4=§o"Fact: You are reading this"
+
+### Fashion
+lastWords.fashion.title=Fashion
+lastWords.fashion.description=OMG, I love your outfit!
+lastWords.fashion.phrase1=§o"This hat was to die for"
+lastWords.fashion.phrase2=§o"I'd never be caught dead in double denim"
+lastWords.fashion.phrase3=§o"I look drop dead gorgeous"
+lastWords.fashion.phrase4=§o"This competition was fierce!"
+
+### Condescending
+lastWords.condescending.title=Condescending
+lastWords.condescending.description=Make people hate you even after you died through these condescending remarks.
+lastWords.condescending.phrase1=§o"Wow good job you just missed the murderer"
+lastWords.condescending.phrase2=§o"I probably died because of whoever is reading"
+lastWords.condescending.phrase3=§o"That took you long enough"
+lastWords.condescending.phrase4=§o"I died but I'm the best so win for me"
+
+### Protips
+lastWords.protips.title=Protips
+lastWords.protips.description=Show off your mastery of the game by teaching others some useful tips.
+lastWords.protips.phrase1=§o"Protip: Use the locator to find the detective bow"
+lastWords.protips.phrase2=§o"Protip: Hiding is a legitimate strategy"
+lastWords.protips.phrase3=§o"Protip: Use the locator to your advantage"
+lastWords.protips.phrase4=§o"Protip: If you see a murderer, stay calm and run"
+
+### Don't care
+lastWords.dontCare.title=Don't care
+lastWords.dontCare.description=Meh.
+lastWords.dontCare.phrase1=§o"Meh."
+
+### Woof
+lastWords.woof.title=Woof
+lastWords.woof.description=Who's a good boy?!
+lastWords.woof.phrase1=§o"Arf Arf!"
+lastWords.woof.phrase2=§o"Woof Woof!"
+lastWords.woof.phrase3=§o"Yip yip yip!"
+lastWords.woof.phrase4=§o"Bow wow wow!"
+
+### Relatable
+lastWords.relatable.title=Relatable
+lastWords.relatable.description=These are so funny and relatable!
+lastWords.relatable.phrase1=§o"i can haz cheesemurder?"
+lastWords.relatable.phrase2=§o"snek got booped"
+lastWords.relatable.phrase3=§o"Wow much ded, very sad"
+lastWords.relatable.phrase4=§o"I don't always die, but when I do I do it with dignity"
+
+### cRyBAbY
+lastWords.cryBaby.title=cRyBAbY
+lastWords.cryBaby.description=plz pick me plz will you?
+lastWords.cryBaby.phrase1=§o"why kill me :'("
+lastWords.cryBaby.phrase2=§o"kill murderer plz"
+lastWords.cryBaby.phrase3=§o"WHY"
+lastWords.cryBaby.phrase4=§o"plz win for me"
+
+### Meow
+lastWords.meow.title=Meow
+lastWords.meow.description=Things your cat would say if you stepped on its tail.
+lastWords.meow.phrase1=§o"MeeeOUUCH"
+lastWords.meow.phrase2=§o"Hiissss"
+lastWords.meow.phrase3=§o"(=^·ω·^=)"
+lastWords.meow.phrase4=§o"Meow"
+
+### New Three Kingdom
+lastWords.newThreeKingdom.title=New Three Kingdom
+lastWords.newThreeKingdom.description=§c§l(Only in Chinese) §r（量筒巴豆原创）你也要被天意侵蚀吗？又寸。
+lastWords.newThreeKingdom.phrase1=§o"平民听令，自！刎！归！天！"
+lastWords.newThreeKingdom.phrase2=§o"Nya——！（盖饭）"
+lastWords.newThreeKingdom.phrase3=§o"不可能！绝对不可能！"
+lastWords.newThreeKingdom.phrase4=§o"公子啊，我能不能不逃了，听天由命吧"
+lastWords.newThreeKingdom.phrase5=§o"你挨了人打还好意思说啊，你为何不以死相拼呢"
+lastWords.newThreeKingdom.phrase6=§o"不是杀手害了我，是这个乱世害了我啊！"
+lastWords.newThreeKingdom.phrase7=§o"我老人家死的好惨啊！呱！yue。"
+lastWords.newThreeKingdom.phrase8=§o"今天我%s就把脖子伸在这里，有种你就砍了去！"
+lastWords.newThreeKingdom.phrase9=§o"你这把刀要把我的心都刺穿了！"
+lastWords.newThreeKingdom.phrase10=§o"罢，罢，罢啊，苍天助杀手不助我！"
+lastWords.newThreeKingdom.phrase11=§o"死不可怕，死是凉爽的夏夜，可供人无忧地安眠"
+lastWords.newThreeKingdom.phrase12=§o"You fool! You should fast!"
+lastWords.newThreeKingdom.phrase13=§o"恨天！！！"
+lastWords.newThreeKingdom.phrase14=§o"咱家恨不得把那些狼心狗肺的杀手，都给我揪出来砍咯！砍咯！"
+lastWords.newThreeKingdom.phrase15=§o"他是刺客！是贼子！是来行刺咱家的！"
+lastWords.newThreeKingdom.phrase16=§o"和杀手玩躲猫猫，我还不如听听我的蛐蛐叫呢"
+lastWords.newThreeKingdom.phrase17=§o"这是上天赐予我的葬身之地啊！"
+lastWords.newThreeKingdom.phrase18=§o"我不能走啊！杀手，我不能走啊！"
+lastWords.newThreeKingdom.phrase19=§o"儿建议，大开城门，放杀手逃生！"
+lastWords.newThreeKingdom.phrase20=§o"值啊，就是平民全死了我都值！"
+lastWords.newThreeKingdom.phrase21=§o"%s回不来了，我心痛欲裂——！"
+lastWords.newThreeKingdom.phrase22=§o"我这辈子，把你当成了最知心的朋友"
+lastWords.newThreeKingdom.phrase23=§o"（正在播放：关羽之歌）"
+lastWords.newThreeKingdom.phrase24=§o"记住，不要愤怒，愤怒会降低你的技术"
+lastWords.newThreeKingdom.phrase25=§o"噔噔噔噔噔噔！"
+lastWords.newThreeKingdom.phrase26=§o"封我为五虎上将，你服不服啊，哈哈哈哈哈哈！"
+lastWords.newThreeKingdom.phrase27=§o"说出吾名，吓汝一跳！我乃是密室杀手上将军%s！"
+lastWords.newThreeKingdom.phrase28=§o"这局我败兵必哀，下一局我就哀兵必胜了！"
+lastWords.newThreeKingdom.phrase29=§o"杀手扎聋了我的耳朵！"
+lastWords.newThreeKingdom.phrase30=§o"恭喜杀手爷可以称帝了！"
+lastWords.newThreeKingdom.phrase31=§o"你们要是还容得下杀手在此肆意放肆，那就容我%s告老还乡了！"
+lastWords.newThreeKingdom.phrase32=§o"杀手贼！奸贼！恶贼！逆——贼！"
+lastWords.newThreeKingdom.phrase33=§o"天地之间茫苍苍，一时多少豪强"
+lastWords.newThreeKingdom.phrase34=§o"哪怕天崩地裂，乾坤毁灭，也必然殉天而死，断断不降"
+lastWords.newThreeKingdom.phrase35=§o"胜败要看天意，天意所至，你想不胜都难"
+lastWords.newThreeKingdom.phrase36=§o"自尽便是懦夫"
+lastWords.newThreeKingdom.phrase37=§o"这刀是朕让杀手掏的"
+lastWords.newThreeKingdom.phrase38=§o"啊？真的吗？"
+lastWords.newThreeKingdom.phrase39=§o"杀手你扪心自问，你对得起朕吗？"
+lastWords.newThreeKingdom.phrase40=§o"我被杀手杀死，这事恐怕要流传百年了啊啊啊啊啊啊啊"
+lastWords.newThreeKingdom.phrase41=§o"禽兽，我不是人，禽兽啊！我与禽兽绝不两立！"
+lastWords.newThreeKingdom.phrase42=§o"不就是个手腕子吗，折了膀子也得接着打，起来！"
+lastWords.newThreeKingdom.phrase43=§o"（正在播放：刘备之死）"
+lastWords.newThreeKingdom.phrase44=§o"你们且退，我要睡了"
+lastWords.newThreeKingdom.phrase45=§o"在下一者为列位诸公悲伤，二者给列位诸公道喜"
+lastWords.newThreeKingdom.phrase46=§o"啊！反了！反了！"
+lastWords.newThreeKingdom.phrase47=§o"杀手，你也闻到我府里的酒香了？"
+lastWords.newThreeKingdom.phrase48=§o"儿啊，为父是开国以来第一个被斩的大都督"
+lastWords.newThreeKingdom.phrase49=§o"我走了，你们吃什么？"
+lastWords.newThreeKingdom.phrase50=§o"若是能让杀手爷痛快些，臣妾愿天天给杀手爷砍"
+
+### Gensokyo
+lastWords.gensokyo.title=Gensokyo
+lastWords.gensokyo.description=（吊桥原创）Woke up and found a 17-year-old blonde girl standing in front of you?!
+lastWords.gensokyo.phrase1=§o"むきゅー"
+lastWords.gensokyo.phrase2=§o"Good thing it wasn't Reimu Hakurei who killed me"
+lastWords.gensokyo.phrase3=§o"Missing you, Akyuu"
+lastWords.gensokyo.phrase4=§o"Aren't I the strongest?"
+lastWords.gensokyo.phrase5=§o"Game progress: 99.61%%"
+lastWords.gensokyo.phrase6=§o"%s died from getting hit by a ton of bullets fired by the Murderer"
+lastWords.gensokyo.phrase7=§o"Still couldn't escape the theory of lifespan in the end..."
+lastWords.gensokyo.phrase8=§o"I see two girls, one is green hair with a hat, the other is red hair with a sickle"
+lastWords.gensokyo.phrase9=§o"%s was frozen into an ice block with Murderer's Freeze Sign 'Perfect Freeze'"
+lastWords.gensokyo.phrase10=§o"%s got killed as a fairy by the Murderer sent to deal with the exterminates troublesome"
+lastWords.gensokyo.phrase11=§o"%s was completely obliterated by the Murderer's Love Sign 'Master Spark'"
+lastWords.gensokyo.phrase12=§o"I really wish I were a fairy..."

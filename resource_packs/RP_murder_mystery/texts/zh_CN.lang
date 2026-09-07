@@ -401,10 +401,13 @@ ui.settings.sendMessage.tip=§7您也可以使用§b/s§7呼出这个 UI。
 ui.settings.defaultSettings.title=恢复默认设置
 
 ui.settings.confirm=确认
+ui.settings.cancel=取消
+
+ui.settings.currentlySelected=当前选中：§a%s
 
 chat.settings.applyNextGame=这些设置将在下一局应用
 
-chat.youChose=§e你选择了§c%s§e。
+chat.youChose=§a你选择了 §6%s
 
 ## ===== 信息板消息 =====
 
@@ -424,3 +427,190 @@ infoboard.bowDropped=弓：§c已掉落§r
 infoboard.throwing=投掷中：§a%s秒§r
 infoboard.charging=填充中：§a%s秒§r
 infoboard.optOutSpectate.enabled=§c主动旁观已启用
+
+## ===== 临终遗言 =====
+
+lastWords.title=临终遗言
+lastWords.description=更改在你死亡后显示在你尸体上的内容。
+lastWords.none.title=无
+lastWords.random.title=随机
+ui.lastWords.preview.title=临终遗言预览：%s
+lastWords.inGame=§6%s§e的临终遗言：
+
+### 吃货
+lastWords.glutton.title=吃货
+lastWords.glutton.description=记得提醒大家你多么喜欢食物。
+lastWords.glutton.phrase1=§o"我喜欢披萨"
+lastWords.glutton.phrase2=§o"我喜欢玉米热狗"
+lastWords.glutton.phrase3=§o"我喜欢汉堡"
+lastWords.glutton.phrase4=§o"我喜欢甜甜圈"
+lastWords.glutton.phrase5=§o"我喜欢薯条"
+lastWords.glutton.phrase6=§o"我喜欢蛋糕"
+
+### 死亡统计
+lastWords.deathCount.title=死亡统计
+lastWords.deathCount.description=自豪地展示你在密室杀手中的死亡次数。
+lastWords.deathCount.phrase1=§o"我死了%s次。:("
+
+### 愤怒
+lastWords.rage.title=愤怒
+lastWords.rage.description=你行你上不行别哔哔。
+lastWords.rage.phrase1=§o"为什么受伤的总是我？？"
+lastWords.rage.phrase2=§o"谁杀了我！？！"
+lastWords.rage.phrase3=§o"我没死，我只是怒退游戏罢了"
+lastWords.rage.phrase4=§o"有本事你顺着网线来咬我啊"
+
+### 海盗
+lastWords.pirate.title=海盗
+lastWords.pirate.description=Yoooooooooo，伙计。
+lastWords.pirate.phrase1=§o"有流氓打我"
+lastWords.pirate.phrase2=§o"现在正面见阎罗王"
+lastWords.pirate.phrase3=§o"我已经被死神选中了"
+lastWords.pirate.phrase4=§o"我的朋友们，注意安全"
+
+### 哲学
+lastWords.philosophy.title=哲学
+lastWords.philosophy.description=用还是不用，这是个问题。
+lastWords.philosophy.phrase1=§o"我宁死得其所，也不活得庸碌"
+lastWords.philosophy.phrase2=§o"每个人都想上天堂，但没有人想去地狱"
+lastWords.philosophy.phrase3=§o"一人死亡着实是一场悲剧，但是%s人死亡就代表杀手胜利了"
+lastWords.philosophy.phrase4=§o"不要在我死的时候送我鲜花。如果你喜欢我的话，请在我活着的时候送给我"
+
+### 废话先生
+lastWords.mrObvious.title=废话先生
+lastWords.mrObvious.description=尽说废话。
+lastWords.mrObvious.phrase1=§o"我死了"
+lastWords.mrObvious.phrase2=§o"我没有幸存下来"
+lastWords.mrObvious.phrase3=§o"有人杀了我"
+lastWords.mrObvious.phrase4=§o"真相：你正在读这段文字"
+
+### 时尚
+lastWords.fashion.title=时尚
+lastWords.fashion.description=OMG，我爱你的装备！
+lastWords.fashion.phrase1=§o"这顶帽子死了也值得买"
+lastWords.fashion.phrase2=§o"我永远不会死在全身牛仔里"
+lastWords.fashion.phrase3=§o"我的美貌沉鱼落雁"
+lastWords.fashion.phrase4=§o"这场比赛太激烈了！"
+
+### 傲慢
+lastWords.condescending.title=傲慢
+lastWords.condescending.description=通过这些傲慢的言论，使人们在你死后也讨厌你。
+lastWords.condescending.phrase1=§o"好棒棒哦，你射杀手射偏了吧"
+lastWords.condescending.phrase2=§o"无论是谁在读这段文字，我可能因此人而死"
+lastWords.condescending.phrase3=§o"这花了你不少的时间吧"
+lastWords.condescending.phrase4=§o"我死了，但我尽力了，所以请为我赢得游戏"
+
+### 专业提示
+lastWords.protips.title=专业提示
+lastWords.protips.description=通过告诉别人一些有用的技巧来揭开这个游戏的神秘之处吧。
+lastWords.protips.phrase1=§o"提示：使用定位器找寻侦探掉落的弓"
+lastWords.protips.phrase2=§o"提示：躲藏是正当的策略"
+lastWords.protips.phrase3=§o"提示：充分利用你的定位器"
+lastWords.protips.phrase4=§o"提示：如果你看到了杀手，请保持冷静，然后快速跑开"
+
+### 无所谓
+lastWords.dontCare.title=无所谓
+lastWords.dontCare.description=真无聊。
+lastWords.dontCare.phrase1=§o"真无聊。"
+
+### 汪
+lastWords.woof.title=汪
+lastWords.woof.description=谁是一个好男孩？！
+lastWords.woof.phrase1=§o"哼哼啊！"
+lastWords.woof.phrase2=§o"汪汪！"
+lastWords.woof.phrase3=§o"嘤嘤嘤！"
+lastWords.woof.phrase4=§o"哇哦哦！"
+
+### 身临其境
+lastWords.relatable.title=身临其境
+lastWords.relatable.description=这些都很有趣并且令人身临其境！
+lastWords.relatable.phrase1=§o"我能来点芝士杀手堡吗？"
+lastWords.relatable.phrase2=§o"啊，被弹鼻子了"
+lastWords.relatable.phrase3=§o"这么多人死了，好伤心"
+lastWords.relatable.phrase4=§o"我不常死去，但我每次都会死得有尊严"
+
+### 爱哭宝宝
+lastWords.cryBaby.title=爱哭宝宝
+lastWords.cryBaby.description=请选我，好吗？
+lastWords.cryBaby.phrase1=§o"为什么杀我:("
+lastWords.cryBaby.phrase2=§o"请杀了杀手qwq"
+lastWords.cryBaby.phrase3=§o"为什么_(:3」∠)_"
+lastWords.cryBaby.phrase4=§o"请为我赢得胜利awa"
+
+### 喵
+lastWords.meow.title=喵
+lastWords.meow.description=如果你踩到它的尾巴，你的猫会说些什么呢？
+lastWords.meow.phrase1=§o"MeeeOUUCH"
+lastWords.meow.phrase2=§o"Hiissss"
+lastWords.meow.phrase3=§o"(=^·ω·^=)"
+lastWords.meow.phrase4=§o"喵"
+
+### 新三国
+lastWords.newThreeKingdom.title=新三国
+lastWords.newThreeKingdom.description=（量筒巴豆原创）你也要被天意侵蚀吗？又寸。
+lastWords.newThreeKingdom.phrase1=§o"平民听令，自！刎！归！天！"
+lastWords.newThreeKingdom.phrase2=§o"Nya——！（盖饭）"
+lastWords.newThreeKingdom.phrase3=§o"不可能！绝对不可能！"
+lastWords.newThreeKingdom.phrase4=§o"公子啊，我能不能不逃了，听天由命吧"
+lastWords.newThreeKingdom.phrase5=§o"你挨了人打还好意思说啊，你为何不以死相拼呢"
+lastWords.newThreeKingdom.phrase6=§o"不是杀手害了我，是这个乱世害了我啊！"
+lastWords.newThreeKingdom.phrase7=§o"我老人家死的好惨啊！呱！yue。"
+lastWords.newThreeKingdom.phrase8=§o"今天我%s就把脖子伸在这里，有种你就砍了去！"
+lastWords.newThreeKingdom.phrase9=§o"你这把刀要把我的心都刺穿了！"
+lastWords.newThreeKingdom.phrase10=§o"罢，罢，罢啊，苍天助杀手不助我！"
+lastWords.newThreeKingdom.phrase11=§o"死不可怕，死是凉爽的夏夜，可供人无忧地安眠"
+lastWords.newThreeKingdom.phrase12=§o"You fool! You should fast!"
+lastWords.newThreeKingdom.phrase13=§o"恨天！！！"
+lastWords.newThreeKingdom.phrase14=§o"咱家恨不得把那些狼心狗肺的杀手，都给我揪出来砍咯！砍咯！"
+lastWords.newThreeKingdom.phrase15=§o"他是刺客！是贼子！是来行刺咱家的！"
+lastWords.newThreeKingdom.phrase16=§o"和杀手玩躲猫猫，我还不如听听我的蛐蛐叫呢"
+lastWords.newThreeKingdom.phrase17=§o"这是上天赐予我的葬身之地啊！"
+lastWords.newThreeKingdom.phrase18=§o"我不能走啊！杀手，我不能走啊！"
+lastWords.newThreeKingdom.phrase19=§o"儿建议，大开城门，放杀手逃生！"
+lastWords.newThreeKingdom.phrase20=§o"值啊，就是平民全死了我都值！"
+lastWords.newThreeKingdom.phrase21=§o"%s回不来了，我心痛欲裂——！"
+lastWords.newThreeKingdom.phrase22=§o"我这辈子，把你当成了最知心的朋友"
+lastWords.newThreeKingdom.phrase23=§o"（正在播放：关羽之歌）"
+lastWords.newThreeKingdom.phrase24=§o"记住，不要愤怒，愤怒会降低你的技术"
+lastWords.newThreeKingdom.phrase25=§o"噔噔噔噔噔噔！"
+lastWords.newThreeKingdom.phrase26=§o"封我为五虎上将，你服不服啊，哈哈哈哈哈哈！"
+lastWords.newThreeKingdom.phrase27=§o"说出吾名，吓汝一跳！我乃是密室杀手上将军%s！"
+lastWords.newThreeKingdom.phrase28=§o"这局我败兵必哀，下一局我就哀兵必胜了！"
+lastWords.newThreeKingdom.phrase29=§o"杀手扎聋了我的耳朵！"
+lastWords.newThreeKingdom.phrase30=§o"恭喜杀手爷可以称帝了！"
+lastWords.newThreeKingdom.phrase31=§o"你们要是还容得下杀手在此肆意放肆，那就容我%s告老还乡了！"
+lastWords.newThreeKingdom.phrase32=§o"杀手贼！奸贼！恶贼！逆——贼！"
+lastWords.newThreeKingdom.phrase33=§o"天地之间茫苍苍，一时多少豪强"
+lastWords.newThreeKingdom.phrase34=§o"哪怕天崩地裂，乾坤毁灭，也必然殉天而死，断断不降"
+lastWords.newThreeKingdom.phrase35=§o"胜败要看天意，天意所至，你想不胜都难"
+lastWords.newThreeKingdom.phrase36=§o"自尽便是懦夫"
+lastWords.newThreeKingdom.phrase37=§o"这刀是朕让杀手掏的"
+lastWords.newThreeKingdom.phrase38=§o"啊？真的吗？"
+lastWords.newThreeKingdom.phrase39=§o"杀手你扪心自问，你对得起朕吗？"
+lastWords.newThreeKingdom.phrase40=§o"我被杀手杀死，这事恐怕要流传百年了啊啊啊啊啊啊啊"
+lastWords.newThreeKingdom.phrase41=§o"禽兽，我不是人，禽兽啊！我与禽兽绝不两立！"
+lastWords.newThreeKingdom.phrase42=§o"不就是个手腕子吗，折了膀子也得接着打，起来！"
+lastWords.newThreeKingdom.phrase43=§o"（正在播放：刘备之死）"
+lastWords.newThreeKingdom.phrase44=§o"你们且退，我要睡了"
+lastWords.newThreeKingdom.phrase45=§o"在下一者为列位诸公悲伤，二者给列位诸公道喜"
+lastWords.newThreeKingdom.phrase46=§o"啊！反了！反了！"
+lastWords.newThreeKingdom.phrase47=§o"杀手，你也闻到我府里的酒香了？"
+lastWords.newThreeKingdom.phrase48=§o"儿啊，为父是开国以来第一个被斩的大都督"
+lastWords.newThreeKingdom.phrase49=§o"我走了，你们吃什么？"
+lastWords.newThreeKingdom.phrase50=§o"若是能让杀手爷痛快些，臣妾愿天天给杀手爷砍"
+
+### 幻想乡
+lastWords.gensokyo.title=幻想乡
+lastWords.gensokyo.description=（吊桥原创）一觉醒来发现自己面前站着个17岁（并非）的黄发美少女？！
+lastWords.gensokyo.phrase1=§o"姆Q~"
+lastWords.gensokyo.phrase2=§o"还好砍死我的不是博丽巫女"
+lastWords.gensokyo.phrase3=§o"想你了，劳求"
+lastWords.gensokyo.phrase4=§o"难道咱不是最强的吗？"
+lastWords.gensokyo.phrase5=§o"游戏进度：99.61%%"
+lastWords.gensokyo.phrase6=§o"%s因为撞上了杀手发射的大量弹幕而满身疮痍"
+lastWords.gensokyo.phrase7=§o"终究还是没能逃离寿命论啊……"
+lastWords.gensokyo.phrase8=§o"我看到了俩妹子，一个绿发戴帽子，一个红发带镰刀"
+lastWords.gensokyo.phrase9=§o"%s被杀手的冻符「Perfect Freeze」冻成了冰块"
+lastWords.gensokyo.phrase10=§o"%s被赶往处理异变的杀手当作杂鱼妖精干掉了"
+lastWords.gensokyo.phrase11=§o"%s被杀手的恋符「Master Spark」轰击的连渣都不剩"
+lastWords.gensokyo.phrase12=§o"我多希望我是个妖精……"

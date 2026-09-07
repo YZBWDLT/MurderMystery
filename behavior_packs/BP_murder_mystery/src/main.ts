@@ -97,19 +97,28 @@ interface MurderMysteryBeforeGameInfo {
     countdownStarted: boolean;
 }
 
-/** 全部的动态属性列表。 */
-interface DynamicProperties {
+/** 全部的实体动态属性列表。 */
+interface EntityDynamicProperties {
     /** 箭是否已经击中方块。该属性将会影响是否和杀手飞刀相碰。 | 适用实体：箭。 */
     "murder_mystery:hit": boolean;
 
     /** 玩家启用的主动旁观状态。 | 适用实体：玩家。 */
     "murder_mystery:optOutSpectate": "nextGame" | "always" | "none";
 
-    // /** 世界启用的设置。 */
-    // "murder_mystery:settings": string;
+    /** 玩家启用的遗言。 | 适用实体：玩家。 */
+    "murder_mystery:lastWord": string;
 
-    // /** 世界使用的下一张地图。若为`false`则终止运行，若为`undefined`则为随机生成地图。 */
-    // "murder_mystery:nextMap": string | false | undefined;
+    /** 玩家的总死亡次数。 | 适用实体：玩家。 */
+    "murder_mystery:deathCount.total": number;
+}
+
+/** 全部的实体动态属性列表。 */
+interface WorldDynamicProperties {
+    /** 世界启用的设置。 */
+    "murder_mystery:settings": string;
+
+    /** 世界使用的下一张地图。若为`false`则终止运行，若为`true`则为随机生成地图。 */
+    "murder_mystery:nextMap": string | boolean;
 }
 
 /** 游戏结束的原因。 */
@@ -363,7 +372,7 @@ export class MurderMysterySystem {
             () => {
                 this.removeAllEntities();
                 MurderMysterySettings.saveSettings(this); // 保存本局设置，以便下局应用
-                minecraft.world.setDynamicProperty("murder_mystery:nextMap"); // 随机设置一张新地图
+                MurderMysterySystem.setWorldState("murder_mystery:nextMap", true); // 随机设置一张新地图
             },
             200,
         );
@@ -457,7 +466,7 @@ export class MurderMysterySystem {
     getPlayersBeforeGame(includeOptOutSpectators = false) {
         // 若玩家的动态属性 "murder_mystery:optOutSpectate" 为 undefined，则为正常参与游戏，否则为主动旁观，不考虑该玩家
         const players = minecraft.world.getPlayers().filter(player => {
-            const isOptOutSpectator = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") !== "none";
+            const isOptOutSpectator = MurderMysterySystem.getEntityState(player, "murder_mystery:optOutSpectate", "none") !== "none";
             if (!includeOptOutSpectators && isOptOutSpectator) return false;
             return true;
         });
@@ -486,12 +495,13 @@ export class MurderMysterySystem {
         // ===== 主动旁观玩家筛选 =====
         // 先筛掉主动旁观玩家，然后再分配玩家身份。
         players
-            .filter(player => MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") !== "none")
+            .filter(player => MurderMysterySystem.getEntityState(player, "murder_mystery:optOutSpectate", "none") !== "none")
             .forEach(player => {
-                const optOutSpectateState = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
+                const optOutSpectateState = MurderMysterySystem.getEntityState(player, "murder_mystery:optOutSpectate", "none");
                 if (optOutSpectateState !== "none") this.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
                 // 如果玩家此时是仅下局旁观，则改回 none
-                if (optOutSpectateState === "nextGame") MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "none");
+                if (optOutSpectateState === "nextGame")
+                    MurderMysterySystem.setEntityState(player, "murder_mystery:optOutSpectate", "none");
                 // 更改全部玩家列表，将该玩家弹出
                 players = players.filter(leftPlayer => leftPlayer.id !== player.id);
                 // 处理玩家
@@ -572,7 +582,7 @@ export class MurderMysterySystem {
             ? { translate: "infoboard.countdown", with: [`${startCountdown}`] }
             : { translate: "infoboard.waiting" };
         const optOutSpectateEnabled: minecraft.RawMessage[] =
-            MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none") === "none"
+            MurderMysterySystem.getEntityState(player, "murder_mystery:optOutSpectate", "none") === "none"
                 ? []
                 : [{ text: "" }, { translate: "infoboard.optOutSpectate.enabled" }];
         const texts: minecraft.RawMessage[] = [
@@ -694,19 +704,42 @@ export class MurderMysterySystem {
         return this.settings.gaming.timePerGame - this.timeLeft;
     }
 
-    /** 获取实体的状态。状态列表可在 {@link DynamicProperties} 检查或注册。 */
-    static getState<T extends keyof DynamicProperties>(
+    /** 获取实体的状态。状态列表可在 {@link EntityDynamicProperties} 检查或注册。 */
+    static getEntityState<T extends keyof EntityDynamicProperties>(
         entity: minecraft.Entity,
         state: T,
-        defaultValue: DynamicProperties[T],
-    ): DynamicProperties[T] {
-        const property = entity.getDynamicProperty(state) as undefined | DynamicProperties[T];
+        defaultValue: EntityDynamicProperties[T],
+    ): EntityDynamicProperties[T] {
+        const property = entity.getDynamicProperty(state) as undefined | EntityDynamicProperties[T];
         return property ?? defaultValue;
     }
 
-    /** 设置实体的状态。状态列表可在 {@link DynamicProperties} 检查或注册。 */
-    static setState<T extends keyof DynamicProperties>(entity: minecraft.Entity, state: T, value: DynamicProperties[T]) {
+    /** 设置实体的状态。状态列表可在 {@link EntityDynamicProperties} 检查或注册。 */
+    static setEntityState<T extends keyof EntityDynamicProperties>(
+        entity: minecraft.Entity,
+        state: T,
+        value: EntityDynamicProperties[T],
+    ) {
         entity.setDynamicProperty(state, value);
+    }
+
+    /** 获取世界的状态。状态列表可在 {@link WorldDynamicProperties} 检查或注册。 */
+    static getWorldState<T extends keyof WorldDynamicProperties>(
+        state: T,
+        defaultValue: WorldDynamicProperties[T],
+    ): WorldDynamicProperties[T] {
+        const property = minecraft.world.getDynamicProperty(state) as undefined | WorldDynamicProperties[T];
+        return property ?? defaultValue;
+    }
+
+    /** 设置世界的状态。状态列表可在 {@link WorldDynamicProperties} 检查或注册。 */
+    static setWorldState<T extends keyof WorldDynamicProperties>(state: T, value: WorldDynamicProperties[T]) {
+        minecraft.world.setDynamicProperty(state, value);
+    }
+
+    /** 通知玩家并播放音效。 */
+    static informPlayer(player: minecraft.Player, message?: string | minecraft.RawMessage | (string | minecraft.RawMessage)[]) {
+        lib.PlayerUtils.notify(player, { message: message, sound: "note.pling", soundOptions: { pitch: 2 } });
     }
 
     // #endregion
@@ -1288,7 +1321,7 @@ class MurderMysterySettings {
 
     /** 对系统保存设置。 */
     static saveSettings(system: MurderMysterySystem) {
-        minecraft.world.setDynamicProperty("murder_mystery:settings", JSON.stringify(system.settings));
+        MurderMysterySystem.setWorldState("murder_mystery:settings", JSON.stringify(system.settings));
     }
 
     /** 加载设置。返回待加载的设置。 */
@@ -1296,7 +1329,8 @@ class MurderMysterySettings {
         const settings = new MurderMysterySettings();
 
         // 如果没有保存设置，则直接返回新生成的设置
-        const savedSettingsStr = minecraft.world.getDynamicProperty("murder_mystery:settings") as string | undefined;
+        const defaultSettings = JSON.stringify(settings);
+        const savedSettingsStr = MurderMysterySystem.getWorldState("murder_mystery:settings", defaultSettings);
         if (!savedSettingsStr) return settings;
 
         // 递归合并（只合并 settings 中已有的键），但如果 JSON 解析失败，则保留默认配置
@@ -1362,6 +1396,12 @@ class MurderMysterySettings {
         const playerSettings: lib.ActionUIComponent[] = [
             { type: "divider" },
             { type: "label", text: { translate: "ui.settings.main.playerSettings" } },
+            {
+                type: "button",
+                text: { translate: "lastWords.title" },
+                icon: "textures/items/paper",
+                onClick: () => this.showLastWordsUI(system, player),
+            },
             {
                 type: "button",
                 text: { translate: "ui.settings.main.optOutSpectate" },
@@ -1512,6 +1552,113 @@ class MurderMysterySettings {
         });
     }
 
+    /** 对玩家显示临终遗言 UI。 */
+    private static showLastWordsUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const allLastWords = Object.keys(gameData.lastWords);
+        const lastWordButtons: lib.FormButtonComponent[] = allLastWords.map(lastWord => ({
+            type: "button",
+            text: { translate: `lastWords.${lastWord}.title` },
+            icon: gameData.lastWords[lastWord]?.logo,
+            onClick: () => {
+                this.showLastWordsConfirmUI(system, player, lastWord);
+            },
+        }));
+        const currentlySelected = MurderMysterySystem.getEntityState(player, "murder_mystery:lastWord", "none");
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "lastWords.title" } },
+                { type: "label", text: { translate: "lastWords.description" } },
+                {
+                    type: "label",
+                    text: {
+                        translate: "ui.settings.currentlySelected",
+                        with: { rawtext: [{ translate: `lastWords.${currentlySelected}.title` }] },
+                    },
+                },
+                { type: "divider" },
+                {
+                    type: "button",
+                    text: { translate: "lastWords.none.title" },
+                    onClick: () => {
+                        MurderMysterySystem.setEntityState(player, "murder_mystery:lastWord", "none");
+                        MurderMysterySystem.informPlayer(player, {
+                            translate: "chat.youChose",
+                            with: { rawtext: [{ translate: "lastWords.none.title" }] },
+                        });
+                    },
+                },
+                {
+                    type: "button",
+                    text: { translate: "lastWords.random.title" },
+                    onClick: () => {
+                        const randomLastWord = lib.JSUtils.array.randomElement(allLastWords);
+                        MurderMysterySystem.setEntityState(player, "murder_mystery:lastWord", randomLastWord);
+                        MurderMysterySystem.informPlayer(player, {
+                            translate: "chat.youChose",
+                            with: { rawtext: [{ translate: `lastWords.${randomLastWord}.title` }] },
+                        });
+                    },
+                },
+                ...lastWordButtons,
+            ],
+        });
+    }
+
+    /** 对玩家显示临终遗言确认 UI。 */
+    private static showLastWordsConfirmUI(system: MurderMysterySystem, player: minecraft.Player, lastWord: string) {
+        const lastWordData = gameData.lastWords[lastWord];
+        if (!lastWordData) return;
+        const lastWordCount = lastWordData.count;
+        const lastWords: lib.FormLabelComponent[] = [];
+        for (let i = 1; i <= lastWordCount; i++) {
+            lastWords.push({
+                type: "label",
+                text: { translate: `lastWords.${lastWord}.phrase${i}`, with: ["§7(X)§r§o"] },
+            });
+        }
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => {
+                this.showLastWordsUI(system, player);
+            },
+            components: [
+                {
+                    type: "header",
+                    text: {
+                        translate: "ui.lastWords.preview.title",
+                        with: { rawtext: [{ translate: `lastWords.${lastWord}.title` }] },
+                    },
+                },
+                { type: "label", text: { translate: `lastWords.${lastWord}.description` } },
+                { type: "divider" },
+                ...lastWords,
+                { type: "divider" },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.confirm" },
+                    icon: "textures/ui/confirm",
+                    onClick: () => {
+                        MurderMysterySystem.setEntityState(player, "murder_mystery:lastWord", lastWord);
+                        MurderMysterySystem.informPlayer(player, {
+                            translate: "chat.youChose",
+                            with: { rawtext: [{ translate: `lastWords.${lastWord}.title` }] },
+                        });
+                    },
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.cancel" },
+                    icon: "textures/ui/cancel",
+                    onClick: () => {
+                        this.showLastWordsUI(system, player);
+                    },
+                },
+            ],
+        });
+    }
+
     /** 对玩家显示关于我们 UI。 */
     private static showAboutUI(system: MurderMysterySystem, player: minecraft.Player) {
         const author: lib.FormLabelComponent[] = gameData.about.author.map(text => ({ type: "label", text: `§a${text}` }));
@@ -1576,7 +1723,7 @@ class MurderMysterySettings {
 
     /** 对玩家显示主动旁观 UI。 */
     private static showOptOutSpectateUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const currentState = MurderMysterySystem.getState(player, "murder_mystery:optOutSpectate", "none");
+        const currentState = MurderMysterySystem.getEntityState(player, "murder_mystery:optOutSpectate", "none");
         lib.UIUtils.createAction(player, {
             type: "action",
             onCancel: () => this.showMainSettingsUI(system, player),
@@ -1594,13 +1741,10 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.none" },
                     onClick: () => {
-                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "none");
-                        lib.PlayerUtils.notify(player, {
-                            message: {
-                                translate: "chat.youChose",
-                                with: { rawtext: [{ translate: "ui.settings.optoutspectate.none" }] },
-                            },
-                            sound: "random.orb",
+                        MurderMysterySystem.setEntityState(player, "murder_mystery:optOutSpectate", "none");
+                        MurderMysterySystem.informPlayer(player, {
+                            translate: "chat.youChose",
+                            with: { rawtext: [{ translate: "ui.settings.optoutspectate.none" }] },
                         });
                     },
                 },
@@ -1608,13 +1752,10 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.nextGame" },
                     onClick: () => {
-                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "nextGame");
-                        lib.PlayerUtils.notify(player, {
-                            message: {
-                                translate: "chat.youChose",
-                                with: { rawtext: [{ translate: "ui.settings.optoutspectate.nextGame" }] },
-                            },
-                            sound: "random.orb",
+                        MurderMysterySystem.setEntityState(player, "murder_mystery:optOutSpectate", "nextGame");
+                        MurderMysterySystem.informPlayer(player, {
+                            translate: "chat.youChose",
+                            with: { rawtext: [{ translate: "ui.settings.optoutspectate.nextGame" }] },
                         });
                     },
                 },
@@ -1622,13 +1763,10 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "ui.settings.optoutspectate.always" },
                     onClick: () => {
-                        MurderMysterySystem.setState(player, "murder_mystery:optOutSpectate", "always");
-                        lib.PlayerUtils.notify(player, {
-                            message: {
-                                translate: "chat.youChose",
-                                with: { rawtext: [{ translate: "ui.settings.optoutspectate.always" }] },
-                            },
-                            sound: "random.orb",
+                        MurderMysterySystem.setEntityState(player, "murder_mystery:optOutSpectate", "always");
+                        MurderMysterySystem.informPlayer(player, {
+                            translate: "chat.youChose",
+                            with: { rawtext: [{ translate: "ui.settings.optoutspectate.always" }] },
                         });
                     },
                 },
@@ -1646,7 +1784,7 @@ class MurderMysterySettings {
             type: "button",
             text: { translate: `map.${mapName}` },
             onClick: () => {
-                minecraft.world.setDynamicProperty("murder_mystery:nextMap", mapName);
+                MurderMysterySystem.setWorldState("murder_mystery:nextMap", mapName);
             },
         }));
         lib.UIUtils.createAction(player, {
@@ -1659,7 +1797,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: `ui.settings.selectMap.randomMap` },
                     onClick: () => {
-                        minecraft.world.setDynamicProperty("murder_mystery:nextMap");
+                        MurderMysterySystem.setWorldState("murder_mystery:nextMap", true);
                     },
                 },
                 ...selectMapButtons,
@@ -2790,7 +2928,7 @@ class MurderMysteryComponents {
             if (!arrow.isValid) return;
             if (arrow.typeId !== "minecraft:arrow") return;
             arrow.triggerEvent("murder_mystery:remove_player_arrow");
-            MurderMysterySystem.setState(arrow, "murder_mystery:hit", true);
+            MurderMysterySystem.setEntityState(arrow, "murder_mystery:hit", true);
         });
     }
 
@@ -3074,11 +3212,10 @@ export class MurderMysteryPlayer {
 
         // 若该玩家正处于无敌状态，并且死亡方式不是虚空等掉出地图的方式，则播放音效和粒子，阻止死亡，终止运行
         const isOutOfMap = gameData.deathTypeOutOfMap.includes(deathType);
-        if (this.player.getEffect("resistance") && !isOutOfMap) {
-            lib.PlayerUtils.getNearby(this.player.location, 10).forEach(player =>
-                player.playSound("mob.irongolem.death", { pitch: 2 }),
-            );
-            this.player.dimension.spawnParticle("murder_mystery:invincible", this.player.location);
+        const player = this.player;
+        if (player.getEffect("resistance") && !isOutOfMap) {
+            lib.PlayerUtils.getNearby(player.location, 10).forEach(player => player.playSound("mob.irongolem.death", { pitch: 2 }));
+            player.dimension.spawnParticle("murder_mystery:invincible", player.location);
             return false;
         }
 
@@ -3087,14 +3224,14 @@ export class MurderMysteryPlayer {
         this.chargingTime = 0;
         this.system.removeLivingPlayer(this);
 
-        // 若不是出图死亡方式，则生成尸体
-        if (!isOutOfMap)
-            lib.EntityUtils.add("murder_mystery:dead_player", this.player.location, this.player.dimension, {
-                initialRotation: this.player.getRotation().y,
-            });
+        // 添加死亡次数
+        const currentDeathCount = MurderMysterySystem.getEntityState(player, "murder_mystery:deathCount.total", 0);
+        MurderMysterySystem.setEntityState(player, "murder_mystery:deathCount.total", currentDeathCount + 1);
 
-        if (isPlayer(this.player)) {
-            const player = this.player;
+        // 若不是出图死亡方式，则生成尸体
+        if (!isOutOfMap) this.placeCorpse();
+
+        if (isPlayer(player)) {
             // 这里，急眼版有一个非常幽默的 bug，如果玩家着火时设置旁观就会一直显示着火粒子，哪怕是其他玩家也能看见
             // 并且通过脚本直接设置 extinguishFire 也是无效的，脚本层也判定玩家未着火，但就是会显示着火粒子
             // 无敌了基岩版
@@ -3120,14 +3257,14 @@ export class MurderMysteryPlayer {
             player.addEffect("minecraft:blindness", 60);
         } else {
             // 传送假玩家到出生点
-            minecraft.system.run(() => this.player.teleport(this.system.mapData.description.waitHall.location));
+            minecraft.system.run(() => player.teleport(this.system.mapData.description.waitHall.location));
         }
 
         // 对所有玩家播放音效
         this.system.livingPlayers.allPlayers.forEach(playerData => {
             if (!isPlayer(playerData.player)) return;
             // 对自己播放骷髅死亡音效（上文已写，这里直接终止）
-            if (playerData.player.id === this.player.id) return;
+            if (playerData.player.id === player.id) return;
             // 对其他玩家播放受伤音效
             playerData.player.playSound("game.player.hurt");
         });
@@ -3136,10 +3273,7 @@ export class MurderMysteryPlayer {
         if (this.role === MurderMysteryPlayerRole.Detective) {
             // 如果是掉到虚空或摔到地上等出图的死亡方法，把弓的位置强行设定到其中一个出生点上
             if (isOutOfMap) {
-                const closestSpawnPoint = lib.Vector3Utils.getClosest(
-                    this.player.location,
-                    this.system.mapData.description.spawnPoints,
-                );
+                const closestSpawnPoint = lib.Vector3Utils.getClosest(player.location, this.system.mapData.description.spawnPoints);
                 this.dropBow(true, lib.Vector3Utils.up(closestSpawnPoint, 1));
             }
             // 否则就设置到侦探本身的位置上
@@ -3150,13 +3284,42 @@ export class MurderMysteryPlayer {
         if (killer) killer.kills++;
 
         // 判断一次游戏有没有结束
-        if (this.role === MurderMysteryPlayerRole.Murderer) {
-            this.system.gameOverTest(MurderMysteryGameOverReason.MurdererDied, killer);
-        } else {
-            this.system.gameOverTest(MurderMysteryGameOverReason.AllPlayersDied);
-        }
+        if (this.role === MurderMysteryPlayerRole.Murderer) this.system.gameOverTest(MurderMysteryGameOverReason.MurdererDied, killer);
+        else this.system.gameOverTest(MurderMysteryGameOverReason.AllPlayersDied);
 
         return true;
+    }
+
+    /** 安置尸体和遗言。 */
+    private placeCorpse() {
+        // ===== 安置尸体 =====
+        const player = this.player;
+        lib.EntityUtils.add("murder_mystery:dead_player", player.location, player.dimension, {
+            initialRotation: player.getRotation().y,
+        });
+
+        // ===== 安置遗言 =====
+        // 如果没有对应的临终遗言，或无效的临终遗言，终止运行
+        const playerLastWord = MurderMysterySystem.getEntityState(player, "murder_mystery:lastWord", "newThreeKingdom");
+        if (playerLastWord === "none") return;
+        const playerLastWordData = gameData.lastWords[playerLastWord];
+        if (!playerLastWordData) return;
+
+        // 第 1 行：尸体上方 1.3 格（XXX的临终遗言：）
+        const line1 = lib.TextDisplayUtils.add(
+            { translate: "lastWords.inGame", with: [this.getName()] },
+            lib.Vector3Utils.add(player.location, 0, 1.5, 0),
+        );
+        line1.timeLeft = 20;
+
+        // 第 2 行：尸体上方 1.0 格（斜体 "XXX"）
+        const phraseIndex = lib.JSUtils.number.randomInt(1, playerLastWordData.count);
+        const replace = playerLastWordData.replacer ? playerLastWordData.replacer(this.system, this) : "";
+        const line2 = lib.TextDisplayUtils.add(
+            { translate: `lastWords.${playerLastWord}.phrase${phraseIndex}`, with: [replace] },
+            lib.Vector3Utils.add(player.location, 0, 1, 0),
+        );
+        line2.timeLeft = 20;
     }
 
     /** 显示信息板。 */
@@ -3225,7 +3388,7 @@ export class MurderMysteryPlayer {
     /** 获取该玩家的名称。 */
     getName() {
         if (isPlayer(this.player)) return this.player.name;
-        return this.player.nameTag;
+        return this.player.id;
     }
 
     /** 获取弓箭。 */
@@ -3510,7 +3673,7 @@ export class MurderMysteryPlayer {
             const dimension = knife.dimension;
             const knifeCollideArrowDistance = this.system.settings.murdererSword.knifeCollideArrowDistance;
             const arrowNearby = lib.EntityUtils.getNearby("minecraft:arrow", location, knifeCollideArrowDistance).filter(
-                arrow => !MurderMysterySystem.getState(arrow, "murder_mystery:hit", false),
+                arrow => !MurderMysterySystem.getEntityState(arrow, "murder_mystery:hit", false),
             )[0];
 
             // ===== 刀箭相碰逻辑 =====
@@ -3826,11 +3989,10 @@ export class MurderMysteryPlayer {
 // 在初始化后，这个属性会变为 false，代表不生成地图
 // 这个进程应该始终存在，不能受到各类 unsubscribe 的影响
 minecraft.world.afterEvents.worldLoad.subscribe(() => {
-    minecraft.world.setDynamicProperty("murder_mystery:nextMap"); // 进入地图时，随机生成一张地图
+    MurderMysterySystem.setWorldState("murder_mystery:nextMap", true); // 进入地图时，随机生成一张地图
     minecraft.system.runInterval(() => {
         // ===== 条件判断 =====
-        /** 下一张地图的名称，若为`false`则终止运行，若为`undefined`则为随机生成地图。 */
-        const nextMapName = minecraft.world.getDynamicProperty("murder_mystery:nextMap") as string | false | undefined;
+        const nextMapName = MurderMysterySystem.getWorldState("murder_mystery:nextMap", true);
         if (nextMapName === false) return;
 
         // ===== 创建新系统 =====
@@ -3840,10 +4002,10 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
         lib.gameSystem.unsubscribeAllDelays();
 
         // 清除已记载的新建地图
-        minecraft.world.setDynamicProperty("murder_mystery:nextMap", false);
+        MurderMysterySystem.setWorldState("murder_mystery:nextMap", false);
 
         // 获取地图数据
-        let nextMap = MurderMysterySystem.getMapData(nextMapName);
+        let nextMap = nextMapName === true ? MurderMysterySystem.getMapData() : MurderMysterySystem.getMapData(nextMapName);
 
         // 尝试添加常加载区域，如果没有成功加载则随机重置地图
         const { from, to } = nextMap.description.range;
@@ -3854,7 +4016,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
                 message: { translate: "chat.error.areaToLarge", with: { rawtext: [{ translate: `map.${nextMap.description.id}` }] } },
                 sound: "random.anvil_land",
             });
-            minecraft.world.setDynamicProperty("murder_mystery:nextMap");
+            MurderMysterySystem.setWorldState("murder_mystery:nextMap", true);
             return;
         }
 
