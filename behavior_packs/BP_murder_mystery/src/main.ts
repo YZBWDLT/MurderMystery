@@ -403,11 +403,11 @@ export class MurderMysterySystem {
         // 给定地图时，检查该地图是否在可用地图中，若在则返回该地图信息
         if (mapName && validMapNames.includes(mapName)) return allMaps[mapName] as gameData.MurderMysteryMapData;
         // 未给定地图时，随机在可用地图中选择
-        const randomMapName = lib.JSUtils.array.randomElement(validMapNames);
+        const randomMapName = lib.JSUtils.array.random(validMapNames);
         const randomMap = allMaps[randomMapName];
         if (!randomMap) {
             lib.PlayerUtils.broadcast({ message: { translate: "chat.error.noValidMaps" }, sound: "random.anvil_land" });
-            return lib.JSUtils.array.randomElement(Object.values(allMaps));
+            return lib.JSUtils.array.random(Object.values(allMaps));
         }
         return randomMap;
     }
@@ -900,16 +900,7 @@ class MurderMysteryEventManager {
         // ===== ↓ 可以成功购买神秘药水 =====
 
         // 决定本次抽中何种药水（potionIndex），并获取药水的相关信息
-        const totalWeight = lib.JSUtils.number.sum(this.mysteryPotionData.map(data => data.weight));
-        let randomWeight = lib.JSUtils.number.randomInt(0, totalWeight - 1);
-        let potionIndex = 0;
-        this.mysteryPotionData.some((data, index) => {
-            randomWeight -= data.weight;
-            if (randomWeight <= 0) {
-                potionIndex = index;
-                return true;
-            }
-        });
+        const potionIndex = lib.JSUtils.array.randomWeightedIndex(this.mysteryPotionData);
         const potionId = `murder_mystery:mystery_potion_${potionIndex}`;
 
         // 展示药水对应的动画
@@ -1593,7 +1584,7 @@ class MurderMysterySettings {
                     type: "button",
                     text: { translate: "lastWords.random.title" },
                     onClick: () => {
-                        const randomLastWord = lib.JSUtils.array.randomElement(allLastWords);
+                        const randomLastWord = lib.JSUtils.array.random(allLastWords);
                         MurderMysterySystem.setEntityState(player, "murder_mystery:lastWord", randomLastWord);
                         MurderMysterySystem.informPlayer(player, {
                             translate: "chat.youChose",
@@ -2868,7 +2859,7 @@ class MurderMysteryComponents {
                     }
                     // 否则，重新分配一个杀手
                     const innocents = system.livingPlayers.innocent;
-                    const randomInnocent = lib.JSUtils.array.randomElement(innocents);
+                    const randomInnocent = lib.JSUtils.array.random(innocents);
                     system.transformRole(randomInnocent, MurderMysteryPlayerRole.Murderer);
                     if (isPlayer(randomInnocent.player)) {
                         randomInnocent.showRole();
@@ -2897,13 +2888,13 @@ class MurderMysteryComponents {
             if (!initialSpawn) return;
             system.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
             player.setGameMode(minecraft.GameMode.Spectator);
-            player.teleport(lib.JSUtils.array.randomElement(system.mapData.description.spawnPoints));
+            player.teleport(lib.JSUtils.array.random(system.mapData.description.spawnPoints));
         });
         lib.gameSystem.subscribeEvent("fakePlayerJoinTest", minecraft.world.afterEvents.entitySpawn, event => {
             const player = event.entity;
             if (player.typeId !== "murder_mystery:fake_player") return;
             system.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
-            player.teleport(lib.JSUtils.array.randomElement(system.mapData.description.spawnPoints));
+            player.teleport(lib.JSUtils.array.random(system.mapData.description.spawnPoints));
         });
     }
 

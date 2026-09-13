@@ -2224,8 +2224,70 @@ class ArrayUtils {
     /** 获取一个数组中的随机元素。
      * @remarks 这个方法在数组为空时会返回`undefined`。
      */
-    static randomElement<T>(array: T[]) {
+    static random<T>(array: T[]) {
         return array[NumberUtils.randomInt(0, array.length - 1)] as T;
+    }
+
+    /** 按权重随机选取一个元素。
+     *
+     * 代码由 Deepseek 生成 =P
+     * @param items 包含权重属性的数组
+     * @returns 被选中的元素，数组为空时返回`undefined`
+     */
+    static randomWeighted<T extends { weight: number }>(items: T[]): T | undefined {
+        if (items.length === 0) return undefined;
+
+        // 1. 计算总权重
+        const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+
+        // 2. 生成 0 ~ totalWeight 之间的随机数
+        let random = Math.random() * totalWeight;
+
+        // 3. 遍历，累减权重，首次 <=0 时命中
+        for (const item of items) {
+            random -= item.weight;
+            if (random <= 0) {
+                return item;
+            }
+        }
+
+        // 4. 兜底（处理浮点精度极边缘情况）
+        return items[items.length - 1];
+    }
+
+    /** 按权重随机选取一个元素。
+     *
+     * 代码由 Deepseek 生成 =P
+     * @param items 包含权重属性的数组
+     * @returns 被选中的元素的索引，数组为空时返回`-1`
+     */
+    static randomWeightedIndex<T extends { weight: number }>(items: T[]): number {
+        if (items.length === 0) return -1;
+
+        const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+        let random = Math.random() * totalWeight;
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i] as T;
+            random -= item.weight;
+            if (random <= 0) {
+                return i;
+            }
+        }
+
+        // 兜底（极少出现浮点误差）
+        return items.length - 1;
+    }
+
+    /** 按权重随机选取一个元素。
+     *
+     * 代码由 Deepseek 生成 =P
+     * @param items 包含权重属性的数组
+     * @returns 数组为空时返回`0`
+     */
+    static getTotalWeight<T extends { weight: number }>(items: T[]): number {
+        if (items.length === 0) return 0;
+        return items.reduce((sum, item) => sum + item.weight, 0);
     }
 }
 
@@ -2359,8 +2421,8 @@ export class Debug {
         minecraft.world.sendMessage(`§a${arrayName} = §r§f[§b${array.join(", ")}§r§f]`);
     }
 
-    /** 打印对象 */
-    static printObject(object: Record<string, any> | undefined, mode: "chat" | "actionbar" = "chat", hasFunction = true) {
+    /** 获取对象数据。 */
+    static getObjectData(object: Record<string, any> | undefined, hasFunction = true): string {
         /** 待打印的字符串数组 */ let printString: string[] = [];
         // 设置打印的字符串
         if (object == undefined) {
@@ -2383,14 +2445,7 @@ export class Debug {
             }
             printString.push(`§r>`);
         }
-        // 打印模式
-        if (mode === "chat") {
-            minecraft.world.sendMessage(printString.join("\n"));
-        } else {
-            minecraft.world.getAllPlayers().forEach(player => {
-                player.onScreenDisplay.setActionBar(printString.join("\n"));
-            });
-        }
+        return printString.join("\n");
     }
 }
 
