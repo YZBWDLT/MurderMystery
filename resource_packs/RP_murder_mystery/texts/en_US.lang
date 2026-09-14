@@ -230,9 +230,6 @@ chat.murdererGetLocator.innocent=§cWatch out! §eThe Murderer can now find surv
 chat.murdererGetLocator.detective=§cWatch out! §eThe Murderer can now find survivors easily!
 chat.murdererGetLocator.murderer=§eYou've got a locator! Hold it to find the remaining survivors!
 
-### Passage in Map Archives
-subtitle.archives.passageOpened=§aA secret passage has been opened!
-
 ### Trap
 trap.name=Trap
 
@@ -245,6 +242,9 @@ chat.error.areaToLarge=§cWarning: Invalid map – the area is too large to init
 
 ### No Full Function Warning
 chat.hasNoFullFunction=§cNote: This map has not yet been fully adapted. Only the most basic features are available. Full adaptation will come in future updates.
+
+### Passage
+subtitle.passageOpened=§aA secret passage has been opened!
 
 ## ===== Map Features =====
 
@@ -270,6 +270,32 @@ chat.aquarium.tank.blindness=§cThe mighty sea creature has poisoned you with Bl
 chat.aquarium.tank.giftSplashPotion=§cThe mighty sea creature has gifted you a %s!
 chat.aquarium.tank.giftDrinkableSpeedPotion=§cThe mighty sea creature has gifted you a Drinkable Speed Potion!
 chat.aquarium.tank.giftBow=§cThe mighty sea creature has gifted you a bow!
+
+### Traps in Spooky Mansion
+textDisplay.spookyMansion.doorTrap.line1=§7Press buttons to
+textDisplay.spookyMansion.doorTrap.line2=§7remove porch floor
+textDisplay.spookyMansion.doorTrap.line3=§61 Gold
+
+textDisplay.spookyMansion.barrelTrap.line1=§7Press buttons
+textDisplay.spookyMansion.barrelTrap.line2=§7to open Barrels
+textDisplay.spookyMansion.barrelTrap.line3=§61 Gold
+
+textDisplay.spookyMansion.crusherTrap.line1=§7Press buttons
+textDisplay.spookyMansion.crusherTrap.line2=§7to activate crusher
+textDisplay.spookyMansion.crusherTrap.line3=§62 Golds
+
+chat.spookyMansion.elevator.lobby=§7You are now in the §aLobby§7 floor!
+chat.spookyMansion.elevator.1stFloor=§7You are now in the §a1st Floor§7 floor!
+chat.spookyMansion.elevator.basement=§7You are now in the §aBasement§7 floor!
+
+textDisplay.spookyMansion.elevator.lobby.line1=§7To: §aLobby
+textDisplay.spookyMansion.elevator.lobby.line2=§62 Golds
+
+textDisplay.spookyMansion.elevator.1stFloor.line1=§7To: §c1st Floor
+textDisplay.spookyMansion.elevator.1stFloor.line2=§62 Golds
+
+textDisplay.spookyMansion.elevator.basement.line1=§7To: §6Basement
+textDisplay.spookyMansion.elevator.basement.line2=§62 Golds
 
 ## ===== Settings UI =====
 

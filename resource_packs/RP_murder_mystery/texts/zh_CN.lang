@@ -230,9 +230,6 @@ chat.murdererGetLocator.innocent=§c小心！§e现在杀手可以易如反掌�
 chat.murdererGetLocator.detective=§c小心！§e现在杀手可以易如反掌地定位玩家！
 chat.murdererGetLocator.murderer=§e你的定位器现在可以指向其他玩家！手持使用，以此来定位剩余平民！
 
-### 档案馆秘密通道
-subtitle.archives.passageOpened=§a一个秘密通道开启了！
-
 ### 陷阱
 trap.name=陷阱
 
@@ -245,6 +242,9 @@ chat.error.areaToLarge=§c警告：无效的地图，该地图区域过大，无
 
 ### 无完整功能警告
 chat.hasNoFullFunction=§c请注意：该地图尚未完成功能适配，只有最基础的功能，在后续版本我们会进行适配。
+
+### 秘密通道
+subtitle.passageOpened=§a一个秘密通道开启了！
 
 ## ===== 地图特色功能 =====
 
@@ -270,6 +270,32 @@ chat.aquarium.tank.blindness=§c神圣的海洋生物用失明毒害了你！§7
 chat.aquarium.tank.giftSplashPotion=§c神圣的海洋生物赠予你一瓶%s！
 chat.aquarium.tank.giftDrinkableSpeedPotion=§c神圣的海洋生物赠予你一瓶可饮用的迅捷药水！
 chat.aquarium.tank.giftBow=§c神圣的海洋生物赠予你一把弓！
+
+### 阴森庄园的陷阱提示
+textDisplay.spookyMansion.doorTrap.line1=§7按下按钮来
+textDisplay.spookyMansion.doorTrap.line2=§7移除玄关地板
+textDisplay.spookyMansion.doorTrap.line3=§61块金锭
+
+textDisplay.spookyMansion.barrelTrap.line1=§7按下按钮来
+textDisplay.spookyMansion.barrelTrap.line2=§7打开滚筒
+textDisplay.spookyMansion.barrelTrap.line3=§61块金锭
+
+textDisplay.spookyMansion.crusherTrap.line1=§7按下按钮来
+textDisplay.spookyMansion.crusherTrap.line2=§7启用挤压装置
+textDisplay.spookyMansion.crusherTrap.line3=§62块金锭
+
+chat.spookyMansion.elevator.lobby=§7你现在位于§a大厅§7！
+chat.spookyMansion.elevator.1stFloor=§7你现在位于§a一楼§7！
+chat.spookyMansion.elevator.basement=§7你现在位于§a地下室§7！
+
+textDisplay.spookyMansion.elevator.lobby.line1=§7前往：§a大厅
+textDisplay.spookyMansion.elevator.lobby.line2=§62块金锭
+
+textDisplay.spookyMansion.elevator.1stFloor.line1=§7前往：§c1楼
+textDisplay.spookyMansion.elevator.1stFloor.line2=§62块金锭
+
+textDisplay.spookyMansion.elevator.basement.line1=§7前往：§6地下室
+textDisplay.spookyMansion.elevator.basement.line2=§62块金锭
 
 ## ===== 设置 UI =====
 

@@ -1778,7 +1778,7 @@ export const maps = {
                 lib.BlockUtils.fill({ id: "minecraft:air", from: { x: 1039, y: 135, z: -187 }, to: { x: 1039, y: 138, z: -185 } });
                 lib.PlayerUtils.broadcast({
                     title: "§1",
-                    subtitle: { translate: "subtitle.archives.passageOpened" },
+                    subtitle: { translate: "subtitle.passageOpened" },
                     titleOptions: { fadeInDuration: 0, fadeOutDuration: 20, stayDuration: 60 },
                     sound: "tile.piston.out",
                     soundOptions: { pitch: 1.5 },

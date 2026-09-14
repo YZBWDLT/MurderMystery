@@ -52,3 +52,4 @@
 - 将密室杀手系统的静态方法`getState`和`setState`更名为`getEntityState`和`setEntityState`，将接口`DynamicProperties`更名为`EntityDynamicProperties`
 - 新增了密室杀手系统的静态方法`getWorldState`和`setWorldState`，新增了`WorldDynamicProperties`接口
 - 为`data.ts`新增了`LastWordData`接口和`lastWords`数据
+- 为`lib.ts`新增了带有权重的随机函数
