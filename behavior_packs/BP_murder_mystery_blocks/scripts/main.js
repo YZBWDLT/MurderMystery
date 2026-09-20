@@ -178,7 +178,10 @@ minecraft.system.beforeEvents.startup.subscribe(event => {
 function showSetFreezeBlockUI(player, showDebugInfo) {
     const form = new ui.CustomForm(player, "放置冻结方块").label(`显示调试性信息：§a${showDebugInfo}`).spacer();
     Object.keys(info.freezeBlockData).map(mapName => {
-        form.button({ translate: `map.${mapName}` }, () => setFreezeBlock(mapName, showDebugInfo, player)).spacer();
+        form.button({ translate: `map.${mapName}` }, () => {
+            setFreezeBlock(mapName, showDebugInfo, player);
+            form.close();
+        }).spacer();
     });
     form.show();
 }
