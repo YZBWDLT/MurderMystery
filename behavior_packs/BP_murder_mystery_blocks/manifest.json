@@ -1,21 +1,21 @@
 {
     "format_version": 2,
     "header": {
-        "name": "方块预设：自定义画",
-        "description": "",
-        "uuid": "8f3ec006-65a5-4822-9e01-1223bb886fe2",
-        "version": [1, 0, 0],
-        "min_engine_version": [1, 21, 120]
+        "name": "量筒的密室杀手：方块包",
+        "description": "包含地图内各种各样的方块。",
+        "uuid": "21ce8949-fc13-47fb-aa6d-ab863f833b51",
+        "version": [1, 0, 19],
+        "min_engine_version": [1, 26, 40]
     },
     "modules": [
         {
             "type": "data",
-            "uuid": "9e68eda0-f93a-49e7-be47-60256c9b16cd",
+            "uuid": "21b5768b-dc7f-41bc-ad58-b8a776f5222d",
             "version": [1, 0, 0]
         },
         {
             "type": "script",
-            "uuid": "6b7c0022-7459-422f-853d-f5c35d6035a1",
+            "uuid": "46a01d55-aa03-4a5d-8412-491dd3af95b6",
             "version": [1, 0, 0],
             "entry": "scripts/main.js"
         }
@@ -26,7 +26,11 @@
     "dependencies": [
         {
             "module_name": "@minecraft/server",
-            "version": "2.0.0"
+            "version": "2.9.0"
+        },
+        {
+            "module_name": "@minecraft/server-ui",
+            "version": "2.1.0"
         }
     ]
 }

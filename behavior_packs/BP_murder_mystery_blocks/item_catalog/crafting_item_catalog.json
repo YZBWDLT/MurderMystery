@@ -20,6 +20,18 @@
                         "items": []
                     }
                 ]
+            },
+            {
+                "category_name": "construction",
+                "groups": [
+                    {
+                        "group_identifier": {
+                            "icon": "freeze_block:farmland",
+                            "name": "freeze_block:itemGroup.name.freeze_block"
+                        },
+                        "items": []
+                    }
+                ]
             }
         ]
     }

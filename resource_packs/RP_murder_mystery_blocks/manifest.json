@@ -1,23 +1,23 @@
 {
     "format_version": 2,
     "header": {
-        "name": "方块预设：自定义画",
-        "description": "",
-        "uuid": "a52738af-7efd-49ba-b6b7-e358e3900781",
-        "version": [1, 0, 0],
-        "min_engine_version": [1, 21, 120]
+        "name": "量筒的密室杀手：方块包",
+        "description": "包含地图内各种各样的方块。",
+        "uuid": "250ba4e1-3b9c-4d08-9bd1-f659b94cc208",
+        "version": [1, 0, 19],
+        "min_engine_version": [1, 26, 40]
     },
     "modules": [
         {
             "type": "resources",
-            "uuid": "f55389d7-e9ff-4ddd-ab37-a95b7dadaf5c",
+            "uuid": "1a77d1b6-8463-461e-995b-0421df70db25",
             "version": [1, 0, 0]
         }
     ],
     "dependencies": [
         {
-            "uuid": "8f3ec006-65a5-4822-9e01-1223bb886fe2",
-            "version": [1, 0, 0]
+            "uuid": "21ce8949-fc13-47fb-aa6d-ab863f833b51",
+            "version": [1, 0, 19]
         }
     ],
     "metadata": { "authors": ["YZBWDLT"] },
