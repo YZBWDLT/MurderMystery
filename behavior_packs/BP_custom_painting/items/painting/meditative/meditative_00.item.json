@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:meditative_00",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting" }
+        },
+        "components": {
+            "minecraft:icon": "meditative_00",
+            "minecraft:block_placer": { "replace_block_item": true, "block": "painting:meditative_00" },
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:meditative.name" }
+        }
+    }
+}

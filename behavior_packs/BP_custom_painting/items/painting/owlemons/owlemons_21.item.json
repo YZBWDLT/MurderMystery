@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:owlemons_21",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting" }
+        },
+        "components": {
+            "minecraft:icon": "owlemons_21",
+            "minecraft:block_placer": { "replace_block_item": true, "block": "painting:owlemons_21" },
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:owlemons.name" }
+        }
+    }
+}

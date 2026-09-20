@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:donkey_kong_32",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting" }
+        },
+        "components": {
+            "minecraft:icon": "donkey_kong_32",
+            "minecraft:block_placer": { "replace_block_item": true, "block": "painting:donkey_kong_32" },
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:donkey_kong.name" }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "format_version": "1.21.60",
+    "minecraft:crafting_items_catalog": {
+        "categories": [
+            {
+                "category_name": "items",
+                "groups": [
+                    {
+                        "group_identifier": {
+                            "icon": "painting:creebet_10",
+                            "name": "painting:itemGroup.name.painting"
+                        },
+                        "items": []
+                    },
+                    {
+                        "group_identifier": {
+                            "icon": "painting:creebet_placer",
+                            "name": "painting:itemGroup.name.painting_placer"
+                        },
+                        "items": []
+                    }
+                ]
+            }
+        ]
+    }
+}

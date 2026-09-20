@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:pond_12",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting" }
+        },
+        "components": {
+            "minecraft:icon": "pond_12",
+            "minecraft:block_placer": { "replace_block_item": true, "block": "painting:pond_12" },
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:pond.name" }
+        }
+    }
+}

@@ -1,0 +1,58 @@
+## ===== Items =====
+
+item.painting:alban.name=Albanian
+item.painting:aztec.name=de_aztec
+item.painting:aztec2.name=de_aztec
+item.painting:backyard.name=Backyard
+item.painting:baroque.name=Baroque
+item.painting:bomb.name=Target Successfully Bombed
+item.painting:bouquet.name=Bouquet
+item.painting:burning_skull.name=Skull On Fire
+item.painting:bust.name=Bust
+item.painting:cavebird.name=Cavebird
+item.painting:changing.name=Changing
+item.painting:cotan.name=Cotán
+item.painting:courbet.name=Bonjour Monsieur Courbet
+item.painting:creebet.name=Creebet
+item.painting:dennis.name=Dennis
+item.painting:donkey_kong.name=Kong
+item.painting:earth.name=Earth
+item.painting:endboss.name=Endboss
+item.painting:fern.name=Fern
+item.painting:fighters.name=Fighters
+item.painting:finding.name=Finding
+item.painting:fire.name=Fire
+item.painting:graham.name=Graham
+item.painting:humble.name=Humble
+item.painting:kebab.name=Kebab med tre pepperoni
+item.painting:lowmist.name=Lowmist
+item.painting:match.name=Match
+item.painting:meditative.name=Meditative
+item.painting:orb.name=Orb
+item.painting:owlemons.name=Owlemons
+item.painting:passage.name=Passage
+item.painting:pigscene.name=Pigscene
+item.painting:plant.name=Paradisträd
+item.painting:pointer.name=Pointer
+item.painting:pond.name=Pond
+item.painting:pool.name=The Pool
+item.painting:prairie_ride.name=Prairie Ride
+item.painting:sea.name=Seaside
+item.painting:skeleton.name=Mortal Coil
+item.painting:skull_and_roses.name=Skull And Roses
+item.painting:stage.name=The Stage Is Set
+item.painting:sunflowers.name=Sunflowers
+item.painting:sunset.name=Sunset Dense
+item.painting:tides.name=Tides
+item.painting:unpacked.name=Unpacked
+item.painting:void.name=The Void
+item.painting:wanderer.name=Wanderer
+item.painting:wasteland.name=Wasteland
+item.painting:water.name=Water
+item.painting:wind.name=Wind
+item.painting:wither.name=Wither
+
+## ===== Item Catalog =====
+
+painting:itemGroup.name.painting=画
+painting:itemGroup.name.painting_placer=画放置器

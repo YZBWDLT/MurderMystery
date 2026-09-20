@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:lowmist_11",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting" }
+        },
+        "components": {
+            "minecraft:icon": "lowmist_11",
+            "minecraft:block_placer": { "replace_block_item": true, "block": "painting:lowmist_11" },
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:lowmist.name" }
+        }
+    }
+}

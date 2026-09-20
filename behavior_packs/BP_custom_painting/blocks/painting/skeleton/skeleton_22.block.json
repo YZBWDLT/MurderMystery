@@ -1,0 +1,45 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:block": {
+        "description": {
+            "identifier": "painting:skeleton_22",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting" },
+            "traits": {
+                "minecraft:placement_direction": {
+                    "enabled_states": ["minecraft:cardinal_direction"]
+                }
+            }
+        },
+        "components": {
+            "minecraft:geometry": { "identifier": "geometry.painting", "culling": "painting:culling.general" },
+            "minecraft:material_instances": {
+                "painting": { "texture": "skeleton_22" },
+                "background": { "texture": "background" }
+            },
+            "minecraft:collision_box": false,
+            "minecraft:selection_box": { "origin": [-8, 0, -8], "size": [16, 16, 1] },
+            "minecraft:destruction_particles": { "texture": "background", "particle_count": 50 },
+            "minecraft:display_name": "item.painting:skeleton.name"
+        },
+        "permutations": [
+            {
+                "condition": "q.block_state('minecraft:cardinal_direction')=='west'",
+                "components": {
+                    "minecraft:transformation": { "rotation": [0, 90, 0] }
+                }
+            },
+            {
+                "condition": "q.block_state('minecraft:cardinal_direction')=='south'",
+                "components": {
+                    "minecraft:transformation": { "rotation": [0, 180, 0] }
+                }
+            },
+            {
+                "condition": "q.block_state('minecraft:cardinal_direction')=='east'",
+                "components": {
+                    "minecraft:transformation": { "rotation": [0, 270, 0] }
+                }
+            }
+        ]
+    }
+}

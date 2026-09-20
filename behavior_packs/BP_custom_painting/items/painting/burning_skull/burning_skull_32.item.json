@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:burning_skull_32",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting" }
+        },
+        "components": {
+            "minecraft:icon": "burning_skull_32",
+            "minecraft:block_placer": { "replace_block_item": true, "block": "painting:burning_skull_32" },
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:burning_skull.name" }
+        }
+    }
+}

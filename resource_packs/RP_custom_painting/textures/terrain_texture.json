@@ -1,0 +1,1124 @@
+{
+    "resource_pack_name": "painting",
+    "texture_data": {
+        "background": {
+            "textures": "textures/painting/background"
+        },
+        "alban_replacer": {
+            "textures": "textures/painting/alban_replacer"
+        },
+        "alban_00": {
+            "textures": "textures/painting/alban_00"
+        },
+        "aztec_replacer": {
+            "textures": "textures/painting/aztec_replacer"
+        },
+        "aztec_00": {
+            "textures": "textures/painting/aztec_00"
+        },
+        "aztec2_replacer": {
+            "textures": "textures/painting/aztec2_replacer"
+        },
+        "aztec2_00": {
+            "textures": "textures/painting/aztec2_00"
+        },
+        "backyard_replacer": {
+            "textures": "textures/painting/backyard_replacer"
+        },
+        "backyard_03": {
+            "textures": "textures/painting/backyard_03"
+        },
+        "backyard_02": {
+            "textures": "textures/painting/backyard_02"
+        },
+        "backyard_01": {
+            "textures": "textures/painting/backyard_01"
+        },
+        "backyard_00": {
+            "textures": "textures/painting/backyard_00"
+        },
+        "backyard_13": {
+            "textures": "textures/painting/backyard_13"
+        },
+        "backyard_12": {
+            "textures": "textures/painting/backyard_12"
+        },
+        "backyard_11": {
+            "textures": "textures/painting/backyard_11"
+        },
+        "backyard_10": {
+            "textures": "textures/painting/backyard_10"
+        },
+        "backyard_23": {
+            "textures": "textures/painting/backyard_23"
+        },
+        "backyard_22": {
+            "textures": "textures/painting/backyard_22"
+        },
+        "backyard_21": {
+            "textures": "textures/painting/backyard_21"
+        },
+        "backyard_20": {
+            "textures": "textures/painting/backyard_20"
+        },
+        "baroque_replacer": {
+            "textures": "textures/painting/baroque_replacer"
+        },
+        "baroque_01": {
+            "textures": "textures/painting/baroque_01"
+        },
+        "baroque_00": {
+            "textures": "textures/painting/baroque_00"
+        },
+        "baroque_11": {
+            "textures": "textures/painting/baroque_11"
+        },
+        "baroque_10": {
+            "textures": "textures/painting/baroque_10"
+        },
+        "bomb_replacer": {
+            "textures": "textures/painting/bomb_replacer"
+        },
+        "bomb_00": {
+            "textures": "textures/painting/bomb_00"
+        },
+        "bouquet_replacer": {
+            "textures": "textures/painting/bouquet_replacer"
+        },
+        "bouquet_02": {
+            "textures": "textures/painting/bouquet_02"
+        },
+        "bouquet_01": {
+            "textures": "textures/painting/bouquet_01"
+        },
+        "bouquet_00": {
+            "textures": "textures/painting/bouquet_00"
+        },
+        "bouquet_12": {
+            "textures": "textures/painting/bouquet_12"
+        },
+        "bouquet_11": {
+            "textures": "textures/painting/bouquet_11"
+        },
+        "bouquet_10": {
+            "textures": "textures/painting/bouquet_10"
+        },
+        "bouquet_22": {
+            "textures": "textures/painting/bouquet_22"
+        },
+        "bouquet_21": {
+            "textures": "textures/painting/bouquet_21"
+        },
+        "bouquet_20": {
+            "textures": "textures/painting/bouquet_20"
+        },
+        "burning_skull_replacer": {
+            "textures": "textures/painting/burning_skull_replacer"
+        },
+        "burning_skull_03": {
+            "textures": "textures/painting/burning_skull_03"
+        },
+        "burning_skull_02": {
+            "textures": "textures/painting/burning_skull_02"
+        },
+        "burning_skull_01": {
+            "textures": "textures/painting/burning_skull_01"
+        },
+        "burning_skull_00": {
+            "textures": "textures/painting/burning_skull_00"
+        },
+        "burning_skull_13": {
+            "textures": "textures/painting/burning_skull_13"
+        },
+        "burning_skull_12": {
+            "textures": "textures/painting/burning_skull_12"
+        },
+        "burning_skull_11": {
+            "textures": "textures/painting/burning_skull_11"
+        },
+        "burning_skull_10": {
+            "textures": "textures/painting/burning_skull_10"
+        },
+        "burning_skull_23": {
+            "textures": "textures/painting/burning_skull_23"
+        },
+        "burning_skull_22": {
+            "textures": "textures/painting/burning_skull_22"
+        },
+        "burning_skull_21": {
+            "textures": "textures/painting/burning_skull_21"
+        },
+        "burning_skull_20": {
+            "textures": "textures/painting/burning_skull_20"
+        },
+        "burning_skull_33": {
+            "textures": "textures/painting/burning_skull_33"
+        },
+        "burning_skull_32": {
+            "textures": "textures/painting/burning_skull_32"
+        },
+        "burning_skull_31": {
+            "textures": "textures/painting/burning_skull_31"
+        },
+        "burning_skull_30": {
+            "textures": "textures/painting/burning_skull_30"
+        },
+        "bust_replacer": {
+            "textures": "textures/painting/bust_replacer"
+        },
+        "bust_01": {
+            "textures": "textures/painting/bust_01"
+        },
+        "bust_00": {
+            "textures": "textures/painting/bust_00"
+        },
+        "bust_11": {
+            "textures": "textures/painting/bust_11"
+        },
+        "bust_10": {
+            "textures": "textures/painting/bust_10"
+        },
+        "cavebird_replacer": {
+            "textures": "textures/painting/cavebird_replacer"
+        },
+        "cavebird_02": {
+            "textures": "textures/painting/cavebird_02"
+        },
+        "cavebird_01": {
+            "textures": "textures/painting/cavebird_01"
+        },
+        "cavebird_00": {
+            "textures": "textures/painting/cavebird_00"
+        },
+        "cavebird_12": {
+            "textures": "textures/painting/cavebird_12"
+        },
+        "cavebird_11": {
+            "textures": "textures/painting/cavebird_11"
+        },
+        "cavebird_10": {
+            "textures": "textures/painting/cavebird_10"
+        },
+        "cavebird_22": {
+            "textures": "textures/painting/cavebird_22"
+        },
+        "cavebird_21": {
+            "textures": "textures/painting/cavebird_21"
+        },
+        "cavebird_20": {
+            "textures": "textures/painting/cavebird_20"
+        },
+        "changing_replacer": {
+            "textures": "textures/painting/changing_replacer"
+        },
+        "changing_01": {
+            "textures": "textures/painting/changing_01"
+        },
+        "changing_00": {
+            "textures": "textures/painting/changing_00"
+        },
+        "changing_11": {
+            "textures": "textures/painting/changing_11"
+        },
+        "changing_10": {
+            "textures": "textures/painting/changing_10"
+        },
+        "changing_21": {
+            "textures": "textures/painting/changing_21"
+        },
+        "changing_20": {
+            "textures": "textures/painting/changing_20"
+        },
+        "changing_31": {
+            "textures": "textures/painting/changing_31"
+        },
+        "changing_30": {
+            "textures": "textures/painting/changing_30"
+        },
+        "cotan_replacer": {
+            "textures": "textures/painting/cotan_replacer"
+        },
+        "cotan_02": {
+            "textures": "textures/painting/cotan_02"
+        },
+        "cotan_01": {
+            "textures": "textures/painting/cotan_01"
+        },
+        "cotan_00": {
+            "textures": "textures/painting/cotan_00"
+        },
+        "cotan_12": {
+            "textures": "textures/painting/cotan_12"
+        },
+        "cotan_11": {
+            "textures": "textures/painting/cotan_11"
+        },
+        "cotan_10": {
+            "textures": "textures/painting/cotan_10"
+        },
+        "cotan_22": {
+            "textures": "textures/painting/cotan_22"
+        },
+        "cotan_21": {
+            "textures": "textures/painting/cotan_21"
+        },
+        "cotan_20": {
+            "textures": "textures/painting/cotan_20"
+        },
+        "courbet_replacer": {
+            "textures": "textures/painting/courbet_replacer"
+        },
+        "courbet_00": {
+            "textures": "textures/painting/courbet_00"
+        },
+        "courbet_10": {
+            "textures": "textures/painting/courbet_10"
+        },
+        "creebet_replacer": {
+            "textures": "textures/painting/creebet_replacer"
+        },
+        "creebet_00": {
+            "textures": "textures/painting/creebet_00"
+        },
+        "creebet_10": {
+            "textures": "textures/painting/creebet_10"
+        },
+        "dennis_replacer": {
+            "textures": "textures/painting/dennis_replacer"
+        },
+        "dennis_02": {
+            "textures": "textures/painting/dennis_02"
+        },
+        "dennis_01": {
+            "textures": "textures/painting/dennis_01"
+        },
+        "dennis_00": {
+            "textures": "textures/painting/dennis_00"
+        },
+        "dennis_12": {
+            "textures": "textures/painting/dennis_12"
+        },
+        "dennis_11": {
+            "textures": "textures/painting/dennis_11"
+        },
+        "dennis_10": {
+            "textures": "textures/painting/dennis_10"
+        },
+        "dennis_22": {
+            "textures": "textures/painting/dennis_22"
+        },
+        "dennis_21": {
+            "textures": "textures/painting/dennis_21"
+        },
+        "dennis_20": {
+            "textures": "textures/painting/dennis_20"
+        },
+        "donkey_kong_replacer": {
+            "textures": "textures/painting/donkey_kong_replacer"
+        },
+        "donkey_kong_02": {
+            "textures": "textures/painting/donkey_kong_02"
+        },
+        "donkey_kong_01": {
+            "textures": "textures/painting/donkey_kong_01"
+        },
+        "donkey_kong_00": {
+            "textures": "textures/painting/donkey_kong_00"
+        },
+        "donkey_kong_12": {
+            "textures": "textures/painting/donkey_kong_12"
+        },
+        "donkey_kong_11": {
+            "textures": "textures/painting/donkey_kong_11"
+        },
+        "donkey_kong_10": {
+            "textures": "textures/painting/donkey_kong_10"
+        },
+        "donkey_kong_22": {
+            "textures": "textures/painting/donkey_kong_22"
+        },
+        "donkey_kong_21": {
+            "textures": "textures/painting/donkey_kong_21"
+        },
+        "donkey_kong_20": {
+            "textures": "textures/painting/donkey_kong_20"
+        },
+        "donkey_kong_32": {
+            "textures": "textures/painting/donkey_kong_32"
+        },
+        "donkey_kong_31": {
+            "textures": "textures/painting/donkey_kong_31"
+        },
+        "donkey_kong_30": {
+            "textures": "textures/painting/donkey_kong_30"
+        },
+        "earth_replacer": {
+            "textures": "textures/painting/earth_replacer"
+        },
+        "earth_01": {
+            "textures": "textures/painting/earth_01"
+        },
+        "earth_00": {
+            "textures": "textures/painting/earth_00"
+        },
+        "earth_11": {
+            "textures": "textures/painting/earth_11"
+        },
+        "earth_10": {
+            "textures": "textures/painting/earth_10"
+        },
+        "endboss_replacer": {
+            "textures": "textures/painting/endboss_replacer"
+        },
+        "endboss_02": {
+            "textures": "textures/painting/endboss_02"
+        },
+        "endboss_01": {
+            "textures": "textures/painting/endboss_01"
+        },
+        "endboss_00": {
+            "textures": "textures/painting/endboss_00"
+        },
+        "endboss_12": {
+            "textures": "textures/painting/endboss_12"
+        },
+        "endboss_11": {
+            "textures": "textures/painting/endboss_11"
+        },
+        "endboss_10": {
+            "textures": "textures/painting/endboss_10"
+        },
+        "endboss_22": {
+            "textures": "textures/painting/endboss_22"
+        },
+        "endboss_21": {
+            "textures": "textures/painting/endboss_21"
+        },
+        "endboss_20": {
+            "textures": "textures/painting/endboss_20"
+        },
+        "fern_replacer": {
+            "textures": "textures/painting/fern_replacer"
+        },
+        "fern_02": {
+            "textures": "textures/painting/fern_02"
+        },
+        "fern_01": {
+            "textures": "textures/painting/fern_01"
+        },
+        "fern_00": {
+            "textures": "textures/painting/fern_00"
+        },
+        "fern_12": {
+            "textures": "textures/painting/fern_12"
+        },
+        "fern_11": {
+            "textures": "textures/painting/fern_11"
+        },
+        "fern_10": {
+            "textures": "textures/painting/fern_10"
+        },
+        "fern_22": {
+            "textures": "textures/painting/fern_22"
+        },
+        "fern_21": {
+            "textures": "textures/painting/fern_21"
+        },
+        "fern_20": {
+            "textures": "textures/painting/fern_20"
+        },
+        "fighters_replacer": {
+            "textures": "textures/painting/fighters_replacer"
+        },
+        "fighters_01": {
+            "textures": "textures/painting/fighters_01"
+        },
+        "fighters_00": {
+            "textures": "textures/painting/fighters_00"
+        },
+        "fighters_11": {
+            "textures": "textures/painting/fighters_11"
+        },
+        "fighters_10": {
+            "textures": "textures/painting/fighters_10"
+        },
+        "fighters_21": {
+            "textures": "textures/painting/fighters_21"
+        },
+        "fighters_20": {
+            "textures": "textures/painting/fighters_20"
+        },
+        "fighters_31": {
+            "textures": "textures/painting/fighters_31"
+        },
+        "fighters_30": {
+            "textures": "textures/painting/fighters_30"
+        },
+        "finding_replacer": {
+            "textures": "textures/painting/finding_replacer"
+        },
+        "finding_01": {
+            "textures": "textures/painting/finding_01"
+        },
+        "finding_00": {
+            "textures": "textures/painting/finding_00"
+        },
+        "finding_11": {
+            "textures": "textures/painting/finding_11"
+        },
+        "finding_10": {
+            "textures": "textures/painting/finding_10"
+        },
+        "finding_21": {
+            "textures": "textures/painting/finding_21"
+        },
+        "finding_20": {
+            "textures": "textures/painting/finding_20"
+        },
+        "finding_31": {
+            "textures": "textures/painting/finding_31"
+        },
+        "finding_30": {
+            "textures": "textures/painting/finding_30"
+        },
+        "fire_replacer": {
+            "textures": "textures/painting/fire_replacer"
+        },
+        "fire_01": {
+            "textures": "textures/painting/fire_01"
+        },
+        "fire_00": {
+            "textures": "textures/painting/fire_00"
+        },
+        "fire_11": {
+            "textures": "textures/painting/fire_11"
+        },
+        "fire_10": {
+            "textures": "textures/painting/fire_10"
+        },
+        "graham_replacer": {
+            "textures": "textures/painting/graham_replacer"
+        },
+        "graham_01": {
+            "textures": "textures/painting/graham_01"
+        },
+        "graham_00": {
+            "textures": "textures/painting/graham_00"
+        },
+        "humble_replacer": {
+            "textures": "textures/painting/humble_replacer"
+        },
+        "humble_01": {
+            "textures": "textures/painting/humble_01"
+        },
+        "humble_00": {
+            "textures": "textures/painting/humble_00"
+        },
+        "humble_11": {
+            "textures": "textures/painting/humble_11"
+        },
+        "humble_10": {
+            "textures": "textures/painting/humble_10"
+        },
+        "kebab_replacer": {
+            "textures": "textures/painting/kebab_replacer"
+        },
+        "kebab_00": {
+            "textures": "textures/painting/kebab_00"
+        },
+        "lowmist_replacer": {
+            "textures": "textures/painting/lowmist_replacer"
+        },
+        "lowmist_01": {
+            "textures": "textures/painting/lowmist_01"
+        },
+        "lowmist_00": {
+            "textures": "textures/painting/lowmist_00"
+        },
+        "lowmist_11": {
+            "textures": "textures/painting/lowmist_11"
+        },
+        "lowmist_10": {
+            "textures": "textures/painting/lowmist_10"
+        },
+        "lowmist_21": {
+            "textures": "textures/painting/lowmist_21"
+        },
+        "lowmist_20": {
+            "textures": "textures/painting/lowmist_20"
+        },
+        "lowmist_31": {
+            "textures": "textures/painting/lowmist_31"
+        },
+        "lowmist_30": {
+            "textures": "textures/painting/lowmist_30"
+        },
+        "match_replacer": {
+            "textures": "textures/painting/match_replacer"
+        },
+        "match_01": {
+            "textures": "textures/painting/match_01"
+        },
+        "match_00": {
+            "textures": "textures/painting/match_00"
+        },
+        "match_11": {
+            "textures": "textures/painting/match_11"
+        },
+        "match_10": {
+            "textures": "textures/painting/match_10"
+        },
+        "meditative_replacer": {
+            "textures": "textures/painting/meditative_replacer"
+        },
+        "meditative_00": {
+            "textures": "textures/painting/meditative_00"
+        },
+        "orb_replacer": {
+            "textures": "textures/painting/orb_replacer"
+        },
+        "orb_03": {
+            "textures": "textures/painting/orb_03"
+        },
+        "orb_02": {
+            "textures": "textures/painting/orb_02"
+        },
+        "orb_01": {
+            "textures": "textures/painting/orb_01"
+        },
+        "orb_00": {
+            "textures": "textures/painting/orb_00"
+        },
+        "orb_13": {
+            "textures": "textures/painting/orb_13"
+        },
+        "orb_12": {
+            "textures": "textures/painting/orb_12"
+        },
+        "orb_11": {
+            "textures": "textures/painting/orb_11"
+        },
+        "orb_10": {
+            "textures": "textures/painting/orb_10"
+        },
+        "orb_23": {
+            "textures": "textures/painting/orb_23"
+        },
+        "orb_22": {
+            "textures": "textures/painting/orb_22"
+        },
+        "orb_21": {
+            "textures": "textures/painting/orb_21"
+        },
+        "orb_20": {
+            "textures": "textures/painting/orb_20"
+        },
+        "orb_33": {
+            "textures": "textures/painting/orb_33"
+        },
+        "orb_32": {
+            "textures": "textures/painting/orb_32"
+        },
+        "orb_31": {
+            "textures": "textures/painting/orb_31"
+        },
+        "orb_30": {
+            "textures": "textures/painting/orb_30"
+        },
+        "owlemons_replacer": {
+            "textures": "textures/painting/owlemons_replacer"
+        },
+        "owlemons_02": {
+            "textures": "textures/painting/owlemons_02"
+        },
+        "owlemons_01": {
+            "textures": "textures/painting/owlemons_01"
+        },
+        "owlemons_00": {
+            "textures": "textures/painting/owlemons_00"
+        },
+        "owlemons_12": {
+            "textures": "textures/painting/owlemons_12"
+        },
+        "owlemons_11": {
+            "textures": "textures/painting/owlemons_11"
+        },
+        "owlemons_10": {
+            "textures": "textures/painting/owlemons_10"
+        },
+        "owlemons_22": {
+            "textures": "textures/painting/owlemons_22"
+        },
+        "owlemons_21": {
+            "textures": "textures/painting/owlemons_21"
+        },
+        "owlemons_20": {
+            "textures": "textures/painting/owlemons_20"
+        },
+        "passage_replacer": {
+            "textures": "textures/painting/passage_replacer"
+        },
+        "passage_01": {
+            "textures": "textures/painting/passage_01"
+        },
+        "passage_00": {
+            "textures": "textures/painting/passage_00"
+        },
+        "passage_11": {
+            "textures": "textures/painting/passage_11"
+        },
+        "passage_10": {
+            "textures": "textures/painting/passage_10"
+        },
+        "passage_21": {
+            "textures": "textures/painting/passage_21"
+        },
+        "passage_20": {
+            "textures": "textures/painting/passage_20"
+        },
+        "passage_31": {
+            "textures": "textures/painting/passage_31"
+        },
+        "passage_30": {
+            "textures": "textures/painting/passage_30"
+        },
+        "pigscene_replacer": {
+            "textures": "textures/painting/pigscene_replacer"
+        },
+        "pigscene_03": {
+            "textures": "textures/painting/pigscene_03"
+        },
+        "pigscene_02": {
+            "textures": "textures/painting/pigscene_02"
+        },
+        "pigscene_01": {
+            "textures": "textures/painting/pigscene_01"
+        },
+        "pigscene_00": {
+            "textures": "textures/painting/pigscene_00"
+        },
+        "pigscene_13": {
+            "textures": "textures/painting/pigscene_13"
+        },
+        "pigscene_12": {
+            "textures": "textures/painting/pigscene_12"
+        },
+        "pigscene_11": {
+            "textures": "textures/painting/pigscene_11"
+        },
+        "pigscene_10": {
+            "textures": "textures/painting/pigscene_10"
+        },
+        "pigscene_23": {
+            "textures": "textures/painting/pigscene_23"
+        },
+        "pigscene_22": {
+            "textures": "textures/painting/pigscene_22"
+        },
+        "pigscene_21": {
+            "textures": "textures/painting/pigscene_21"
+        },
+        "pigscene_20": {
+            "textures": "textures/painting/pigscene_20"
+        },
+        "pigscene_33": {
+            "textures": "textures/painting/pigscene_33"
+        },
+        "pigscene_32": {
+            "textures": "textures/painting/pigscene_32"
+        },
+        "pigscene_31": {
+            "textures": "textures/painting/pigscene_31"
+        },
+        "pigscene_30": {
+            "textures": "textures/painting/pigscene_30"
+        },
+        "plant_replacer": {
+            "textures": "textures/painting/plant_replacer"
+        },
+        "plant_00": {
+            "textures": "textures/painting/plant_00"
+        },
+        "pointer_replacer": {
+            "textures": "textures/painting/pointer_replacer"
+        },
+        "pointer_03": {
+            "textures": "textures/painting/pointer_03"
+        },
+        "pointer_02": {
+            "textures": "textures/painting/pointer_02"
+        },
+        "pointer_01": {
+            "textures": "textures/painting/pointer_01"
+        },
+        "pointer_00": {
+            "textures": "textures/painting/pointer_00"
+        },
+        "pointer_13": {
+            "textures": "textures/painting/pointer_13"
+        },
+        "pointer_12": {
+            "textures": "textures/painting/pointer_12"
+        },
+        "pointer_11": {
+            "textures": "textures/painting/pointer_11"
+        },
+        "pointer_10": {
+            "textures": "textures/painting/pointer_10"
+        },
+        "pointer_23": {
+            "textures": "textures/painting/pointer_23"
+        },
+        "pointer_22": {
+            "textures": "textures/painting/pointer_22"
+        },
+        "pointer_21": {
+            "textures": "textures/painting/pointer_21"
+        },
+        "pointer_20": {
+            "textures": "textures/painting/pointer_20"
+        },
+        "pointer_33": {
+            "textures": "textures/painting/pointer_33"
+        },
+        "pointer_32": {
+            "textures": "textures/painting/pointer_32"
+        },
+        "pointer_31": {
+            "textures": "textures/painting/pointer_31"
+        },
+        "pointer_30": {
+            "textures": "textures/painting/pointer_30"
+        },
+        "pond_replacer": {
+            "textures": "textures/painting/pond_replacer"
+        },
+        "pond_03": {
+            "textures": "textures/painting/pond_03"
+        },
+        "pond_02": {
+            "textures": "textures/painting/pond_02"
+        },
+        "pond_01": {
+            "textures": "textures/painting/pond_01"
+        },
+        "pond_00": {
+            "textures": "textures/painting/pond_00"
+        },
+        "pond_13": {
+            "textures": "textures/painting/pond_13"
+        },
+        "pond_12": {
+            "textures": "textures/painting/pond_12"
+        },
+        "pond_11": {
+            "textures": "textures/painting/pond_11"
+        },
+        "pond_10": {
+            "textures": "textures/painting/pond_10"
+        },
+        "pond_23": {
+            "textures": "textures/painting/pond_23"
+        },
+        "pond_22": {
+            "textures": "textures/painting/pond_22"
+        },
+        "pond_21": {
+            "textures": "textures/painting/pond_21"
+        },
+        "pond_20": {
+            "textures": "textures/painting/pond_20"
+        },
+        "pool_replacer": {
+            "textures": "textures/painting/pool_replacer"
+        },
+        "pool_00": {
+            "textures": "textures/painting/pool_00"
+        },
+        "pool_10": {
+            "textures": "textures/painting/pool_10"
+        },
+        "prairie_ride_replacer": {
+            "textures": "textures/painting/prairie_ride_replacer"
+        },
+        "prairie_ride_01": {
+            "textures": "textures/painting/prairie_ride_01"
+        },
+        "prairie_ride_00": {
+            "textures": "textures/painting/prairie_ride_00"
+        },
+        "sea_replacer": {
+            "textures": "textures/painting/sea_replacer"
+        },
+        "sea_00": {
+            "textures": "textures/painting/sea_00"
+        },
+        "sea_10": {
+            "textures": "textures/painting/sea_10"
+        },
+        "skeleton_replacer": {
+            "textures": "textures/painting/skeleton_replacer"
+        },
+        "skeleton_02": {
+            "textures": "textures/painting/skeleton_02"
+        },
+        "skeleton_01": {
+            "textures": "textures/painting/skeleton_01"
+        },
+        "skeleton_00": {
+            "textures": "textures/painting/skeleton_00"
+        },
+        "skeleton_12": {
+            "textures": "textures/painting/skeleton_12"
+        },
+        "skeleton_11": {
+            "textures": "textures/painting/skeleton_11"
+        },
+        "skeleton_10": {
+            "textures": "textures/painting/skeleton_10"
+        },
+        "skeleton_22": {
+            "textures": "textures/painting/skeleton_22"
+        },
+        "skeleton_21": {
+            "textures": "textures/painting/skeleton_21"
+        },
+        "skeleton_20": {
+            "textures": "textures/painting/skeleton_20"
+        },
+        "skeleton_32": {
+            "textures": "textures/painting/skeleton_32"
+        },
+        "skeleton_31": {
+            "textures": "textures/painting/skeleton_31"
+        },
+        "skeleton_30": {
+            "textures": "textures/painting/skeleton_30"
+        },
+        "skull_and_roses_replacer": {
+            "textures": "textures/painting/skull_and_roses_replacer"
+        },
+        "skull_and_roses_01": {
+            "textures": "textures/painting/skull_and_roses_01"
+        },
+        "skull_and_roses_00": {
+            "textures": "textures/painting/skull_and_roses_00"
+        },
+        "skull_and_roses_11": {
+            "textures": "textures/painting/skull_and_roses_11"
+        },
+        "skull_and_roses_10": {
+            "textures": "textures/painting/skull_and_roses_10"
+        },
+        "stage_replacer": {
+            "textures": "textures/painting/stage_replacer"
+        },
+        "stage_01": {
+            "textures": "textures/painting/stage_01"
+        },
+        "stage_00": {
+            "textures": "textures/painting/stage_00"
+        },
+        "stage_11": {
+            "textures": "textures/painting/stage_11"
+        },
+        "stage_10": {
+            "textures": "textures/painting/stage_10"
+        },
+        "sunflowers_replacer": {
+            "textures": "textures/painting/sunflowers_replacer"
+        },
+        "sunflowers_02": {
+            "textures": "textures/painting/sunflowers_02"
+        },
+        "sunflowers_01": {
+            "textures": "textures/painting/sunflowers_01"
+        },
+        "sunflowers_00": {
+            "textures": "textures/painting/sunflowers_00"
+        },
+        "sunflowers_12": {
+            "textures": "textures/painting/sunflowers_12"
+        },
+        "sunflowers_11": {
+            "textures": "textures/painting/sunflowers_11"
+        },
+        "sunflowers_10": {
+            "textures": "textures/painting/sunflowers_10"
+        },
+        "sunflowers_22": {
+            "textures": "textures/painting/sunflowers_22"
+        },
+        "sunflowers_21": {
+            "textures": "textures/painting/sunflowers_21"
+        },
+        "sunflowers_20": {
+            "textures": "textures/painting/sunflowers_20"
+        },
+        "sunset_replacer": {
+            "textures": "textures/painting/sunset_replacer"
+        },
+        "sunset_00": {
+            "textures": "textures/painting/sunset_00"
+        },
+        "sunset_10": {
+            "textures": "textures/painting/sunset_10"
+        },
+        "tides_replacer": {
+            "textures": "textures/painting/tides_replacer"
+        },
+        "tides_02": {
+            "textures": "textures/painting/tides_02"
+        },
+        "tides_01": {
+            "textures": "textures/painting/tides_01"
+        },
+        "tides_00": {
+            "textures": "textures/painting/tides_00"
+        },
+        "tides_12": {
+            "textures": "textures/painting/tides_12"
+        },
+        "tides_11": {
+            "textures": "textures/painting/tides_11"
+        },
+        "tides_10": {
+            "textures": "textures/painting/tides_10"
+        },
+        "tides_22": {
+            "textures": "textures/painting/tides_22"
+        },
+        "tides_21": {
+            "textures": "textures/painting/tides_21"
+        },
+        "tides_20": {
+            "textures": "textures/painting/tides_20"
+        },
+        "unpacked_replacer": {
+            "textures": "textures/painting/unpacked_replacer"
+        },
+        "unpacked_03": {
+            "textures": "textures/painting/unpacked_03"
+        },
+        "unpacked_02": {
+            "textures": "textures/painting/unpacked_02"
+        },
+        "unpacked_01": {
+            "textures": "textures/painting/unpacked_01"
+        },
+        "unpacked_00": {
+            "textures": "textures/painting/unpacked_00"
+        },
+        "unpacked_13": {
+            "textures": "textures/painting/unpacked_13"
+        },
+        "unpacked_12": {
+            "textures": "textures/painting/unpacked_12"
+        },
+        "unpacked_11": {
+            "textures": "textures/painting/unpacked_11"
+        },
+        "unpacked_10": {
+            "textures": "textures/painting/unpacked_10"
+        },
+        "unpacked_23": {
+            "textures": "textures/painting/unpacked_23"
+        },
+        "unpacked_22": {
+            "textures": "textures/painting/unpacked_22"
+        },
+        "unpacked_21": {
+            "textures": "textures/painting/unpacked_21"
+        },
+        "unpacked_20": {
+            "textures": "textures/painting/unpacked_20"
+        },
+        "unpacked_33": {
+            "textures": "textures/painting/unpacked_33"
+        },
+        "unpacked_32": {
+            "textures": "textures/painting/unpacked_32"
+        },
+        "unpacked_31": {
+            "textures": "textures/painting/unpacked_31"
+        },
+        "unpacked_30": {
+            "textures": "textures/painting/unpacked_30"
+        },
+        "void_replacer": {
+            "textures": "textures/painting/void_replacer"
+        },
+        "void_01": {
+            "textures": "textures/painting/void_01"
+        },
+        "void_00": {
+            "textures": "textures/painting/void_00"
+        },
+        "void_11": {
+            "textures": "textures/painting/void_11"
+        },
+        "void_10": {
+            "textures": "textures/painting/void_10"
+        },
+        "wanderer_replacer": {
+            "textures": "textures/painting/wanderer_replacer"
+        },
+        "wanderer_01": {
+            "textures": "textures/painting/wanderer_01"
+        },
+        "wanderer_00": {
+            "textures": "textures/painting/wanderer_00"
+        },
+        "wasteland_replacer": {
+            "textures": "textures/painting/wasteland_replacer"
+        },
+        "wasteland_00": {
+            "textures": "textures/painting/wasteland_00"
+        },
+        "water_replacer": {
+            "textures": "textures/painting/water_replacer"
+        },
+        "water_01": {
+            "textures": "textures/painting/water_01"
+        },
+        "water_00": {
+            "textures": "textures/painting/water_00"
+        },
+        "water_11": {
+            "textures": "textures/painting/water_11"
+        },
+        "water_10": {
+            "textures": "textures/painting/water_10"
+        },
+        "wind_replacer": {
+            "textures": "textures/painting/wind_replacer"
+        },
+        "wind_01": {
+            "textures": "textures/painting/wind_01"
+        },
+        "wind_00": {
+            "textures": "textures/painting/wind_00"
+        },
+        "wind_11": {
+            "textures": "textures/painting/wind_11"
+        },
+        "wind_10": {
+            "textures": "textures/painting/wind_10"
+        },
+        "wither_replacer": {
+            "textures": "textures/painting/wither_replacer"
+        },
+        "wither_01": {
+            "textures": "textures/painting/wither_01"
+        },
+        "wither_00": {
+            "textures": "textures/painting/wither_00"
+        },
+        "wither_11": {
+            "textures": "textures/painting/wither_11"
+        },
+        "wither_10": {
+            "textures": "textures/painting/wither_10"
+        }
+    }
+}
