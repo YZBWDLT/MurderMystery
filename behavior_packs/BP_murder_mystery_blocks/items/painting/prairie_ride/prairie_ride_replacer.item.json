@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:prairie_ride_placer",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting_placer" }
+        },
+        "components": {
+            "minecraft:icon": "prairie_ride_replacer",
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:prairie_ride.name" },
+            "painting:placer": { "id": "painting:prairie_ride", "width": 1, "height": 2 }
+        }
+    }
+}

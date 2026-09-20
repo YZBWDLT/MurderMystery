@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:pond_placer",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting_placer" }
+        },
+        "components": {
+            "minecraft:icon": "pond_replacer",
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:pond.name" },
+            "painting:placer": { "id": "painting:pond", "width": 3, "height": 4 }
+        }
+    }
+}

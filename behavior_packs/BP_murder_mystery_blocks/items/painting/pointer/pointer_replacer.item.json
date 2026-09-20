@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:pointer_placer",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting_placer" }
+        },
+        "components": {
+            "minecraft:icon": "pointer_replacer",
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:pointer.name" },
+            "painting:placer": { "id": "painting:pointer", "width": 4, "height": 4 }
+        }
+    }
+}

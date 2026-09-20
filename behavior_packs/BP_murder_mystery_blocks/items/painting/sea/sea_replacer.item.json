@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:sea_placer",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting_placer" }
+        },
+        "components": {
+            "minecraft:icon": "sea_replacer",
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:sea.name" },
+            "painting:placer": { "id": "painting:sea", "width": 2, "height": 1 }
+        }
+    }
+}

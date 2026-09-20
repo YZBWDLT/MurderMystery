@@ -1,0 +1,15 @@
+{
+    "format_version": "1.21.120",
+    "minecraft:item": {
+        "description": {
+            "identifier": "painting:burning_skull_placer",
+            "menu_category": { "category": "items", "group": "painting:itemGroup.name.painting_placer" }
+        },
+        "components": {
+            "minecraft:icon": "burning_skull_replacer",
+            "minecraft:rarity": "uncommon",
+            "minecraft:display_name": { "value": "item.painting:burning_skull.name" },
+            "painting:placer": { "id": "painting:burning_skull", "width": 4, "height": 4 }
+        }
+    }
+}

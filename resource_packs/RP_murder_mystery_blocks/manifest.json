@@ -1,0 +1,25 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "方块预设：自定义画",
+        "description": "",
+        "uuid": "a52738af-7efd-49ba-b6b7-e358e3900781",
+        "version": [1, 0, 0],
+        "min_engine_version": [1, 21, 120]
+    },
+    "modules": [
+        {
+            "type": "resources",
+            "uuid": "f55389d7-e9ff-4ddd-ab37-a95b7dadaf5c",
+            "version": [1, 0, 0]
+        }
+    ],
+    "dependencies": [
+        {
+            "uuid": "8f3ec006-65a5-4822-9e01-1223bb886fe2",
+            "version": [1, 0, 0]
+        }
+    ],
+    "metadata": { "authors": ["YZBWDLT"] },
+    "capabilities": ["pbr"]
+}
