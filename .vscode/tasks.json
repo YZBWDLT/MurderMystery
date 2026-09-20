@@ -8,27 +8,6 @@
             "args": ["-p", "behavior_packs/BP_murder_mystery/tsconfig.json", "--watch"],
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
-        },
-        {
-            "label": "监听头颅包",
-            "type": "shell",
-            "command": "tsc",
-            "args": ["-p", "behavior_packs/BP_murder_mystery_head/tsconfig.json", "--watch"],
-            "isBackground": true,
-            "problemMatcher": "$tsc-watch"
-        },
-        {
-            "label": "监听冻结方块包",
-            "type": "shell",
-            "command": "tsc",
-            "args": ["-p", "behavior_packs/BP_murder_mystery_freeze_block/tsconfig.json", "--watch"],
-            "isBackground": true,
-            "problemMatcher": "$tsc-watch"
-        },
-        {
-            "label": "全部监听",
-            "dependsOn": ["监听主包", "监听头颅包", "监听冻结方块包"],
-            "problemMatcher": []
         }
     ]
 }

@@ -3114,7 +3114,7 @@ export class MurderMysteryPlayer {
         const stopTesting = () => {
             if (knife.isValid)
                 knife.remove();
-            lib.gameSystem.unsubscribeTimelines(`${knife.id}OutOfBorder`, `${knife.id}HitArrow`);
+            lib.gameSystem.unsubscribeTimelines(`${knife.id}OutOfBorder`, `${knife.id}HitArrow`, `${knife.id}HitWater`);
             lib.gameSystem.unsubscribeEvents(`${knife.id}HitPlayer`, `${knife.id}HitBlock`);
         };
         /** 是否为给定的刀。如果不是则返回 false。如果这把刀已无效，则还移除该实体。 */
@@ -3166,7 +3166,7 @@ export class MurderMysteryPlayer {
             const blockId = block.typeId;
             const blockLocation = lib.Vector3Utils.add(block.location, 0.5, 0, 0.5);
             // ===== 击中玻璃板 =====
-            // 允许飞刀穿过，并播放裂纹动画。
+            // 允许飞刀穿过，并播放裂纹动画
             if (blockId.includes("glass_pane")) {
                 // 播放破碎音效
                 lib.PlayerUtils.getNearby(blockLocation, 15).forEach(player => player.playSound("random.glass"));
@@ -3206,6 +3206,14 @@ export class MurderMysteryPlayer {
             lib.PlayerUtils.getNearby(location, 10).forEach(player => player.playSound("random.break", { pitch: 2 }));
             dimension.spawnParticle("murder_mystery:knife_arrow_collide", location);
             stopTesting();
+        });
+        // --- 飞刀入水 ---
+        // 如果刀无效或入水，则终止运行
+        lib.gameSystem.subscribeTimeline(`${knife.id}HitWater`, () => {
+            if (!knife.isValid)
+                return stopTesting();
+            if (knife.isInWater)
+                stopTesting();
         });
         // --- 飞刀出界 ---
         lib.gameSystem.subscribeTimeline(`${knife.id}OutOfBorder`, () => {
