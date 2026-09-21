@@ -413,6 +413,8 @@ ui.settings.miscellaneous.getGoldHint.title=获取金锭提示
 ui.settings.miscellaneous.getGoldHint.description=获取金锭时是否提示玩家。
 ui.settings.miscellaneous.applyNightVision.title=启用夜视效果
 ui.settings.miscellaneous.applyNightVision.description=是否对所有玩家施加夜视状态效果。
+ui.settings.miscellaneous.alwaysShowHero.title=常显示英雄
+ui.settings.miscellaneous.alwaysShowHero.description=无论是谁杀死了杀手都显示英雄，哪怕这个英雄是杀手自己。
 
 ### 假玩家管理器 UI
 ui.settings.fakePlayerManager.title=假玩家管理器

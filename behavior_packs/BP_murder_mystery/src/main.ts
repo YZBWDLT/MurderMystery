@@ -635,11 +635,12 @@ export class MurderMysterySystem {
             return;
         // 如果英雄不存在，对系统返回无英雄的情况
         if (!probableHero) return this.enterGameOverStage(reason);
-        // 如果给定的英雄是杀手，对系统返回无英雄的情况
-        if (probableHero.role === MurderMysteryPlayerRole.Murderer) return this.enterGameOverStage(reason);
-        // 如果给定的英雄是首位侦探，则对系统返回无英雄的情况
-        if (probableHero.role === MurderMysteryPlayerRole.Detective && probableHero.isFirstDetective)
-            return this.enterGameOverStage(reason);
+        // 如果未指定常显示杀手，则英雄为杀手或首位侦探时都返回无英雄的情况
+        if (!this.settings.miscellaneous.alwaysShowHero) {
+            if (probableHero.role === MurderMysteryPlayerRole.Murderer) return this.enterGameOverStage(reason);
+            if (probableHero.role === MurderMysteryPlayerRole.Detective && probableHero.isFirstDetective)
+                return this.enterGameOverStage(reason);
+        }
         // 其他情况，对系统返回没有英雄的情况
         return this.enterGameOverStage(reason, probableHero);
     }
@@ -1248,6 +1249,9 @@ interface MurderMysteryMiscellaneousSettings {
 
     /** 是否对所有玩家施加夜视状态效果。 */
     applyNightVision: boolean;
+
+    /** 无论是谁杀死了杀手都显示英雄，哪怕这个英雄是杀手自己。 */
+    alwaysShowHero: boolean;
 }
 
 /** 密室杀手设置。在设置内包含众多玩家可以调控的设置项。 */
@@ -1307,6 +1311,7 @@ class MurderMysterySettings {
         getGoldHint: true,
         infoboardLastLine: "YZBWDLT",
         applyNightVision: false,
+        alwaysShowHero: false,
     };
 
     mapEnabled: Record<keyof typeof gameData.maps, boolean> = {};
@@ -2073,7 +2078,7 @@ class MurderMysterySettings {
 
     /** 对玩家显示杂项 UI。 */
     private static showMiscellaneousUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { infoboardLastLine, getGoldHint, applyNightVision } = system.settings.miscellaneous;
+        const { infoboardLastLine, getGoldHint, applyNightVision, alwaysShowHero } = system.settings.miscellaneous;
         this.generateSettingsUI(
             system,
             player,
@@ -2105,6 +2110,15 @@ class MurderMysterySettings {
                     default: applyNightVision,
                     onSubmit: result => {
                         system.settings.miscellaneous.applyNightVision = result;
+                    },
+                },
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.miscellaneous.alwaysShowHero.title" },
+                    tipText: { translate: "ui.settings.miscellaneous.alwaysShowHero.description" },
+                    default: alwaysShowHero,
+                    onSubmit: result => {
+                        system.settings.miscellaneous.alwaysShowHero = result;
                     },
                 },
             ],

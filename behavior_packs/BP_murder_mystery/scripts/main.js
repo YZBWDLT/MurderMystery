@@ -490,12 +490,13 @@ export class MurderMysterySystem {
         // 如果英雄不存在，对系统返回无英雄的情况
         if (!probableHero)
             return this.enterGameOverStage(reason);
-        // 如果给定的英雄是杀手，对系统返回无英雄的情况
-        if (probableHero.role === MurderMysteryPlayerRole.Murderer)
-            return this.enterGameOverStage(reason);
-        // 如果给定的英雄是首位侦探，则对系统返回无英雄的情况
-        if (probableHero.role === MurderMysteryPlayerRole.Detective && probableHero.isFirstDetective)
-            return this.enterGameOverStage(reason);
+        // 如果未指定常显示杀手，则英雄为杀手或首位侦探时都返回无英雄的情况
+        if (!this.settings.miscellaneous.alwaysShowHero) {
+            if (probableHero.role === MurderMysteryPlayerRole.Murderer)
+                return this.enterGameOverStage(reason);
+            if (probableHero.role === MurderMysteryPlayerRole.Detective && probableHero.isFirstDetective)
+                return this.enterGameOverStage(reason);
+        }
         // 其他情况，对系统返回没有英雄的情况
         return this.enterGameOverStage(reason, probableHero);
     }
@@ -971,6 +972,7 @@ class MurderMysterySettings {
         getGoldHint: true,
         infoboardLastLine: "YZBWDLT",
         applyNightVision: false,
+        alwaysShowHero: false,
     };
     mapEnabled = {};
     // #region - 保存与加载设置
@@ -1669,7 +1671,7 @@ class MurderMysterySettings {
     }
     /** 对玩家显示杂项 UI。 */
     static showMiscellaneousUI(system, player) {
-        const { infoboardLastLine, getGoldHint, applyNightVision } = system.settings.miscellaneous;
+        const { infoboardLastLine, getGoldHint, applyNightVision, alwaysShowHero } = system.settings.miscellaneous;
         this.generateSettingsUI(system, player, "miscellaneous", [
             {
                 type: "textField",
@@ -1697,6 +1699,15 @@ class MurderMysterySettings {
                 default: applyNightVision,
                 onSubmit: result => {
                     system.settings.miscellaneous.applyNightVision = result;
+                },
+            },
+            {
+                type: "toggle",
+                description: { translate: "ui.settings.miscellaneous.alwaysShowHero.title" },
+                tipText: { translate: "ui.settings.miscellaneous.alwaysShowHero.description" },
+                default: alwaysShowHero,
+                onSubmit: result => {
+                    system.settings.miscellaneous.alwaysShowHero = result;
                 },
             },
         ], () => {

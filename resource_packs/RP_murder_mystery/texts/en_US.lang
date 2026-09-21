@@ -413,6 +413,8 @@ ui.settings.miscellaneous.getGoldHint.title=Gold Pickup Hint
 ui.settings.miscellaneous.getGoldHint.description=Whether to notify the player when picking up gold ingots.
 ui.settings.miscellaneous.applyNightVision.title=Enable Night Vision Effect
 ui.settings.miscellaneous.applyNightVision.description=Whether to apply the night vision status effect to all players.
+ui.settings.miscellaneous.alwaysShowHero.title=Always Show Hero
+ui.settings.miscellaneous.alwaysShowHero.description=Show the hero no matter who killed the murderer, even if the hero is the murderer themselves.
 
 ### Manage Fake Player UI
 ui.settings.fakePlayerManager.title=Manage Fake Player
