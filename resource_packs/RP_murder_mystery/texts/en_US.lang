@@ -379,8 +379,6 @@ ui.settings.gaming.pickupBowMethod.rightClick=Right-click to pick up
 ui.settings.gaming.pickupBowMethod.nearby=Nearby to pick up
 ui.settings.gaming.showRoleInSpectatorTeleportUI.title=Show Role for Spectators
 ui.settings.gaming.showRoleInSpectatorTeleportUI.description=Whether to display the role in the spectator mode teleport list.
-ui.settings.gaming.applyNightVision.title=Enable Night Vision Effect
-ui.settings.gaming.applyNightVision.description=Whether to apply the night vision status effect to all players.
 
 ### Gold Spawn Settings UI
 ui.settings.goldSpawn.title=Gold Spawn Settings
@@ -413,6 +411,8 @@ ui.settings.miscellaneous.infoboardLastLine.title=Last Line of Infoboard
 ui.settings.miscellaneous.infoboardLastLine.description=The content of last line of infoboard, with the color of yellow.
 ui.settings.miscellaneous.getGoldHint.title=Gold Pickup Hint
 ui.settings.miscellaneous.getGoldHint.description=Whether to notify the player when picking up gold ingots.
+ui.settings.miscellaneous.applyNightVision.title=Enable Night Vision Effect
+ui.settings.miscellaneous.applyNightVision.description=Whether to apply the night vision status effect to all players.
 
 ### Manage Fake Player UI
 ui.settings.fakePlayerManager.title=Manage Fake Player

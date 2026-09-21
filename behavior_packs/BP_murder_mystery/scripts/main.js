@@ -951,7 +951,6 @@ class MurderMysterySettings {
         detectiveBowCooldown: 5,
         pickupBowMethod: "nearby",
         showRoleInSpectatorTeleportUI: true,
-        applyNightVision: false,
     };
     /** 金锭生成设置，控制如何生成金锭。 */
     goldSpawn = {
@@ -971,6 +970,7 @@ class MurderMysterySettings {
     miscellaneous = {
         getGoldHint: true,
         infoboardLastLine: "YZBWDLT",
+        applyNightVision: false,
     };
     mapEnabled = {};
     // #region - 保存与加载设置
@@ -1486,7 +1486,7 @@ class MurderMysterySettings {
     }
     /** 对玩家显示游戏时 UI。 */
     static showGamingUI(system, player) {
-        const { timePerGame, getSpecialItemDelay, detectiveBowCooldown, pickupBowMethod, showRoleInSpectatorTeleportUI, applyNightVision, } = system.settings.gaming;
+        const { timePerGame, getSpecialItemDelay, detectiveBowCooldown, pickupBowMethod, showRoleInSpectatorTeleportUI } = system.settings.gaming;
         const pickupBowMethodList = {
             rightClick: 0,
             nearby: 1,
@@ -1551,27 +1551,12 @@ class MurderMysterySettings {
                     system.settings.gaming.showRoleInSpectatorTeleportUI = result;
                 },
             },
-            {
-                type: "toggle",
-                description: { translate: "ui.settings.gaming.applyNightVision.title" },
-                tipText: { translate: "ui.settings.gaming.applyNightVision.description" },
-                default: applyNightVision,
-                onSubmit: result => {
-                    system.settings.gaming.applyNightVision = result;
-                },
-            },
         ], () => {
             // 如果要设置的游戏时间小于当前剩余的游戏时间，则直接改为待设置的游戏时间
             if (system.settings.gaming.timePerGame < system.timeLeft)
                 system.timeLeft = system.settings.gaming.timePerGame;
             // 重新注册弓箭检测组件
             MurderMysteryComponents.playerPickupBowTest(system);
-            // 若启用夜视，则立刻应用组件，否则立刻移除夜视效果
-            if (system.settings.gaming.applyNightVision)
-                MurderMysteryComponents.applyNightVision(system);
-            else {
-                lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
-            }
         });
     }
     /** 对玩家显示金锭生成 UI。 */
@@ -1684,7 +1669,7 @@ class MurderMysterySettings {
     }
     /** 对玩家显示杂项 UI。 */
     static showMiscellaneousUI(system, player) {
-        const { infoboardLastLine, getGoldHint } = system.settings.miscellaneous;
+        const { infoboardLastLine, getGoldHint, applyNightVision } = system.settings.miscellaneous;
         this.generateSettingsUI(system, player, "miscellaneous", [
             {
                 type: "textField",
@@ -1705,7 +1690,23 @@ class MurderMysterySettings {
                     system.settings.miscellaneous.getGoldHint = result;
                 },
             },
-        ]);
+            {
+                type: "toggle",
+                description: { translate: "ui.settings.miscellaneous.applyNightVision.title" },
+                tipText: { translate: "ui.settings.miscellaneous.applyNightVision.description" },
+                default: applyNightVision,
+                onSubmit: result => {
+                    system.settings.miscellaneous.applyNightVision = result;
+                },
+            },
+        ], () => {
+            // 若启用夜视，则立刻应用组件，否则立刻移除夜视效果
+            if (system.settings.miscellaneous.applyNightVision)
+                MurderMysteryComponents.applyNightVision(system);
+            else {
+                lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
+            }
+        });
     }
     /** 对玩家显示假玩家管理器 UI。 */
     static showFakePlayerManagerUI(system, player) {
@@ -1973,7 +1974,7 @@ class MurderMysteryComponents {
      * @description 会在游戏开始时尝试对所有玩家施加夜视效果。
      */
     static applyNightVision(system) {
-        if (!system.settings.gaming.applyNightVision)
+        if (!system.settings.miscellaneous.applyNightVision)
             return;
         lib.PlayerUtils.getAll().forEach(player => player.runCommand("effect @s night_vision infinite 0 true"));
     }

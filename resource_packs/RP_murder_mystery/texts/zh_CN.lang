@@ -379,8 +379,6 @@ ui.settings.gaming.pickupBowMethod.rightClick=右键拾取
 ui.settings.gaming.pickupBowMethod.nearby=接近拾取
 ui.settings.gaming.showRoleInSpectatorTeleportUI.title=旁观显示身份
 ui.settings.gaming.showRoleInSpectatorTeleportUI.description=旁观模式的传送列表中，是否显示身份。
-ui.settings.gaming.applyNightVision.title=启用夜视效果
-ui.settings.gaming.applyNightVision.description=是否对所有玩家施加夜视状态效果。
 
 ### 金锭生成设置 UI
 ui.settings.goldSpawn.title=金锭生成设置
@@ -413,6 +411,8 @@ ui.settings.miscellaneous.infoboardLastLine.title=信息板最后一行
 ui.settings.miscellaneous.infoboardLastLine.description=信息板最后一行的内容，使用黄色字体。
 ui.settings.miscellaneous.getGoldHint.title=获取金锭提示
 ui.settings.miscellaneous.getGoldHint.description=获取金锭时是否提示玩家。
+ui.settings.miscellaneous.applyNightVision.title=启用夜视效果
+ui.settings.miscellaneous.applyNightVision.description=是否对所有玩家施加夜视状态效果。
 
 ### 假玩家管理器 UI
 ui.settings.fakePlayerManager.title=假玩家管理器

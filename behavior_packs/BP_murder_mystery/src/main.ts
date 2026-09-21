@@ -1209,9 +1209,6 @@ interface MurderMysteryGameSettings {
 
     /** 旁观模式的传送列表中，是否显示身份。 */
     showRoleInSpectatorTeleportUI: boolean;
-
-    /** 是否对所有玩家施加夜视状态效果。 */
-    applyNightVision: boolean;
 }
 
 interface MurderMysteryGoldSpawnSettings {
@@ -1248,6 +1245,9 @@ interface MurderMysteryMiscellaneousSettings {
 
     /** 获取金锭时是否提示玩家。 */
     getGoldHint: boolean;
+
+    /** 是否对所有玩家施加夜视状态效果。 */
+    applyNightVision: boolean;
 }
 
 /** 密室杀手设置。在设置内包含众多玩家可以调控的设置项。 */
@@ -1284,7 +1284,6 @@ class MurderMysterySettings {
         detectiveBowCooldown: 5,
         pickupBowMethod: "nearby",
         showRoleInSpectatorTeleportUI: true,
-        applyNightVision: false,
     };
 
     /** 金锭生成设置，控制如何生成金锭。 */
@@ -1307,6 +1306,7 @@ class MurderMysterySettings {
     miscellaneous: MurderMysteryMiscellaneousSettings = {
         getGoldHint: true,
         infoboardLastLine: "YZBWDLT",
+        applyNightVision: false,
     };
 
     mapEnabled: Record<keyof typeof gameData.maps, boolean> = {};
@@ -1880,14 +1880,8 @@ class MurderMysterySettings {
 
     /** 对玩家显示游戏时 UI。 */
     private static showGamingUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const {
-            timePerGame,
-            getSpecialItemDelay,
-            detectiveBowCooldown,
-            pickupBowMethod,
-            showRoleInSpectatorTeleportUI,
-            applyNightVision,
-        } = system.settings.gaming;
+        const { timePerGame, getSpecialItemDelay, detectiveBowCooldown, pickupBowMethod, showRoleInSpectatorTeleportUI } =
+            system.settings.gaming;
         const pickupBowMethodList: Record<"rightClick" | "nearby", number> = {
             rightClick: 0,
             nearby: 1,
@@ -1957,26 +1951,12 @@ class MurderMysterySettings {
                         system.settings.gaming.showRoleInSpectatorTeleportUI = result;
                     },
                 },
-                {
-                    type: "toggle",
-                    description: { translate: "ui.settings.gaming.applyNightVision.title" },
-                    tipText: { translate: "ui.settings.gaming.applyNightVision.description" },
-                    default: applyNightVision,
-                    onSubmit: result => {
-                        system.settings.gaming.applyNightVision = result;
-                    },
-                },
             ],
             () => {
                 // 如果要设置的游戏时间小于当前剩余的游戏时间，则直接改为待设置的游戏时间
                 if (system.settings.gaming.timePerGame < system.timeLeft) system.timeLeft = system.settings.gaming.timePerGame;
                 // 重新注册弓箭检测组件
                 MurderMysteryComponents.playerPickupBowTest(system);
-                // 若启用夜视，则立刻应用组件，否则立刻移除夜视效果
-                if (system.settings.gaming.applyNightVision) MurderMysteryComponents.applyNightVision(system);
-                else {
-                    lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
-                }
             },
         );
     }
@@ -2093,28 +2073,49 @@ class MurderMysterySettings {
 
     /** 对玩家显示杂项 UI。 */
     private static showMiscellaneousUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { infoboardLastLine, getGoldHint } = system.settings.miscellaneous;
-        this.generateSettingsUI(system, player, "miscellaneous", [
-            {
-                type: "textField",
-                description: { translate: "ui.settings.miscellaneous.infoboardLastLine.title" },
-                tipText: { translate: "ui.settings.miscellaneous.infoboardLastLine.description" },
-                default: infoboardLastLine,
-                placeholderText: "",
-                onSubmit: result => {
-                    system.settings.miscellaneous.infoboardLastLine = result;
+        const { infoboardLastLine, getGoldHint, applyNightVision } = system.settings.miscellaneous;
+        this.generateSettingsUI(
+            system,
+            player,
+            "miscellaneous",
+            [
+                {
+                    type: "textField",
+                    description: { translate: "ui.settings.miscellaneous.infoboardLastLine.title" },
+                    tipText: { translate: "ui.settings.miscellaneous.infoboardLastLine.description" },
+                    default: infoboardLastLine,
+                    placeholderText: "",
+                    onSubmit: result => {
+                        system.settings.miscellaneous.infoboardLastLine = result;
+                    },
                 },
-            },
-            {
-                type: "toggle",
-                description: { translate: "ui.settings.miscellaneous.getGoldHint.title" },
-                tipText: { translate: "ui.settings.miscellaneous.getGoldHint.description" },
-                default: getGoldHint,
-                onSubmit: result => {
-                    system.settings.miscellaneous.getGoldHint = result;
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.miscellaneous.getGoldHint.title" },
+                    tipText: { translate: "ui.settings.miscellaneous.getGoldHint.description" },
+                    default: getGoldHint,
+                    onSubmit: result => {
+                        system.settings.miscellaneous.getGoldHint = result;
+                    },
                 },
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.miscellaneous.applyNightVision.title" },
+                    tipText: { translate: "ui.settings.miscellaneous.applyNightVision.description" },
+                    default: applyNightVision,
+                    onSubmit: result => {
+                        system.settings.miscellaneous.applyNightVision = result;
+                    },
+                },
+            ],
+            () => {
+                // 若启用夜视，则立刻应用组件，否则立刻移除夜视效果
+                if (system.settings.miscellaneous.applyNightVision) MurderMysteryComponents.applyNightVision(system);
+                else {
+                    lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
+                }
             },
-        ]);
+        );
     }
 
     /** 对玩家显示假玩家管理器 UI。 */
@@ -2392,7 +2393,7 @@ class MurderMysteryComponents {
      * @description 会在游戏开始时尝试对所有玩家施加夜视效果。
      */
     static applyNightVision(system: MurderMysterySystem) {
-        if (!system.settings.gaming.applyNightVision) return;
+        if (!system.settings.miscellaneous.applyNightVision) return;
         lib.PlayerUtils.getAll().forEach(player => player.runCommand("effect @s night_vision infinite 0 true"));
     }
 
