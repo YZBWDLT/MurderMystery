@@ -67,6 +67,9 @@ const goldId = "murder_mystery:gold_ingot";
 /** 密室杀手的弓掉落物 ID。 */
 const bowEntityId = "murder_mystery:item_bow";
 
+/** 密室杀手的杀手剑 ID。 */
+const swordId = "murder_mystery:iron_sword";
+
 /** 判断实体是否为玩家。 */
 const isPlayer = lib.PlayerUtils.isPlayer;
 
@@ -2679,7 +2682,7 @@ class MurderMysteryComponents {
             if (attackerData.role !== MurderMysteryPlayerRole.Murderer) return;
             // 杀手必须拿剑
             const attackerMainhandItem = lib.ItemUtils.equipment.getItem(attacker, minecraft.EquipmentSlot.Mainhand);
-            if (attackerMainhandItem?.typeId !== "murder_mystery:iron_sword") return;
+            if (attackerMainhandItem?.typeId !== swordId) return;
             // 记录击杀
             victimData.setDead(gameData.MurderMysteryDeathType.MurdererStab, attackerData);
         });
@@ -2929,9 +2932,20 @@ class MurderMysteryComponents {
     static murdererKnife(system: MurderMysterySystem) {
         lib.gameSystem.subscribeEvent("murdererKnifeTest", minecraft.world.afterEvents.itemUse, event => {
             const { itemStack: ironSword, source: murderer } = event;
-            if (ironSword.typeId !== "murder_mystery:iron_sword") return;
+            if (ironSword.typeId !== swordId) return;
             system.getPlayer(murderer)?.throwingKnife();
         });
+        lib.gameSystem.subscribeTimeline(
+            "murdererHoldKnifeTest",
+            () => {
+                system.livingPlayers.murderer.forEach(murderer => {
+                    // 如果不是手持剑，则终止运行
+                    if (lib.ItemUtils.equipment.getItem(murderer.player, minecraft.EquipmentSlot.Mainhand)?.typeId !== swordId) return;
+                    murderer.showSwordParticle();
+                });
+            },
+            5,
+        );
     }
 
     /** 旁观玩家抬头打开设置组件。
@@ -3469,7 +3483,7 @@ export class MurderMysteryPlayer {
     getSword() {
         if (this.role !== MurderMysteryPlayerRole.Murderer) return;
         if (!isPlayer(this.player)) return;
-        lib.ItemUtils.inventory.set(this.player, 1, "murder_mystery:iron_sword", {
+        lib.ItemUtils.inventory.set(this.player, 1, swordId, {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,
         });
@@ -3542,7 +3556,7 @@ export class MurderMysteryPlayer {
 
         // 如果玩家再次使用刀，终止投刀
         lib.gameSystem.subscribeEvent(`${murderer.id}UseItemAgain`, minecraft.world.afterEvents.itemUse, event => {
-            if (event.itemStack.typeId !== "murder_mystery:iron_sword") return;
+            if (event.itemStack.typeId !== swordId) return;
             if (event.source.id !== murderer.id) return;
             stopThrowing();
         });
@@ -3555,7 +3569,7 @@ export class MurderMysteryPlayer {
         // 如果不是杀手，不能飞刀
         if (this.role !== MurderMysteryPlayerRole.Murderer) return;
         // 生成飞刀
-        const knife = lib.EntityUtils.add("murder_mystery:iron_sword", this.player.getHeadLocation());
+        const knife = lib.EntityUtils.add(swordId, this.player.getHeadLocation());
         const projectileComp = knife.getComponent("projectile") as minecraft.EntityProjectileComponent;
         projectileComp.owner = this.player;
         projectileComp.shoot(lib.Vector3Utils.scale(this.player.getViewDirection(), this.system.settings.murdererSword.knifeSpeed), {
@@ -3703,6 +3717,21 @@ export class MurderMysteryPlayer {
             },
             20,
         );
+    }
+
+    /** 在玩家的右手处显示杀手剑的粒子。 */
+    showSwordParticle() {
+        const player = this.player;
+        const rightDirection = lib.Vector3Utils.normalize(
+            lib.Vector3Utils.crossProduct(player.getViewDirection(), { x: 0, y: 1, z: 0 }),
+        );
+        const location: minecraft.Vector3 = {
+            x: player.location.x + rightDirection.x * 0.4,
+            y: player.location.y + 0.75,
+            z: player.location.z + rightDirection.z * 0.4,
+        };
+
+        minecraft.world.getDimension("overworld").spawnParticle("minecraft:redstone_ore_dust_particle", location);
     }
 
     // #endregion
