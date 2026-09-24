@@ -137,6 +137,7 @@ deathMessage.lightningBolt=§eA lightning bolt fell from the sky and hit you!
 deathMessage.draggedByTheDead=§eYou were dragged to the depths by the dead!
 deathMessage.piranhas=§eThe piranhas ate you!
 deathMessage.shark=§eThe shark ate you!
+deathMessage.crushed=§eYou were crushed!
 deathMessage.other=§eYou Died!
 chat.knifeKilledPlayer=§eKilled target at %s meters away!
 #### ↑ 因为中英文语序不同，只能以“目标”代替“§7%s§e”
@@ -235,6 +236,7 @@ trap.name=Trap
 
 ### Cooldown
 chat.cooldown=§cThe %s has %s seconds to cool down!
+chat.cooldown.general=§cPlease wait, this trap is currently on cooldown!
 
 ### Errors
 chat.error.noValidMaps=§cWarning: No valid maps found. Please contact an admin to check the enabled map settings and enable at least one map. To ensure the game runs properly, a new map has been randomly enabled.

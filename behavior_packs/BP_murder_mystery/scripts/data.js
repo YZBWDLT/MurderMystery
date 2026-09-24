@@ -58,6 +58,8 @@ export var MurderMysteryDeathType;
      * @remarks 这种死法是一种会导致出图的死法。
      */
     MurderMysteryDeathType["Shark"] = "shark";
+    /** 被挤压而死。 */
+    MurderMysteryDeathType["Crushed"] = "crushed";
     /** 其他死因。 */
     MurderMysteryDeathType["Other"] = "other";
 })(MurderMysteryDeathType || (MurderMysteryDeathType = {}));
@@ -136,6 +138,11 @@ function isPlayer(entity) {
         return false;
     return true;
 }
+function notify(entity, options) {
+    if (!isPlayer(entity))
+        return;
+    lib.PlayerUtils.notify(entity, options);
+}
 /** 添加消耗金锭的文本展示。 */
 function addConsumeGoldTextDisplay(location, itemName, consume) {
     const mainText = consume === 1 ? "textDisplay.consumeGold.1gold" : "textDisplay.consumeGold";
@@ -184,6 +191,29 @@ function tryGetMysteryPotion(system, animationLocation, playerData, consumeGold 
         return false;
     playerData.consumeGold(consumeGold);
     return true;
+}
+// #region - 阴森庄园方法
+/** 阴森庄园的电梯。 */
+function spookyMansionElevator(playerData, teleportLocation, layerName) {
+    if (!playerData)
+        return;
+    if (!playerData.consumeGold(2))
+        return;
+    notify(playerData.player, { sound: "random.lever_click", soundOptions: { pitch: 1.5 } });
+    notify(playerData.player, { sound: "random.bowhit", soundOptions: { pitch: 2 } });
+    minecraft.system.runTimeout(() => {
+        playerData.player.teleport(teleportLocation, { rotation: { x: 0, y: 270 } });
+        notify(playerData.player, {
+            message: { translate: `chat.spookyMansion.elevator.${layerName}` },
+            sound: "mob.endermen.portal",
+            soundDelay: 2,
+        });
+    }, 10);
+}
+/** 阴森庄园的挤压装置。 */
+function spookyMansionCrusher(operation, from, to, soundLocation) {
+    lib.BlockUtils.fill({ id: operation === "on" ? "minecraft:polished_andesite" : "minecraft:air", from, to });
+    lib.PlayerUtils.broadcast({ location: soundLocation, sound: "note.hat", soundOptions: { pitch: 2 } });
 }
 /** 全部的临终遗言。遗言需要在语言文件中声明，包括：
  * - `lastWords.(ID).title`：临终遗言的标题。
@@ -714,7 +744,7 @@ export const maps = {
             "aquarium:piranhaTrap": (system, playerData) => {
                 // ===== 条件检查 =====
                 // 如果仍处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap", "trap.name", playerData?.player) > 0)
+                if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap", "general", playerData?.player) > 0)
                     return;
                 // 如果没有玩家执行，终止运行
                 if (!playerData)
@@ -756,7 +786,7 @@ export const maps = {
             "aquarium:sharkTrap": (system, playerData) => {
                 // ===== 条件检查 =====
                 // 如果当前陷阱处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("aquarium:sharkTrap", "trap.name", playerData?.player) > 0)
+                if (system.eventManager.getEventCooldownCountdown("aquarium:sharkTrap", "general", playerData?.player) > 0)
                     return;
                 // 如果没有玩家执行，终止运行
                 if (!playerData)
@@ -802,7 +832,7 @@ export const maps = {
                     { x: 902, y: 69, z: 2940 },
                 ];
                 // 如果当前陷阱处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap", "trap.name", playerData?.player) > 0)
+                if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap", "general", playerData?.player) > 0)
                     return;
                 // 如果没有玩家执行，终止运行
                 if (!playerData)
@@ -849,8 +879,7 @@ export const maps = {
                     const potion = minecraft.Potions.resolve(potionEffectType, potionDeliveryType);
                     potion.lockMode = minecraft.ItemLockMode.slot;
                     lib.ItemUtils.inventory.get(playerData.player)?.container.setItem(nextSlot, potion);
-                    if (isPlayer(playerData.player))
-                        lib.PlayerUtils.notify(playerData.player, { message, sound: "mob.villager.yes" });
+                    notify(playerData.player, { message, sound: "mob.villager.yes" });
                     return true;
                 };
                 // ===== 获取玩家的金锭，决定玩家使用哪种兑换组合 =====
@@ -862,11 +891,10 @@ export const maps = {
                         playerData.getBow();
                         if (playerData.role === "detective")
                             playerData.chargingTime = 0;
-                        if (isPlayer(playerData.player))
-                            lib.PlayerUtils.notify(playerData.player, {
-                                message: { translate: "chat.aquarium.tank.giftBow" },
-                                sound: "mob.villager.yes",
-                            });
+                        notify(playerData.player, {
+                            message: { translate: "chat.aquarium.tank.giftBow" },
+                            sound: "mob.villager.yes",
+                        });
                     }
                     // 选项 2：一瓶可饮用的迅捷药水
                     else {
@@ -902,11 +930,10 @@ export const maps = {
                     // 选项 1：失明
                     if (Math.random() > 0.5) {
                         playerData.player.addEffect("blindness", 600);
-                        if (isPlayer(playerData.player))
-                            lib.PlayerUtils.notify(playerData.player, {
-                                message: { translate: "chat.aquarium.tank.blindness" },
-                                sound: "mob.endermen.portal",
-                            });
+                        notify(playerData.player, {
+                            message: { translate: "chat.aquarium.tank.blindness" },
+                            sound: "mob.endermen.portal",
+                        });
                     }
                     // 选项 2：给予一瓶喷溅型夜视药水
                     else {
@@ -1707,8 +1734,7 @@ export const maps = {
                     return;
                 // ===== 放置方块 =====
                 lib.BlockUtils.set({ id: "minecraft:fire", location });
-                if (isPlayer(playerData.player))
-                    lib.PlayerUtils.notify(playerData.player, { sound: "item.firecharge.use" });
+                notify(playerData.player, { sound: "item.firecharge.use" });
                 playerData.consumeGold(1);
                 system.eventManager.triggerEvent("archives:openDoor");
             },
@@ -1723,8 +1749,7 @@ export const maps = {
                     return;
                 // ===== 放置方块 =====
                 lib.BlockUtils.set({ id: "minecraft:fire", location });
-                if (isPlayer(playerData.player))
-                    lib.PlayerUtils.notify(playerData.player, { sound: "item.firecharge.use" });
+                notify(playerData.player, { sound: "item.firecharge.use" });
                 playerData.consumeGold(1);
                 system.eventManager.triggerEvent("archives:openDoor");
             },
@@ -1739,8 +1764,7 @@ export const maps = {
                     return;
                 // ===== 放置方块 =====
                 lib.BlockUtils.set({ id: "minecraft:fire", location });
-                if (isPlayer(playerData.player))
-                    lib.PlayerUtils.notify(playerData.player, { sound: "item.firecharge.use" });
+                notify(playerData.player, { sound: "item.firecharge.use" });
                 playerData.consumeGold(1);
                 system.eventManager.triggerEvent("archives:openDoor");
             },
@@ -1755,8 +1779,7 @@ export const maps = {
                     return;
                 // ===== 放置方块 =====
                 lib.BlockUtils.set({ id: "minecraft:fire", location });
-                if (isPlayer(playerData.player))
-                    lib.PlayerUtils.notify(playerData.player, { sound: "item.firecharge.use" });
+                notify(playerData.player, { sound: "item.firecharge.use" });
                 playerData.consumeGold(1);
                 system.eventManager.triggerEvent("archives:openDoor");
             },
@@ -3711,7 +3734,7 @@ export const maps = {
                     { x: 106, y: 38, z: 1878 },
                 ];
                 // 如果当前陷阱处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("darkfall:trap", "trap.name", playerData?.player) > 0)
+                if (system.eventManager.getEventCooldownCountdown("darkfall:trap", "general", playerData?.player) > 0)
                     return;
                 // 如果没有玩家执行，终止运行
                 if (!playerData)
@@ -3766,15 +3789,13 @@ export const maps = {
                 if (!playerData)
                     return;
                 playerData.player.teleport({ x: 71, y: 37, z: 1957 }, { facingLocation: { x: 71, y: 37, z: 1946 } });
-                if (isPlayer(playerData.player))
-                    lib.PlayerUtils.notify(playerData.player, { sound: "portal.travel", soundDelay: 3 });
+                notify(playerData.player, { sound: "portal.travel", soundDelay: 3 });
             },
             "darkfall:teleportToHouse": (system, playerData) => {
                 if (!playerData)
                     return;
                 playerData.player.teleport({ x: 154, y: 37.1, z: 1915 }, { facingLocation: { x: 140, y: 37, z: 1915 } });
-                if (isPlayer(playerData.player))
-                    lib.PlayerUtils.notify(playerData.player, { sound: "portal.travel", soundDelay: 3 });
+                notify(playerData.player, { sound: "portal.travel", soundDelay: 3 });
             },
         },
     },
@@ -9691,11 +9712,175 @@ export const maps = {
                 { x: -42.5, y: 30.5, z: -1904.5 },
             ],
             enabledByDefault: false,
-            hasFullFunction: false,
         },
         components: {
             time: 18000,
-            interaction: [{ blocks: ["minecraft:dark_oak_door", "minecraft:birch_door"] }],
+            interaction: [
+                { blocks: ["minecraft:dark_oak_door", "minecraft:birch_door"] },
+                // 电梯
+                {
+                    at: [
+                        { x: -63, y: 23, z: -1949 },
+                        { x: -63, y: 41, z: -1951 },
+                    ],
+                    type: "button",
+                    trigger: "spookyMansionV1:teleportToLobby",
+                },
+                {
+                    at: [{ x: -63, y: 31, z: -1951 }],
+                    type: "button",
+                    trigger: "spookyMansionV1:teleportToBasement",
+                },
+                {
+                    at: [{ x: -63, y: 31, z: -1949 }],
+                    type: "button",
+                    trigger: "spookyMansionV1:teleportTo1stFloor",
+                },
+                // 玄关地板陷阱
+                {
+                    at: [
+                        { x: -67, y: 30, z: -1939 },
+                        { x: -67, y: 30, z: -1935 },
+                    ],
+                    type: "button",
+                    trigger: "spookyMansionV1:doorTrap",
+                },
+                // 秘密通道
+                {
+                    at: [{ x: -47, y: 31, z: -1950 }],
+                    type: "button",
+                    trigger: "spookyMansionV1:setFire1",
+                },
+                {
+                    at: [{ x: -52, y: 31, z: -1929 }],
+                    type: "button",
+                    trigger: "spookyMansionV1:setFire2",
+                },
+            ],
+            onGameStart: { trigger: "spookyMansionV1:recover" },
+        },
+        events: {
+            "spookyMansionV1:recover": () => {
+                // ===== 放置悬浮文本 =====
+                // 地下室 -> 大厅的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line1" }, { x: -63, y: 22.8, z: -1948.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line2" }, { x: -63, y: 22.3, z: -1948.5 });
+                // 大厅 -> 1 楼的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.1stFloor.line1" }, { x: -63, y: 30.8, z: -1948.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.1stFloor.line2" }, { x: -63, y: 30.3, z: -1948.5 });
+                // 大厅 -> 地下室的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.basement.line1" }, { x: -63, y: 30.8, z: -1951.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.basement.line2" }, { x: -63, y: 30.3, z: -1951.5 });
+                // 地下室 -> 大厅的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line1" }, { x: -63, y: 40.8, z: -1951.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line2" }, { x: -63, y: 40.3, z: -1951.5 });
+                // ===== 恢复玄关地板陷阱 =====
+                lib.BlockUtils.fill({
+                    id: "minecraft:stone_bricks",
+                    from: { x: -68, y: 29, z: -1939 },
+                    to: { x: -66, y: 29, z: -1935 },
+                });
+                // ===== 恢复暗门 =====
+                lib.BlockUtils.fill({ id: "minecraft:bookshelf", from: { x: -45, y: 30, z: -1949 }, to: { x: -45, y: 32, z: -1947 } });
+                lib.BlockUtils.fill({ id: "minecraft:bookshelf", from: { x: -50, y: 30, z: -1928 }, to: { x: -50, y: 32, z: -1927 } });
+                lib.BlockUtils.fill({
+                    id: "minecraft:stone_brick_stairs",
+                    from: { x: -51, y: 30, z: -1928 },
+                    to: { x: -51, y: 30, z: -1927 },
+                    states: { upside_down_bit: true },
+                });
+                lib.BlockUtils.set({ id: "minecraft:air", location: { x: -52, y: 32, z: -1929 } });
+                lib.BlockUtils.set({ id: "minecraft:air", location: { x: -47, y: 32, z: -1950 } });
+            },
+            // 电梯
+            "spookyMansionV1:teleportToLobby": (system, playerData) => {
+                spookyMansionElevator(playerData, { x: -62.5, y: 30, z: -1949.5 }, "lobby");
+            },
+            "spookyMansionV1:teleportTo1stFloor": (system, playerData) => {
+                spookyMansionElevator(playerData, { x: -62.5, y: 40, z: -1949.5 }, "1stFloor");
+            },
+            "spookyMansionV1:teleportToBasement": (system, playerData) => {
+                spookyMansionElevator(playerData, { x: -62.5, y: 22, z: -1949.5 }, "basement");
+            },
+            // 玄关地板陷阱
+            "spookyMansionV1:doorTrap": (system, playerData) => {
+                // ===== 条件检查 =====
+                // 如果仍处于冷却，终止运行
+                if (system.eventManager.getEventCooldownCountdown("spookyMansionV1:doorTrap", "general", playerData?.player) > 0)
+                    return;
+                // 如果没有玩家执行，终止运行
+                if (!playerData)
+                    return;
+                // 如果玩家金锭不足，终止运行
+                if (!playerData.consumeGold(1))
+                    return;
+                // ===== 启动陷阱 =====
+                // 进入冷却
+                system.eventManager.setEventCooldown("spookyMansionV1:doorTrap", 10);
+                // 填充掉地面
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -68, y: 29, z: -1939 }, to: { x: -66, y: 29, z: -1935 } });
+                lib.PlayerUtils.broadcast({ location: { x: -67, y: 30, z: -1937 }, sound: "mob.irongolem.hit" });
+                // 5 秒后恢复
+                minecraft.system.runTimeout(() => {
+                    lib.BlockUtils.fill({
+                        id: "minecraft:stone_bricks",
+                        from: { x: -68, y: 29, z: -1939 },
+                        to: { x: -66, y: 29, z: -1935 },
+                    });
+                    lib.PlayerUtils.broadcast({ location: { x: -67, y: 30, z: -1937 }, sound: "mob.irongolem.hit" });
+                }, 100);
+            },
+            // 秘密通道
+            "spookyMansionV1:setFire1": (system, playerData) => {
+                // ===== 条件检查 =====
+                if (!playerData)
+                    return;
+                if (!playerData.haveEnoughGold(1, false))
+                    return;
+                const location = { x: -47, y: 32, z: -1950 };
+                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                    return;
+                // ===== 放置方块 =====
+                lib.BlockUtils.set({ id: "minecraft:fire", location });
+                notify(playerData.player, { sound: "item.firecharge.use" });
+                playerData.consumeGold(1);
+                system.eventManager.triggerEvent("spookyMansionV1:openSecretPassage");
+            },
+            "spookyMansionV1:setFire2": (system, playerData) => {
+                // ===== 条件检查 =====
+                if (!playerData)
+                    return;
+                if (!playerData.haveEnoughGold(1, false))
+                    return;
+                const location = { x: -52, y: 32, z: -1929 };
+                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                    return;
+                // ===== 放置方块 =====
+                lib.BlockUtils.set({ id: "minecraft:fire", location });
+                notify(playerData.player, { sound: "item.firecharge.use" });
+                playerData.consumeGold(1);
+                system.eventManager.triggerEvent("spookyMansionV1:openSecretPassage");
+            },
+            "spookyMansionV1:openSecretPassage": () => {
+                // ===== 检查条件 =====
+                const isFire = (location) => {
+                    return lib.BlockUtils.match({ id: "minecraft:fire", location });
+                };
+                if (!isFire({ x: -47, y: 32, z: -1950 }))
+                    return;
+                if (!isFire({ x: -52, y: 32, z: -1929 }))
+                    return;
+                // ===== 开门 =====
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -45, y: 30, z: -1949 }, to: { x: -45, y: 32, z: -1947 } });
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -51, y: 30, z: -1928 }, to: { x: -50, y: 32, z: -1927 } });
+                lib.PlayerUtils.broadcast({
+                    title: "§1",
+                    subtitle: { translate: "subtitle.passageOpened" },
+                    titleOptions: { fadeInDuration: 0, fadeOutDuration: 20, stayDuration: 60 },
+                    sound: "tile.piston.out",
+                    soundOptions: { pitch: 1.5 },
+                });
+            },
         },
     },
     // #endregion
@@ -10050,11 +10235,334 @@ export const maps = {
                 { x: -46.5, y: 86.5, z: -2893.5 },
                 { x: -45.5, y: 86.5, z: -2889.5 },
             ],
-            hasFullFunction: false,
         },
         components: {
             time: 18000,
-            interaction: [{ blocks: ["minecraft:dark_oak_door", "minecraft:birch_door"] }],
+            interaction: [
+                { blocks: ["minecraft:dark_oak_door", "minecraft:birch_door"] },
+                // 电梯
+                {
+                    at: [
+                        { x: -75, y: 87, z: -2930 },
+                        { x: -75, y: 69, z: -2928 },
+                    ],
+                    type: "button",
+                    trigger: "spookyMansion:teleportToLobby",
+                },
+                {
+                    at: [{ x: -75, y: 77, z: -2930 }],
+                    type: "button",
+                    trigger: "spookyMansion:teleportToBasement",
+                },
+                {
+                    at: [{ x: -75, y: 77, z: -2928 }],
+                    type: "button",
+                    trigger: "spookyMansion:teleportTo1stFloor",
+                },
+                // 滚筒陷阱
+                {
+                    at: [
+                        { x: -67, y: 69, z: -2881 },
+                        { x: -71, y: 69, z: -2881 },
+                    ],
+                    type: "button",
+                    trigger: "spookyMansion:barrelTrap",
+                },
+                // 玄关地板陷阱
+                {
+                    at: [
+                        { x: -80, y: 77, z: -2913 },
+                        { x: -80, y: 77, z: -2909 },
+                    ],
+                    type: "button",
+                    trigger: "spookyMansion:doorTrap",
+                },
+                // 挤压装置陷阱
+                {
+                    at: [
+                        { x: -63, y: 77, z: -2888 },
+                        { x: -67, y: 77, z: -2888 },
+                        { x: -63, y: 77, z: -2882 },
+                        { x: -67, y: 77, z: -2882 },
+                    ],
+                    type: "button",
+                    trigger: "spookyMansion:crusherTrap1",
+                },
+                {
+                    at: [
+                        { x: -61, y: 87, z: -2896 },
+                        { x: -61, y: 87, z: -2892 },
+                        { x: -55, y: 87, z: -2892 },
+                        { x: -55, y: 87, z: -2896 },
+                    ],
+                    type: "button",
+                    trigger: "spookyMansion:crusherTrap2",
+                },
+                // 秘密通道
+                {
+                    at: [{ x: -54, y: 77, z: -2932 }],
+                    type: "button",
+                    trigger: "spookyMansion:setFire1",
+                },
+                {
+                    at: [{ x: -48, y: 76, z: -2917 }],
+                    type: "button",
+                    trigger: "spookyMansion:setFire2",
+                },
+            ],
+            onGameStart: { trigger: "spookyMansion:recover" },
+        },
+        events: {
+            "spookyMansion:recover": () => {
+                // ===== 放置悬浮文本 =====
+                // 地下室 -> 大厅的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line1" }, { x: -75, y: 68.8, z: -2927.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line2" }, { x: -75, y: 68.3, z: -2927.5 });
+                // 大厅 -> 1 楼的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.1stFloor.line1" }, { x: -75, y: 76.8, z: -2927.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.1stFloor.line2" }, { x: -75, y: 76.3, z: -2927.5 });
+                // 大厅 -> 地下室的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.basement.line1" }, { x: -75, y: 76.8, z: -2930.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.basement.line2" }, { x: -75, y: 76.3, z: -2930.5 });
+                // 地下室 -> 大厅的电梯
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line1" }, { x: -75, y: 86.8, z: -2930.5 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.elevator.lobby.line2" }, { x: -75, y: 86.3, z: -2930.5 });
+                // 滚筒陷阱
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.barrelTrap.line1" }, { x: -69, y: 70.8, z: -2881 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.barrelTrap.line2" }, { x: -69, y: 70.4, z: -2881 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.barrelTrap.line3" }, { x: -69, y: 70.0, z: -2881 });
+                // 玄关地板陷阱
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.doorTrap.line1" }, { x: -83, y: 78.8, z: -2911 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.doorTrap.line2" }, { x: -83, y: 78.4, z: -2911 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.doorTrap.line3" }, { x: -83, y: 78.0, z: -2911 });
+                // 挤压装置陷阱
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.crusherTrap.line1" }, { x: -65, y: 78.3, z: -2885 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.crusherTrap.line2" }, { x: -65, y: 77.9, z: -2885 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.crusherTrap.line3" }, { x: -65, y: 77.5, z: -2885 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.crusherTrap.line1" }, { x: -58, y: 88.8, z: -2894 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.crusherTrap.line2" }, { x: -58, y: 88.4, z: -2894 });
+                lib.TextDisplayUtils.add({ translate: "textDisplay.spookyMansion.crusherTrap.line3" }, { x: -58, y: 88.0, z: -2894 });
+                // ===== 恢复玄关地板陷阱 =====
+                lib.StructureUtils.placeAsync(`murder_mystery:spookyMansion/door_trap`, { x: -84, y: 75, z: -2914 });
+                // ===== 恢复挤压陷阱 =====
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -64, y: 76, z: -2886 }, to: { x: -66, y: 78, z: -2884 } });
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -57, y: 89, z: -2895 }, to: { x: -59, y: 86, z: -2893 } });
+                // ===== 恢复暗门 =====
+                lib.StructureUtils.placeAsync(`murder_mystery:spookyMansion/secret_passage_door_1`, { x: -52, y: 76, z: -2935 });
+                lib.StructureUtils.placeAsync(`murder_mystery:spookyMansion/secret_passage_door_2`, { x: -47, y: 76, z: -2919 });
+                lib.BlockUtils.set({ id: "minecraft:air", location: { x: -48, y: 79, z: -2917 } });
+                lib.BlockUtils.set({ id: "minecraft:air", location: { x: -54, y: 79, z: -2932 } });
+            },
+            // 电梯
+            "spookyMansion:teleportToLobby": (system, playerData) => {
+                spookyMansionElevator(playerData, { x: -74.5, y: 76, z: -2928.5 }, "lobby");
+            },
+            "spookyMansion:teleportTo1stFloor": (system, playerData) => {
+                spookyMansionElevator(playerData, { x: -74.5, y: 86, z: -2928.5 }, "1stFloor");
+            },
+            "spookyMansion:teleportToBasement": (system, playerData) => {
+                spookyMansionElevator(playerData, { x: -74.5, y: 68, z: -2928.5 }, "basement");
+            },
+            // 滚筒陷阱
+            "spookyMansion:barrelTrap": (system, playerData) => {
+                // ===== 条件检查 =====
+                // 如果仍处于冷却，终止运行
+                if (system.eventManager.getEventCooldownCountdown("spookyMansion:barrelTrap", "general", playerData?.player) > 0)
+                    return;
+                // 如果没有玩家执行，终止运行
+                if (!playerData)
+                    return;
+                // 如果玩家金锭不足，终止运行
+                if (!playerData.consumeGold(1))
+                    return;
+                // ===== 启动陷阱 =====
+                // 进入冷却
+                system.eventManager.setEventCooldown("spookyMansion:barrelTrap", 10);
+                // 填充掉玻璃
+                lib.BlockUtils.set({ id: "minecraft:air", location: { x: -73, y: 70, z: -2870 } });
+                lib.BlockUtils.set({ id: "minecraft:air", location: { x: -73, y: 70, z: -2874 } });
+                lib.BlockUtils.set({ id: "minecraft:air", location: { x: -73, y: 70, z: -2878 } });
+                lib.PlayerUtils.broadcast({ location: { x: -69, y: 68, z: -2874 }, sound: "random.glass" });
+                // 5 秒后恢复
+                minecraft.system.runTimeout(() => {
+                    lib.BlockUtils.set({ id: "minecraft:brown_stained_glass", location: { x: -73, y: 70, z: -2870 } });
+                    lib.BlockUtils.set({ id: "minecraft:brown_stained_glass", location: { x: -73, y: 70, z: -2874 } });
+                    lib.BlockUtils.set({ id: "minecraft:brown_stained_glass", location: { x: -73, y: 70, z: -2878 } });
+                    lib.PlayerUtils.broadcast({ location: { x: -69, y: 68, z: -2874 }, sound: "random.glass" });
+                }, 100);
+            },
+            // 玄关地板陷阱
+            "spookyMansion:doorTrap": (system, playerData) => {
+                // ===== 条件检查 =====
+                // 如果仍处于冷却，终止运行
+                if (system.eventManager.getEventCooldownCountdown("spookyMansion:doorTrap", "general", playerData?.player) > 0)
+                    return;
+                // 如果没有玩家执行，终止运行
+                if (!playerData)
+                    return;
+                // 如果玩家金锭不足，终止运行
+                if (!playerData.consumeGold(1))
+                    return;
+                // ===== 启动陷阱 =====
+                // 进入冷却
+                system.eventManager.setEventCooldown("spookyMansion:doorTrap", 10);
+                // 填充掉地面
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -84, y: 75, z: -2914 }, to: { x: -81, y: 75, z: -2908 } });
+                lib.PlayerUtils.broadcast({ location: { x: -83, y: 75, z: -2911 }, sound: "mob.irongolem.hit" });
+                // 5 秒后恢复
+                minecraft.system.runTimeout(() => {
+                    lib.StructureUtils.placeAsync(`murder_mystery:spookyMansion/door_trap`, { x: -84, y: 75, z: -2914 });
+                    lib.PlayerUtils.broadcast({ location: { x: -83, y: 75, z: -2911 }, sound: "mob.irongolem.hit" });
+                }, 100);
+            },
+            // 挤压装置陷阱
+            "spookyMansion:crusherTrap1": (system, playerData) => {
+                // ===== 条件检查 =====
+                // 如果仍处于冷却，终止运行
+                if (system.eventManager.getEventCooldownCountdown("spookyMansion:crusherTrap1") > 0)
+                    return;
+                // 如果没有玩家执行，终止运行
+                if (!playerData)
+                    return;
+                // 如果玩家金锭不足，终止运行
+                if (!playerData.consumeGold(2))
+                    return;
+                // ===== 启动陷阱 =====
+                // 播放陷阱动画，当玩家头在磨制花岗岩内时直接处死
+                lib.gameSystem.subscribeTimeline("spookyMansionCrusherTrap1Animation", time => {
+                    // 处死被挤压的玩家
+                    system.livingPlayers.allPlayers.forEach(crushedPlayer => {
+                        // 如果玩家头不在磨制花岗岩内，终止运行
+                        const playerInBlock = lib.BlockUtils.get(crushedPlayer.player.location);
+                        if (playerInBlock?.typeId !== "minecraft:polished_andesite")
+                            return;
+                        // 否则，直接处死玩家
+                        crushedPlayer.setDead(MurderMysteryDeathType.Crushed);
+                    });
+                    // 开陷阱
+                    if (time === 16)
+                        spookyMansionCrusher("on", { x: -64, y: 76, z: -2886 }, { x: -64, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                    if (time === 18) {
+                        spookyMansionCrusher("on", { x: -65, y: 76, z: -2886 }, { x: -66, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                        lib.PlayerUtils.broadcast({
+                            location: { x: -65, y: 77, z: -2885 },
+                            sound: "mob.irongolem.hit",
+                            soundOptions: { pitch: 0.5 },
+                        });
+                    }
+                    // 关陷阱
+                    if (time === 28)
+                        spookyMansionCrusher("off", { x: -66, y: 76, z: -2886 }, { x: -66, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                    if (time === 34)
+                        spookyMansionCrusher("off", { x: -65, y: 76, z: -2886 }, { x: -65, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                    if (time === 40) {
+                        spookyMansionCrusher("off", { x: -64, y: 76, z: -2886 }, { x: -64, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                        return false;
+                    }
+                });
+            },
+            "spookyMansion:crusherTrap2": (system, playerData) => {
+                // ===== 条件检查 =====
+                // 如果仍处于冷却，终止运行
+                if (system.eventManager.getEventCooldownCountdown("spookyMansion:crusherTrap1") > 0)
+                    return;
+                // 如果没有玩家执行，终止运行
+                if (!playerData)
+                    return;
+                // 如果玩家金锭不足，终止运行
+                if (!playerData.consumeGold(2))
+                    return;
+                // ===== 启动陷阱 =====
+                // 播放陷阱动画，当玩家头在磨制花岗岩内时直接处死
+                lib.gameSystem.subscribeTimeline("spookyMansionCrusherTrap1Animation", time => {
+                    // 处死被挤压的玩家
+                    system.livingPlayers.allPlayers.forEach(crushedPlayer => {
+                        // 如果玩家头不在磨制花岗岩内，终止运行
+                        const playerInBlock = lib.BlockUtils.get(crushedPlayer.player.getHeadLocation());
+                        if (playerInBlock?.typeId !== "minecraft:polished_andesite")
+                            return;
+                        // 否则，直接处死玩家
+                        crushedPlayer.setDead(MurderMysteryDeathType.Crushed);
+                    });
+                    // 开陷阱
+                    if (time === 12)
+                        spookyMansionCrusher("on", { x: -57, y: 89, z: -2895 }, { x: -59, y: 89, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                    if (time === 14)
+                        spookyMansionCrusher("on", { x: -57, y: 88, z: -2895 }, { x: -59, y: 88, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                    if (time === 16)
+                        spookyMansionCrusher("on", { x: -57, y: 87, z: -2895 }, { x: -59, y: 87, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                    if (time === 18) {
+                        spookyMansionCrusher("on", { x: -57, y: 86, z: -2895 }, { x: -59, y: 86, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                        lib.PlayerUtils.broadcast({
+                            location: { x: -58, y: 87, z: -2894 },
+                            sound: "mob.irongolem.hit",
+                            soundOptions: { pitch: 0.5 },
+                        });
+                    }
+                    // 关陷阱
+                    if (time === 28)
+                        spookyMansionCrusher("off", { x: -57, y: 86, z: -2895 }, { x: -59, y: 86, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                    if (time === 32)
+                        spookyMansionCrusher("off", { x: -57, y: 87, z: -2895 }, { x: -59, y: 87, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                    if (time === 36)
+                        spookyMansionCrusher("off", { x: -57, y: 88, z: -2895 }, { x: -59, y: 88, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                    if (time === 40) {
+                        spookyMansionCrusher("off", { x: -57, y: 89, z: -2895 }, { x: -59, y: 89, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                        return false;
+                    }
+                });
+            },
+            // 秘密通道
+            "spookyMansion:setFire1": (system, playerData) => {
+                // ===== 条件检查 =====
+                if (!playerData)
+                    return;
+                if (!playerData.haveEnoughGold(1, false))
+                    return;
+                const location = { x: -54, y: 79, z: -2932 };
+                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                    return;
+                // ===== 放置方块 =====
+                lib.BlockUtils.set({ id: "minecraft:fire", location });
+                notify(playerData.player, { sound: "item.firecharge.use" });
+                playerData.consumeGold(1);
+                system.eventManager.triggerEvent("spookyMansion:openSecretPassage");
+            },
+            "spookyMansion:setFire2": (system, playerData) => {
+                // ===== 条件检查 =====
+                if (!playerData)
+                    return;
+                if (!playerData.haveEnoughGold(1, false))
+                    return;
+                const location = { x: -48, y: 79, z: -2917 };
+                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                    return;
+                // ===== 放置方块 =====
+                lib.BlockUtils.set({ id: "minecraft:fire", location });
+                notify(playerData.player, { sound: "item.firecharge.use" });
+                playerData.consumeGold(1);
+                system.eventManager.triggerEvent("spookyMansion:openSecretPassage");
+            },
+            "spookyMansion:openSecretPassage": () => {
+                // ===== 检查条件 =====
+                const isFire = (location) => {
+                    return lib.BlockUtils.match({ id: "minecraft:fire", location });
+                };
+                if (!isFire({ x: -48, y: 79, z: -2917 }))
+                    return;
+                if (!isFire({ x: -54, y: 79, z: -2932 }))
+                    return;
+                // ===== 开门 =====
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -52, y: 76, z: -2935 }, to: { x: -52, y: 81, z: -2933 } });
+                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -47, y: 76, z: -2919 }, to: { x: -45, y: 81, z: -2919 } });
+                lib.PlayerUtils.broadcast({
+                    title: "§1",
+                    subtitle: { translate: "subtitle.passageOpened" },
+                    titleOptions: { fadeInDuration: 0, fadeOutDuration: 20, stayDuration: 60 },
+                    sound: "tile.piston.out",
+                    soundOptions: { pitch: 1.5 },
+                });
+            },
         },
     },
     // #endregion
@@ -10790,7 +11298,7 @@ export const maps = {
                 if (!playerData)
                     return;
                 // 如果仍处于冷却，警告玩家
-                if (system.eventManager.getEventCooldownCountdown("towerfall:trap", "trap.name", playerData.player) > 0)
+                if (system.eventManager.getEventCooldownCountdown("towerfall:trap", "general", playerData.player) > 0)
                     return false;
                 // 如果玩家金锭不足，恢复回未拉下状态
                 if (!playerData.consumeGold(1)) {

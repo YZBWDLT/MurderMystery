@@ -557,7 +557,7 @@ export class MurderMysterySystem {
      */
     initPlayer(player: minecraft.Entity) {
         player.getComponent("inventory")?.container.clearAll();
-        lib.ItemUtils.inventory.set(player, 8, "murder_mystery:settings", { itemLock: minecraft.ItemLockMode.slot });
+        lib.ItemUtils.inventory.set(player, 6, "murder_mystery:settings", { itemLock: minecraft.ItemLockMode.slot });
 
         const { location, facingLocation } = this.mapData.description.waitHall;
         player.teleport(location, { facingLocation });
@@ -822,14 +822,22 @@ class MurderMysteryEventManager {
         );
     }
 
-    /** 返回玩家是否处于某个事件的冷却状态中。 */
-    getEventCooldownCountdown(type: string, itemName?: string, notifyPlayer?: minecraft.Entity): number {
+    /** 返回玩家是否处于某个事件的冷却状态中。
+     * @remarks 如果不指定`itemName`，则在玩家金锭不足时不会提醒。
+     * @remarks 如果指定`itemName`为`"general"`，则会笼统地提示玩家陷阱正在冷却。
+     */
+    getEventCooldownCountdown(type: string, itemName?: string | "general", notifyPlayer?: minecraft.Entity): number {
         const countdown = this.eventCooldown[type] ?? 0;
         if (countdown > 0 && itemName && notifyPlayer && isPlayer(notifyPlayer))
-            notifyPlayer.sendMessage({
-                translate: "chat.cooldown",
-                with: { rawtext: [{ translate: itemName }, { text: `${countdown}` }] },
-            });
+            if (itemName === "general") {
+                lib.PlayerUtils.notify(notifyPlayer, { message: { translate: "chat.cooldown.general" }, sound: "random.anvil_land" });
+            } else
+                lib.PlayerUtils.notify(notifyPlayer, {
+                    message: {
+                        translate: "chat.cooldown",
+                        with: { rawtext: [{ translate: itemName }, { text: `${countdown}` }] },
+                    },
+                });
         return countdown;
     }
 
@@ -3320,7 +3328,7 @@ export class MurderMysteryPlayer {
 
         // ===== 安置遗言 =====
         // 如果没有对应的临终遗言，或无效的临终遗言，终止运行
-        const playerLastWord = MurderMysterySystem.getEntityState(player, "murder_mystery:lastWord", "newThreeKingdom");
+        const playerLastWord = MurderMysterySystem.getEntityState(player, "murder_mystery:lastWord", "none");
         if (playerLastWord === "none") return;
         const playerLastWordData = gameData.lastWords[playerLastWord];
         if (!playerLastWordData) return;
