@@ -1902,83 +1902,149 @@ class MurderMysteryComponents {
         });
     }
     /** 玩家和方块交互组件。
-     * @description 阻止玩家和地图交互组件`interactions`、`pressButton`中指定之外的方块交互。
-     * @description 触发具有交互组件的其他事件，例如门、获得神秘药水等。
-     * @description 不会阻止创造模式玩家和方块交互。
+     * @description （实际内容有待更新）
      */
     static interaction(system) {
-        /** 全部的交互组件。 */
-        const interactionComponent = system.mapData.components?.interaction ?? [];
-        /** 由玩家与方块交互前事件传递给玩家按下按钮后事件的所有信息集合。 */
-        const pressedButtonEvent = new Map();
-        // 检查玩家交互
+        // ===== 检查玩家交互 =====
         lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
-            // ===== 初步判断 =====
+            // --- 变量获取 ---
             const { isFirstEvent, block, player } = event;
-            const location = block.location;
-            const blockId = block.typeId;
-            // 如果不是首次交互，取消事件并直接终止
-            if (!isFirstEvent) {
+            if (!isFirstEvent)
+                event.cancel = true;
+            /** 交互的默认黑名单。 */
+            const banList = [
+                "minecraft:flower_pot",
+                "minecraft:hopper",
+                "minecraft:chest",
+                "minecraft:trapped_chest",
+                "minecraft:ender_chest",
+                "minecraft:furnace",
+                "minecraft:brewing_stand",
+                "minecraft:crafting_table",
+                "minecraft:anvil",
+                "minecraft:chipped_anvil",
+                "minecraft:damaged_anvil",
+                "minecraft:cake",
+                "minecraft:dispenser",
+                "minecraft:dropper",
+                "minecraft:frame",
+            ];
+            // --- 检查交互黑名单 ---
+            // 如果交互黑名单包含指定方块类型，并且玩家不为创造模式，则取消事件
+            if (banList.includes(block.typeId) && player.getGameMode() !== minecraft.GameMode.Creative)
+                event.cancel = true;
+            // --- 执行指定的事件 ---
+            // 如果非游戏阶段，终止运行
+            const isGaming = system.gameStage === GameStage.GamingStage;
+            if (!isGaming) {
                 event.cancel = true;
                 return;
             }
-            // 如果是创造模式玩家，直接终止
-            if (player.getGameMode() === minecraft.GameMode.Creative)
-                return;
-            // 如果不是游戏阶段，取消事件并直接终止
-            if (system.gameStage !== GameStage.GamingStage) {
-                event.cancel = true;
-                return;
-            }
-            // 如果不是有效玩家，直接终止
+            // 如果不是有效玩家，终止运行
             const playerData = system.getPlayer(player);
             if (!playerData)
                 return;
-            // ===== 解析地图交互属性 =====
-            /** 匹配到的交互属性。若没有匹配属性，则为 undefined。 */
-            const matchedInteraction = interactionComponent.find(data => {
-                // 如果有给定坐标或给定方块则返回
-                if ("at" in data && data.at && lib.Vector3Utils.hasPosition(data.at, location))
+            // 如果这次交互不触发任何事件，终止运行
+            const comp = system.mapData.components?.interaction ?? [];
+            const matchedInteraction = comp.find(data => {
+                if (lib.Vector3Utils.hasPosition(data.at, block.location))
                     return true;
-                if ("blocks" in data && data.blocks && data.blocks.includes(blockId))
-                    return true;
-                // 否则不返回
                 return false;
             });
-            // 如果地图交互属性不存在，取消事件并直接终止运行
-            if (!matchedInteraction) {
-                event.cancel = true;
+            if (!matchedInteraction)
                 return;
-            }
-            const { stillCancelEvent = false, trigger = "" } = matchedInteraction;
-            // 如果触发的交互属性为按钮，则交给按下按钮后事件执行，然后终止，1 秒后销毁该事件信息
-            // 这里是为了防止玩家在按钮按下后仍然能够触发事件
-            if (matchedInteraction.type === "button") {
-                pressedButtonEvent.set(player.id, { player, location, trigger });
-                minecraft.system.runTimeout(() => pressedButtonEvent.delete(player.id), 20);
-                return;
-            }
-            // ===== 执行交互属性的功能 =====
-            if (stillCancelEvent)
-                event.cancel = true;
-            minecraft.system.run(() => system.eventManager.triggerEvent(trigger, playerData));
+            // 运行事件
+            const run = matchedInteraction.run;
+            if (typeof run === "string")
+                minecraft.system.run(() => system.eventManager.triggerEvent(run, playerData));
+            else
+                minecraft.system.run(() => run(system, playerData));
         });
-        lib.gameSystem.subscribeEvent("playerPressButton", minecraft.world.afterEvents.buttonPush, event => {
-            // ===== 条件检查 =====
-            // 如果玩家未曾交互过按钮，或者出现其他问题时，终止运行
-            const { block, source } = event;
-            const eventInfo = pressedButtonEvent.get(source.id);
-            if (!eventInfo)
-                return;
-            if (!lib.Vector3Utils.isEqual(block.location, eventInfo.location))
-                return;
-            const playerData = system.getPlayer(source);
-            if (!playerData)
-                return;
-            // ===== 触发事件 =====
-            system.eventManager.triggerEvent(eventInfo.trigger, playerData);
-            pressedButtonEvent.delete(eventInfo.player.id);
-        });
+        // ===== 检查玩家按下按钮 =====
+        // 如果没有指定该组件，则不订阅事件
+        const pressButtonComp = system.mapData.components?.playerPressButton ?? [];
+        if (pressButtonComp.length > 0)
+            lib.gameSystem.subscribeEvent("playerPressButton", minecraft.world.afterEvents.buttonPush, event => {
+                // 如果这次交互不触发任何事件，终止运行
+                const { block: button, source: player } = event;
+                const matchedInteraction = pressButtonComp.find(data => {
+                    if (lib.Vector3Utils.hasPosition(data.at, button.location))
+                        return true;
+                    return false;
+                });
+                if (!matchedInteraction)
+                    return;
+                // 如果不是有效玩家，终止运行
+                const playerData = system.getPlayer(player);
+                if (!playerData)
+                    return;
+                // 运行事件
+                const run = matchedInteraction.run;
+                if (typeof run === "string")
+                    system.eventManager.triggerEvent(run, playerData);
+                else
+                    run(system, playerData);
+            });
+        // ===== 检查玩家拉下拉杆 =====
+        /** 设置拉杆状态。 */
+        function setLeverState(levers, state) {
+            levers.forEach(lever => {
+                if (!lever)
+                    return;
+                lib.BlockUtils.setState(lever, { open_bit: state });
+                lib.PlayerUtils.broadcast({ sound: "random.lever_click", location: lever.location });
+            });
+        }
+        // 如果没有指定该组件，则不订阅事件
+        const pushLeverComp = system.mapData.components?.playerPushLever ?? [];
+        if (pushLeverComp.length > 0)
+            lib.gameSystem.subscribeEvent("playerPushLever", minecraft.world.afterEvents.leverAction, event => {
+                // 如果这次交互不触发任何事件，终止运行
+                const { block: lever, player } = event;
+                const matchedInteraction = pushLeverComp.find(data => {
+                    if (lib.Vector3Utils.hasPosition(data.at, lever.location))
+                        return true;
+                    return false;
+                });
+                if (!matchedInteraction)
+                    return;
+                // 如果不是有效玩家，终止运行
+                const playerData = system.getPlayer(player);
+                if (!playerData)
+                    return;
+                // --- 运行事件 ---
+                const { run, at } = matchedInteraction;
+                const levers = at.map(location => lib.BlockUtils.get(location));
+                // 若指定为string，则触发对应名称的事件，并且拉杆会自动弹回
+                if (typeof run === "string") {
+                    system.eventManager.triggerEvent(run, playerData);
+                    setLeverState(levers, false);
+                    return;
+                }
+                // 若指定为函数类型，则在这段时间内（返回值，单位：秒）拉杆将不再能被交互，并在该时间过后自动弹回
+                const reopenDelay = run(system, playerData);
+                if (reopenDelay === 0) {
+                    setLeverState(levers, false);
+                    return;
+                }
+                const eventId = lib.JSUtils.number.randomInt(100000000, 999999999);
+                setLeverState(levers, true);
+                // 禁止交互
+                lib.gameSystem.subscribeEvent(`banLever${eventId}`, minecraft.world.beforeEvents.playerInteractWithBlock, event => {
+                    const hasLeverMatched = levers.some(lever => {
+                        if (!lever)
+                            return false;
+                        return lib.Vector3Utils.isEqual(lever.location, event.block.location);
+                    });
+                    if (hasLeverMatched)
+                        event.cancel = true;
+                });
+                // 在延迟结束之后，重新允许交互
+                lib.gameSystem.subscribeDelay(`recoverLever${eventId}`, () => {
+                    setLeverState(levers, false);
+                    lib.gameSystem.unsubscribeEvent(`banLever${eventId}`);
+                }, 20 * reopenDelay);
+            });
     }
     /** 玩家使用设置。
      * @description 为使用玩家开启一个设置界面。

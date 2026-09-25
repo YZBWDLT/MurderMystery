@@ -148,32 +148,6 @@ function addConsumeGoldTextDisplay(location, itemName, consume) {
     const mainText = consume === 1 ? "textDisplay.consumeGold.1gold" : "textDisplay.consumeGold";
     lib.TextDisplayUtils.add({ translate: mainText, with: { rawtext: [{ translate: itemName }, { text: `${consume}` }] } }, location);
 }
-/** 设置拉杆状态。 */
-function setLeverState(leverLocations, state) {
-    leverLocations.forEach(location => {
-        const lever = lib.BlockUtils.get(location);
-        if (!lever)
-            return;
-        lib.BlockUtils.setState(lever, { open_bit: state });
-    });
-    lib.PlayerUtils.broadcast({ sound: "random.lever_click" });
-}
-/** 暂时禁用拉杆。
- * @param reopenDelay 在多久之后重新启用拉杆。单位：秒。
- * @param id 一个阻止和其他禁用拉杆的进程相冲突的参数。通常设置为地图的 ID。
- */
-function banLever(leverLocations, reopenDelay, id) {
-    setLeverState(leverLocations, true);
-    lib.gameSystem.subscribeEvent(`${id}TrapBanLever`, minecraft.world.beforeEvents.playerInteractWithBlock, event => {
-        if (leverLocations.some(leverLocation => lib.Vector3Utils.isEqual(leverLocation, event.block.location))) {
-            event.cancel = true;
-        }
-    });
-    lib.gameSystem.subscribeDelay(`${id}TrapRecoverLeverDelay`, () => {
-        setLeverState(leverLocations, false);
-        lib.gameSystem.unsubscribeEvent(`${id}TrapBanLever`);
-    }, 20 * reopenDelay);
-}
 /** 是否为已开启的木门。 */
 function isOpenedWoodenDoor(location) {
     return lib.BlockUtils.match({ id: "minecraft:wooden_door", location, states: { open_bit: true } });
@@ -697,20 +671,51 @@ export const maps = {
                 { area: { xMin: 861, xMax: 869, yMin: 48, yMax: 57, zMin: 2928, zMax: 2936 }, trigger: "aquarium:ateByPiranhas" },
                 { area: { xMin: 891, xMax: 911, yMin: 35, yMax: 65, zMin: 2951, zMax: 2972 }, trigger: "aquarium:ateByShark" },
             ],
-            interaction: [
-                { at: [{ x: 857, y: 61, z: 2934 }], trigger: "aquarium:piranhaTrap" },
+            playerPushLever: [
+                // ===== 食人鱼陷阱 =====
                 {
-                    at: [
-                        { x: 890, y: 69, z: 2966 },
-                        { x: 890, y: 69, z: 2962 },
-                        { x: 912, y: 69, z: 2966 },
-                        { x: 912, y: 69, z: 2962 },
-                        { x: 899, y: 69, z: 2974 },
-                        { x: 903, y: 69, z: 2974 },
-                    ],
-                    trigger: "aquarium:sharkTrap",
-                    type: "button",
+                    at: [{ x: 857, y: 61, z: 2934 }],
+                    run: (system, playerData) => {
+                        // --- 条件检查 ---
+                        // 如果仍处于冷却，终止运行
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap", "general", playerData?.player) > 0)
+                            return 0;
+                        // 如果没有玩家执行，终止运行
+                        if (!playerData)
+                            return 0;
+                        // 如果玩家金锭不足，终止运行
+                        if (!playerData.consumeGold(1))
+                            return 0;
+                        // --- 开启陷阱 ---
+                        // 播放动画
+                        const trapLocation = { x: 861, y: 59, z: 2928 };
+                        const setStructureStage = (stage) => {
+                            lib.StructureUtils.placeAsync(`murder_mystery:aquarium/piranha_trap_stage${stage}`, trapLocation);
+                            lib.PlayerUtils.broadcast({ sound: "random.glass" });
+                        };
+                        lib.gameSystem.subscribeTimeline("aquariumPiranhaTrapAnimation", time => {
+                            if (time === 5)
+                                setStructureStage(1);
+                            if (time === 20)
+                                setStructureStage(2);
+                            if (time === 35)
+                                setStructureStage(3);
+                            if (time === 235)
+                                setStructureStage(2);
+                            if (time === 250)
+                                setStructureStage(1);
+                            if (time >= 265) {
+                                lib.StructureUtils.placeAsync(`murder_mystery:aquarium/piranha_trap_full`, trapLocation);
+                                lib.PlayerUtils.broadcast({ sound: "random.glass" });
+                                return false;
+                            }
+                        });
+                        // 进入冷却
+                        system.eventManager.setEventCooldown("aquarium:piranhaTrap", 15);
+                        return 10;
+                    },
                 },
+                // ===== 桥陷阱 =====
                 {
                     at: [
                         { x: 907, y: 69, z: 2947 },
@@ -720,16 +725,187 @@ export const maps = {
                         { x: 900, y: 69, z: 2940 },
                         { x: 902, y: 69, z: 2940 },
                     ],
-                    trigger: "aquarium:bridgeTrap",
+                    run: (system, playerData) => {
+                        // --- 条件检查 ---
+                        // 如果当前陷阱处于冷却，终止运行
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap", "general", playerData?.player) > 0)
+                            return 0;
+                        // 如果没有玩家执行，终止运行
+                        if (!playerData)
+                            return 0;
+                        // 如果玩家金锭不足，终止运行
+                        if (!playerData.consumeGold(1))
+                            return 0;
+                        // --- 开启陷阱 ---
+                        const trapLocation = { x: 899, y: 67, z: 2944 };
+                        const setStructureStage = (stage) => {
+                            lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_stage${stage}`, trapLocation);
+                            lib.PlayerUtils.broadcast({ sound: "random.glass", location: { x: 901, y: 68, z: 2946 } });
+                        };
+                        lib.gameSystem.subscribeTimeline("aquariumBridgeTrapAnimation", time => {
+                            if (time === 4)
+                                setStructureStage(1);
+                            if (time === 12)
+                                setStructureStage(2);
+                            if (time === 172)
+                                setStructureStage(1);
+                            if (time >= 180) {
+                                lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_full`, trapLocation);
+                                lib.PlayerUtils.broadcast({ sound: "random.glass", location: { x: 901, y: 68, z: 2946 } });
+                                return false;
+                            }
+                        });
+                        // 进入冷却
+                        system.eventManager.setEventCooldown("aquarium:bridgeTrap", 15);
+                        return 10;
+                    },
                 },
+            ],
+            playerPressButton: [
+                // ===== 鲨鱼陷阱 =====
+                {
+                    at: [
+                        { x: 890, y: 69, z: 2966 },
+                        { x: 890, y: 69, z: 2962 },
+                        { x: 912, y: 69, z: 2966 },
+                        { x: 912, y: 69, z: 2962 },
+                        { x: 899, y: 69, z: 2974 },
+                        { x: 903, y: 69, z: 2974 },
+                    ],
+                    run: (system, playerData) => {
+                        // --- 条件检查 ---
+                        // 如果当前陷阱处于冷却，终止运行
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:sharkTrap", "general", playerData?.player) > 0)
+                            return;
+                        // 如果没有玩家执行，终止运行
+                        if (!playerData)
+                            return;
+                        // 如果玩家金锭不足，终止运行
+                        if (!playerData.consumeGold(2))
+                            return;
+                        // --- 开启陷阱 ---
+                        // 获取当前鲨鱼陷阱的状态
+                        // - `0`：当前处于完整桥状态，下一次激活改为状态 1。
+                        // - `1`：当前处于半完整桥状态，下一次激活改为状态 2。
+                        // - `2`：当前处于空桥状态，在 9 秒后自动改为状态 1，再在 1 秒后改回状态 0。
+                        const currentTrapStage = minecraft.world.getDynamicProperty("murder_mystery:aquarium:shark_trap_stage") ??
+                            0;
+                        const setTrapStage = (stage) => {
+                            const structureId = stage === 0
+                                ? `murder_mystery:aquarium/shark_trap_full`
+                                : `murder_mystery:aquarium/shark_trap_stage${stage}`;
+                            lib.StructureUtils.placeAsync(structureId, { x: 897, y: 67, z: 2963 });
+                            minecraft.world.setDynamicProperty("murder_mystery:aquarium:shark_trap_stage", stage);
+                            lib.PlayerUtils.broadcast({
+                                location: { x: 901, y: 68, z: 2964 },
+                                sound: "block.mob_spawner.break",
+                                soundOptions: { pitch: 0.8 },
+                            });
+                        };
+                        if (currentTrapStage === 0) {
+                            setTrapStage(1);
+                        }
+                        else if (currentTrapStage === 1) {
+                            setTrapStage(2);
+                            lib.gameSystem.subscribeDelay("aquariumSharkTrapToStage1", () => setTrapStage(1), 180);
+                            lib.gameSystem.subscribeDelay("aquariumSharkTrapToStage0", () => setTrapStage(0), 200);
+                        }
+                        // 设置鲨鱼陷阱的冷却
+                        system.eventManager.setEventCooldown("aquarium:sharkTrap", 15);
+                    },
+                },
+                // ===== 药水 =====
                 {
                     at: [
                         { x: 861, y: 61, z: 2951 },
                         { x: 870, y: 69, z: 2932 },
                         { x: 901, y: 69, z: 2982 },
                     ],
-                    trigger: "aquarium:potionTrap",
-                    type: "button",
+                    run: (system, playerData) => {
+                        // --- 条件检查 ---
+                        if (!playerData)
+                            return;
+                        // --- 变量准备 ---
+                        /** 给予药水。返回是否成功给予。 */
+                        const givePotion = (potionEffectType, potionDeliveryType, message) => {
+                            if (!playerData.canGiveItem())
+                                return false;
+                            const nextSlot = playerData.getNextItemSlot();
+                            const potion = minecraft.Potions.resolve(potionEffectType, potionDeliveryType);
+                            potion.lockMode = minecraft.ItemLockMode.slot;
+                            lib.ItemUtils.inventory.get(playerData.player)?.container.setItem(nextSlot, potion);
+                            notify(playerData.player, { message, sound: "mob.villager.yes" });
+                            return true;
+                        };
+                        // --- 获取玩家的金锭，决定玩家使用哪种兑换组合 ---
+                        const goldCount = lib.ItemUtils.inventory.getTypeAmount(playerData.player, "murder_mystery:gold_ingot");
+                        // 8 金锭的选项
+                        if (goldCount >= 8) {
+                            // 选项 1：一把弓
+                            if (Math.random() > 0.5) {
+                                playerData.getBow();
+                                if (playerData.role === "detective")
+                                    playerData.chargingTime = 0;
+                                notify(playerData.player, {
+                                    message: { translate: "chat.aquarium.tank.giftBow" },
+                                    sound: "mob.villager.yes",
+                                });
+                            }
+                            // 选项 2：一瓶可饮用的迅捷药水
+                            else {
+                                // 尝试给予药水，若不能给予则终止运行，若能给予则注册一个玩家喝完药就立刻清除玻璃瓶的事件
+                                const givePotionResult = givePotion("minecraft:swiftness", "Consume", {
+                                    translate: "chat.aquarium.tank.giftDrinkableSpeedPotion",
+                                });
+                                if (!givePotionResult)
+                                    return;
+                                lib.gameSystem.subscribeEvent("aquariumPlayerDrinkPotion", minecraft.world.afterEvents.itemCompleteUse, event => {
+                                    lib.ItemUtils.removeItem(event.source, "minecraft:glass_bottle");
+                                });
+                            }
+                            playerData.consumeGold(8);
+                        }
+                        // 5 金锭的选项：一瓶喷溅型虚弱药水 / 一瓶喷溅型缓慢药水
+                        else if (goldCount >= 5) {
+                            let givePotionResult = Math.random() > 0.5
+                                ? givePotion("minecraft:weakness", "ThrownSplash", {
+                                    translate: "chat.aquarium.tank.giftSplashPotion",
+                                    with: { rawtext: [{ translate: "potion.weakness.splash.name" }] },
+                                })
+                                : givePotion("minecraft:slowness", "ThrownSplash", {
+                                    translate: "chat.aquarium.tank.giftSplashPotion",
+                                    with: { rawtext: [{ translate: "potion.moveSlowdown.splash.name" }] },
+                                });
+                            if (!givePotionResult)
+                                return;
+                            playerData.consumeGold(5);
+                        }
+                        // 1 金锭的选项
+                        else if (goldCount >= 1) {
+                            // 选项 1：失明
+                            if (Math.random() > 0.5) {
+                                playerData.player.addEffect("blindness", 600);
+                                notify(playerData.player, {
+                                    message: { translate: "chat.aquarium.tank.blindness" },
+                                    sound: "mob.endermen.portal",
+                                });
+                            }
+                            // 选项 2：给予一瓶喷溅型夜视药水
+                            else {
+                                let givePotionResult = true;
+                                givePotionResult = givePotion("minecraft:nightvision", "ThrownSplash", {
+                                    translate: "chat.aquarium.tank.giftSplashPotion",
+                                    with: { rawtext: [{ translate: "potion.nightVision.splash.name" }] },
+                                });
+                                if (!givePotionResult)
+                                    return;
+                            }
+                            playerData.consumeGold(1);
+                        }
+                        // 没有金锭：警告玩家不能获取药水
+                        else
+                            playerData.haveEnoughGold(1);
+                    },
                 },
             ],
             onGameStart: { trigger: "aquarium:recover" },
@@ -740,216 +916,6 @@ export const maps = {
             },
             "aquarium:ateByShark": (system, playerData) => {
                 playerData?.setDead(MurderMysteryDeathType.Shark);
-            },
-            "aquarium:piranhaTrap": (system, playerData) => {
-                // ===== 条件检查 =====
-                // 如果仍处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap", "general", playerData?.player) > 0)
-                    return;
-                // 如果没有玩家执行，终止运行
-                if (!playerData)
-                    return;
-                // 如果玩家金锭不足，终止运行
-                if (!playerData.consumeGold(1)) {
-                    setLeverState([{ x: 857, y: 61, z: 2934 }], false);
-                    return;
-                }
-                // ===== 开启陷阱 =====
-                // 播放动画
-                const trapLocation = { x: 861, y: 59, z: 2928 };
-                const setStructureStage = (stage) => {
-                    lib.StructureUtils.placeAsync(`murder_mystery:aquarium/piranha_trap_stage${stage}`, trapLocation);
-                    lib.PlayerUtils.broadcast({ sound: "random.glass" });
-                };
-                lib.gameSystem.subscribeTimeline("aquariumPiranhaTrapAnimation", time => {
-                    if (time === 5)
-                        setStructureStage(1);
-                    if (time === 20)
-                        setStructureStage(2);
-                    if (time === 35)
-                        setStructureStage(3);
-                    if (time === 235)
-                        setStructureStage(2);
-                    if (time === 250)
-                        setStructureStage(1);
-                    if (time >= 265) {
-                        lib.StructureUtils.placeAsync(`murder_mystery:aquarium/piranha_trap_full`, trapLocation);
-                        lib.PlayerUtils.broadcast({ sound: "random.glass" });
-                        return false;
-                    }
-                });
-                // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，15 秒后恢复原状
-                banLever([{ x: 857, y: 61, z: 2934 }], 15, "aquarium");
-                // 进入冷却
-                system.eventManager.setEventCooldown("aquarium:piranhaTrap", 15);
-            },
-            "aquarium:sharkTrap": (system, playerData) => {
-                // ===== 条件检查 =====
-                // 如果当前陷阱处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("aquarium:sharkTrap", "general", playerData?.player) > 0)
-                    return;
-                // 如果没有玩家执行，终止运行
-                if (!playerData)
-                    return;
-                // 如果玩家金锭不足，终止运行
-                if (!playerData.consumeGold(2))
-                    return;
-                // ===== 开启陷阱 =====
-                // 获取当前鲨鱼陷阱的状态
-                // - `0`：当前处于完整桥状态，下一次激活改为状态 1。
-                // - `1`：当前处于半完整桥状态，下一次激活改为状态 2。
-                // - `2`：当前处于空桥状态，在 9 秒后自动改为状态 1，再在 1 秒后改回状态 0。
-                const currentTrapStage = minecraft.world.getDynamicProperty("murder_mystery:aquarium:shark_trap_stage") ?? 0;
-                const setTrapStage = (stage) => {
-                    const structureId = stage === 0 ? `murder_mystery:aquarium/shark_trap_full` : `murder_mystery:aquarium/shark_trap_stage${stage}`;
-                    lib.StructureUtils.placeAsync(structureId, { x: 897, y: 67, z: 2963 });
-                    minecraft.world.setDynamicProperty("murder_mystery:aquarium:shark_trap_stage", stage);
-                    lib.PlayerUtils.broadcast({
-                        location: { x: 901, y: 68, z: 2964 },
-                        sound: "block.mob_spawner.break",
-                        soundOptions: { pitch: 0.8 },
-                    });
-                };
-                if (currentTrapStage === 0) {
-                    setTrapStage(1);
-                }
-                else if (currentTrapStage === 1) {
-                    setTrapStage(2);
-                    lib.gameSystem.subscribeDelay("aquariumSharkTrapToStage1", () => setTrapStage(1), 180);
-                    lib.gameSystem.subscribeDelay("aquariumSharkTrapToStage0", () => setTrapStage(0), 200);
-                }
-                // 设置鲨鱼陷阱的冷却
-                system.eventManager.setEventCooldown("aquarium:sharkTrap", 15);
-            },
-            "aquarium:bridgeTrap": (system, playerData) => {
-                // ===== 条件检查 =====
-                const leverLocations = [
-                    { x: 907, y: 69, z: 2947 },
-                    { x: 907, y: 69, z: 2945 },
-                    { x: 895, y: 69, z: 2947 },
-                    { x: 895, y: 69, z: 2945 },
-                    { x: 900, y: 69, z: 2940 },
-                    { x: 902, y: 69, z: 2940 },
-                ];
-                // 如果当前陷阱处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap", "general", playerData?.player) > 0)
-                    return;
-                // 如果没有玩家执行，终止运行
-                if (!playerData)
-                    return;
-                // 如果玩家金锭不足，终止运行
-                if (!playerData.consumeGold(1)) {
-                    setLeverState(leverLocations, false);
-                    return;
-                }
-                // ===== 开启陷阱 =====
-                const trapLocation = { x: 899, y: 67, z: 2944 };
-                const setStructureStage = (stage) => {
-                    lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_stage${stage}`, trapLocation);
-                    lib.PlayerUtils.broadcast({ sound: "random.glass", location: { x: 901, y: 68, z: 2946 } });
-                };
-                lib.gameSystem.subscribeTimeline("aquariumBridgeTrapAnimation", time => {
-                    if (time === 4)
-                        setStructureStage(1);
-                    if (time === 12)
-                        setStructureStage(2);
-                    if (time === 172)
-                        setStructureStage(1);
-                    if (time >= 180) {
-                        lib.StructureUtils.placeAsync(`murder_mystery:aquarium/bridge_trap_full`, trapLocation);
-                        lib.PlayerUtils.broadcast({ sound: "random.glass", location: { x: 901, y: 68, z: 2946 } });
-                        return false;
-                    }
-                });
-                // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，15 秒后恢复原状
-                banLever(leverLocations, 15, "aquarium");
-                // 进入冷却
-                system.eventManager.setEventCooldown("aquarium:bridgeTrap", 15);
-            },
-            "aquarium:potionTrap": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                // ===== 变量准备 =====
-                /** 给予药水。返回是否成功给予。 */
-                const givePotion = (potionEffectType, potionDeliveryType, message) => {
-                    if (!playerData.canGiveItem())
-                        return false;
-                    const nextSlot = playerData.getNextItemSlot();
-                    const potion = minecraft.Potions.resolve(potionEffectType, potionDeliveryType);
-                    potion.lockMode = minecraft.ItemLockMode.slot;
-                    lib.ItemUtils.inventory.get(playerData.player)?.container.setItem(nextSlot, potion);
-                    notify(playerData.player, { message, sound: "mob.villager.yes" });
-                    return true;
-                };
-                // ===== 获取玩家的金锭，决定玩家使用哪种兑换组合 =====
-                const goldCount = lib.ItemUtils.inventory.getTypeAmount(playerData.player, "murder_mystery:gold_ingot");
-                // 8 金锭的选项
-                if (goldCount >= 8) {
-                    // 选项 1：一把弓
-                    if (Math.random() > 0.5) {
-                        playerData.getBow();
-                        if (playerData.role === "detective")
-                            playerData.chargingTime = 0;
-                        notify(playerData.player, {
-                            message: { translate: "chat.aquarium.tank.giftBow" },
-                            sound: "mob.villager.yes",
-                        });
-                    }
-                    // 选项 2：一瓶可饮用的迅捷药水
-                    else {
-                        // 尝试给予药水，若不能给予则终止运行，若能给予则注册一个玩家喝完药就立刻清除玻璃瓶的事件
-                        const givePotionResult = givePotion("minecraft:swiftness", "Consume", {
-                            translate: "chat.aquarium.tank.giftDrinkableSpeedPotion",
-                        });
-                        if (!givePotionResult)
-                            return;
-                        lib.gameSystem.subscribeEvent("aquariumPlayerDrinkPotion", minecraft.world.afterEvents.itemCompleteUse, event => {
-                            lib.ItemUtils.removeItem(event.source, "minecraft:glass_bottle");
-                        });
-                    }
-                    playerData.consumeGold(8);
-                }
-                // 5 金锭的选项：一瓶喷溅型虚弱药水 / 一瓶喷溅型缓慢药水
-                else if (goldCount >= 5) {
-                    let givePotionResult = Math.random() > 0.5
-                        ? givePotion("minecraft:weakness", "ThrownSplash", {
-                            translate: "chat.aquarium.tank.giftSplashPotion",
-                            with: { rawtext: [{ translate: "potion.weakness.splash.name" }] },
-                        })
-                        : givePotion("minecraft:slowness", "ThrownSplash", {
-                            translate: "chat.aquarium.tank.giftSplashPotion",
-                            with: { rawtext: [{ translate: "potion.moveSlowdown.splash.name" }] },
-                        });
-                    if (!givePotionResult)
-                        return;
-                    playerData.consumeGold(5);
-                }
-                // 1 金锭的选项
-                else if (goldCount >= 1) {
-                    // 选项 1：失明
-                    if (Math.random() > 0.5) {
-                        playerData.player.addEffect("blindness", 600);
-                        notify(playerData.player, {
-                            message: { translate: "chat.aquarium.tank.blindness" },
-                            sound: "mob.endermen.portal",
-                        });
-                    }
-                    // 选项 2：给予一瓶喷溅型夜视药水
-                    else {
-                        let givePotionResult = true;
-                        givePotionResult = givePotion("minecraft:nightvision", "ThrownSplash", {
-                            translate: "chat.aquarium.tank.giftSplashPotion",
-                            with: { rawtext: [{ translate: "potion.nightVision.splash.name" }] },
-                        });
-                        if (!givePotionResult)
-                            return;
-                    }
-                    playerData.consumeGold(1);
-                }
-                // 没有金锭：警告玩家不能获取药水
-                else
-                    playerData.haveEnoughGold(1);
             },
             "aquarium:recover": () => {
                 // 重置陷阱
@@ -1701,88 +1667,80 @@ export const maps = {
             interaction: [
                 {
                     at: [{ x: 1038, y: 125, z: -184 }],
-                    stillCancelEvent: true,
-                    trigger: "archives:setFire1",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: 1038, y: 126, z: -184 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("archives:openDoor");
+                    },
                 },
                 {
                     at: [{ x: 1038, y: 125, z: -188 }],
-                    stillCancelEvent: true,
-                    trigger: "archives:setFire2",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: 1038, y: 126, z: -188 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("archives:openDoor");
+                    },
                 },
                 {
                     at: [{ x: 1041, y: 135, z: -184 }],
-                    stillCancelEvent: true,
-                    trigger: "archives:setFire3",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: 1041, y: 136, z: -184 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("archives:openDoor");
+                    },
                 },
                 {
                     at: [{ x: 1041, y: 135, z: -188 }],
-                    stillCancelEvent: true,
-                    trigger: "archives:setFire4",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: 1041, y: 136, z: -188 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("archives:openDoor");
+                    },
                 },
             ],
             onGameStart: { trigger: "archives:recover" },
         },
         events: {
-            "archives:setFire1": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: 1038, y: 126, z: -184 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("archives:openDoor");
-            },
-            "archives:setFire2": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: 1038, y: 126, z: -188 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("archives:openDoor");
-            },
-            "archives:setFire3": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: 1041, y: 136, z: -184 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("archives:openDoor");
-            },
-            "archives:setFire4": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: 1041, y: 136, z: -188 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("archives:openDoor");
-            },
             "archives:openDoor": () => {
                 // ===== 检查条件 =====
                 const isFire = (location) => {
@@ -2896,9 +2854,7 @@ export const maps = {
             ],
             hasFullFunction: false,
         },
-        components: {
-            interaction: [{ blocks: ["minecraft:spruce_door"] }],
-        },
+        components: {},
         events: {},
     },
     // #endregion
@@ -3297,7 +3253,6 @@ export const maps = {
         },
         components: {
             playerHurt: [{ cause: minecraft.EntityDamageCause.lightning, trigger: "cruiseShip:playerHitByLightningBolt" }],
-            interaction: [{ blocks: ["minecraft:trapdoor"] }],
         },
         events: {
             "cruiseShip:playerHitByLightningBolt": (system, playerData) => {
@@ -3673,26 +3628,52 @@ export const maps = {
         components: {
             time: 18000,
             interaction: [
-                // 通过按钮触发神秘药水
-                { at: [{ x: 71, y: 36, z: 1947 }], trigger: "darkfall:getMysteryPotion1", type: "button" },
-                { at: [{ x: 99, y: 42, z: 1941 }], trigger: "darkfall:getMysteryPotion2", type: "button" },
-                { at: [{ x: 120, y: 38, z: 1914 }], trigger: "darkfall:getMysteryPotion3", type: "button" },
-                { at: [{ x: 131, y: 37, z: 1922 }], trigger: "darkfall:getMysteryPotion4", type: "button" },
-                { at: [{ x: 120, y: 37, z: 1892 }], trigger: "darkfall:getMysteryPotion5", type: "button" },
                 // 通过酿造台触发神秘药水，需要取消事件
-                { at: [{ x: 71, y: 37, z: 1946 }], trigger: "darkfall:getMysteryPotion1", stillCancelEvent: true },
-                { at: [{ x: 98, y: 43, z: 1941 }], trigger: "darkfall:getMysteryPotion2", stillCancelEvent: true },
-                { at: [{ x: 120, y: 39, z: 1913 }], trigger: "darkfall:getMysteryPotion3", stillCancelEvent: true },
-                { at: [{ x: 130, y: 38, z: 1922 }], trigger: "darkfall:getMysteryPotion4", stillCancelEvent: true },
-                { at: [{ x: 121, y: 38, z: 1892 }], trigger: "darkfall:getMysteryPotion5", stillCancelEvent: true },
-                // 开启陷阱
+                { at: [{ x: 71, y: 37, z: 1946 }], run: "darkfall:getMysteryPotion1" },
+                { at: [{ x: 98, y: 43, z: 1941 }], run: "darkfall:getMysteryPotion2" },
+                { at: [{ x: 120, y: 39, z: 1913 }], run: "darkfall:getMysteryPotion3" },
+                { at: [{ x: 130, y: 38, z: 1922 }], run: "darkfall:getMysteryPotion4" },
+                { at: [{ x: 121, y: 38, z: 1892 }], run: "darkfall:getMysteryPotion5" },
+            ],
+            playerPushLever: [
+                // ===== 陷阱 =====
                 {
                     at: [
                         { x: 106, y: 38, z: 1885 },
                         { x: 106, y: 38, z: 1878 },
                     ],
-                    trigger: "darkfall:openTrap",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        // 如果当前陷阱处于冷却，终止运行
+                        if (system.eventManager.getEventCooldownCountdown("darkfall:trap", "general", playerData?.player) > 0)
+                            return 0;
+                        // 如果没有玩家执行，终止运行
+                        if (!playerData)
+                            return 0;
+                        // 如果玩家金锭不足，终止运行
+                        if (!playerData.consumeGold(2))
+                            return 0;
+                        // ===== 开启陷阱 =====
+                        lib.BlockUtils.fill({ id: "minecraft:air", from: { x: 112, y: 36, z: 1884 }, to: { x: 107, y: 36, z: 1879 } });
+                        lib.gameSystem.subscribeTimeline("darkfallTrapAnimation", time => {
+                            if (time === 6) {
+                                lib.StructureUtils.placeAsync("murder_mystery:darkfall/trap", { x: 107, y: 36, z: 1879 });
+                                return false;
+                            }
+                        }, 20);
+                        // 进入冷却
+                        system.eventManager.setEventCooldown("darkfall:trap", 15);
+                        return 6;
+                    },
                 },
+            ],
+            playerPressButton: [
+                // 通过按钮触发神秘药水
+                { at: [{ x: 71, y: 36, z: 1947 }], run: "darkfall:getMysteryPotion1" },
+                { at: [{ x: 99, y: 42, z: 1941 }], run: "darkfall:getMysteryPotion2" },
+                { at: [{ x: 120, y: 38, z: 1914 }], run: "darkfall:getMysteryPotion3" },
+                { at: [{ x: 131, y: 37, z: 1922 }], run: "darkfall:getMysteryPotion4" },
+                { at: [{ x: 120, y: 37, z: 1892 }], run: "darkfall:getMysteryPotion5" },
             ],
             enableMysteryPotion: {},
             playerInArea: [
@@ -3726,36 +3707,6 @@ export const maps = {
             },
             "darkfall:getMysteryPotion5": (system, playerData) => {
                 tryGetMysteryPotion(system, { x: 121, y: 38, z: 1892 }, playerData);
-            },
-            "darkfall:openTrap": (system, playerData) => {
-                // ===== 条件检查 =====
-                const leverLocations = [
-                    { x: 106, y: 38, z: 1885 },
-                    { x: 106, y: 38, z: 1878 },
-                ];
-                // 如果当前陷阱处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("darkfall:trap", "general", playerData?.player) > 0)
-                    return;
-                // 如果没有玩家执行，终止运行
-                if (!playerData)
-                    return;
-                // 如果玩家金锭不足，终止运行
-                if (!playerData.consumeGold(2)) {
-                    setLeverState(leverLocations, false);
-                    return;
-                }
-                // ===== 开启陷阱 =====
-                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: 112, y: 36, z: 1884 }, to: { x: 107, y: 36, z: 1879 } });
-                lib.gameSystem.subscribeTimeline("darkfallTrapAnimation", time => {
-                    if (time === 6) {
-                        lib.StructureUtils.placeAsync("murder_mystery:darkfall/trap", { x: 107, y: 36, z: 1879 });
-                        return false;
-                    }
-                }, 20);
-                // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，15 秒后恢复原状
-                banLever(leverLocations, 15, "darkfall");
-                // 进入冷却
-                system.eventManager.setEventCooldown("darkfall:trap", 15);
             },
             "darkfall:playerIntoTrap": (system, playerData) => {
                 playerData?.setDead(MurderMysteryDeathType.DraggedByTheDead);
@@ -4165,19 +4116,72 @@ export const maps = {
             onGameStart: {
                 trigger: ["easterWorld:recoverDoor1", "easterWorld:recoverDoor2", "easterWorld:recoverDoor3", "easterWorld:setText"],
             },
-            interaction: [
-                { at: [{ x: -133, y: 26, z: 3140 }], trigger: "easterWorld:playerOnMonorail1", type: "button" },
-                { at: [{ x: -76, y: 26, z: 3059 }], trigger: "easterWorld:playerOnMonorail2", type: "button" },
+            playerPressButton: [
+                // ===== 单轨列车事件 =====
+                {
+                    at: [{ x: -133, y: 26, z: 3140 }],
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return false;
+                        const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
+                        if (leftDuration > 0)
+                            return false;
+                        if (!playerData.haveEnoughGold(1))
+                            return;
+                        // ===== 玩家乘坐矿车 =====
+                        system.eventManager
+                            .rideMinecart(playerData, 1, { x: -133, y: 25, z: 3140 }, { x: -74, y: 25, z: 3059 }, { x: 8, y: 0, z: 0 })
+                            .then(result => {
+                            if (result)
+                                playerData.setEventCooldown("rail", 10);
+                        });
+                    },
+                },
+                {
+                    at: [{ x: -76, y: 26, z: 3059 }],
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return false;
+                        const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
+                        if (leftDuration > 0)
+                            return false;
+                        if (!playerData.haveEnoughGold(1))
+                            return;
+                        // ===== 玩家乘坐矿车 =====
+                        system.eventManager
+                            .rideMinecart(playerData, 1, { x: -76, y: 25, z: 3059 }, { x: -135, y: 25, z: 3140 }, { x: -8, y: 0, z: 0 })
+                            .then(result => {
+                            if (result)
+                                playerData.setEventCooldown("rail", 10);
+                        });
+                    },
+                },
+                // ===== 过山车事件 =====
                 {
                     at: [
                         { x: -82, y: 22, z: 3034 },
                         { x: -81, y: 22, z: 3033 },
                     ],
-                    trigger: "easterWorld:playerOnRollerCoaster",
-                    type: "button",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return false;
+                        const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
+                        if (leftDuration > 0)
+                            return false;
+                        if (!playerData.haveEnoughGold(1))
+                            return;
+                        // ===== 玩家乘坐矿车 =====
+                        system.eventManager
+                            .rideMinecart(playerData, 1, { x: -82, y: 22, z: 3032 }, { x: -94, y: 22, z: 3032 }, { x: 8, y: 0, z: 0 })
+                            .then(result => {
+                            if (result)
+                                playerData.setEventCooldown("rail", 10);
+                        });
+                    },
                 },
-                // 过山车支线的按钮
-                { at: [{ x: -63, y: 29, z: 3031 }] },
             ],
         },
         events: {
@@ -4254,58 +4258,6 @@ export const maps = {
                 addConsumeGoldTextDisplay({ x: -76, y: 25.5, z: 3058 }, "monorail.name", 1);
                 // 过山车
                 addConsumeGoldTextDisplay({ x: -81, y: 23, z: 3034 }, "rollerCoaster.name", 1);
-            },
-            // ===== 过山车事件 =====
-            "easterWorld:playerOnMonorail1": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return false;
-                const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
-                if (leftDuration > 0)
-                    return false;
-                if (!playerData.haveEnoughGold(1))
-                    return;
-                // ===== 玩家乘坐矿车 =====
-                system.eventManager
-                    .rideMinecart(playerData, 1, { x: -133, y: 25, z: 3140 }, { x: -74, y: 25, z: 3059 }, { x: 8, y: 0, z: 0 })
-                    .then(result => {
-                    if (result)
-                        playerData.setEventCooldown("rail", 10);
-                });
-            },
-            "easterWorld:playerOnMonorail2": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return false;
-                const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
-                if (leftDuration > 0)
-                    return false;
-                if (!playerData.haveEnoughGold(1))
-                    return;
-                // ===== 玩家乘坐矿车 =====
-                system.eventManager
-                    .rideMinecart(playerData, 1, { x: -76, y: 25, z: 3059 }, { x: -135, y: 25, z: 3140 }, { x: -8, y: 0, z: 0 })
-                    .then(result => {
-                    if (result)
-                        playerData.setEventCooldown("rail", 10);
-                });
-            },
-            "easterWorld:playerOnRollerCoaster": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return false;
-                const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
-                if (leftDuration > 0)
-                    return false;
-                if (!playerData.haveEnoughGold(1))
-                    return;
-                // ===== 玩家乘坐矿车 =====
-                system.eventManager
-                    .rideMinecart(playerData, 1, { x: -82, y: 22, z: 3032 }, { x: -94, y: 22, z: 3032 }, { x: 8, y: 0, z: 0 })
-                    .then(result => {
-                    if (result)
-                        playerData.setEventCooldown("rail", 10);
-                });
             },
         },
     },
@@ -5206,9 +5158,7 @@ export const maps = {
                 { x: 875.5, y: 30.5, z: 3889.5 },
             ],
         },
-        components: {
-            interaction: [{ blocks: ["minecraft:wooden_door", "minecraft:spruce_door"] }],
-        },
+        components: {},
     },
     // #endregion
     // #region - 好莱坞
@@ -6051,19 +6001,70 @@ export const maps = {
                     "hypixelWorld:setText",
                 ],
             },
-            interaction: [
-                { at: [{ x: -927, y: 51, z: 2919 }], trigger: "hypixelWorld:playerOnMonorail1", type: "button" },
-                { at: [{ x: -870, y: 51, z: 2838 }], trigger: "hypixelWorld:playerOnMonorail2", type: "button" },
+            playerPressButton: [
+                {
+                    at: [{ x: -927, y: 51, z: 2919 }],
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return false;
+                        const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
+                        if (leftDuration > 0)
+                            return false;
+                        if (!playerData.haveEnoughGold(1))
+                            return;
+                        // ===== 玩家乘坐矿车 =====
+                        system.eventManager
+                            .rideMinecart(playerData, 1, { x: -927, y: 50, z: 2919 }, { x: -868, y: 50, z: 2838 }, { x: 8, y: 0, z: 0 })
+                            .then(result => {
+                            if (result)
+                                playerData.setEventCooldown("rail", 10);
+                        });
+                    },
+                },
+                {
+                    at: [{ x: -870, y: 51, z: 2838 }],
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return false;
+                        const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
+                        if (leftDuration > 0)
+                            return false;
+                        if (!playerData.haveEnoughGold(1))
+                            return;
+                        // ===== 玩家乘坐矿车 =====
+                        system.eventManager
+                            .rideMinecart(playerData, 1, { x: -870, y: 50, z: 2838 }, { x: -929, y: 50, z: 2919 }, { x: -8, y: 0, z: 0 })
+                            .then(result => {
+                            if (result)
+                                playerData.setEventCooldown("rail", 10);
+                        });
+                    },
+                },
                 {
                     at: [
                         { x: -875, y: 47, z: 2812 },
                         { x: -876, y: 47, z: 2813 },
                     ],
-                    trigger: "hypixelWorld:playerOnRollerCoaster",
-                    type: "button",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return false;
+                        const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
+                        if (leftDuration > 0)
+                            return false;
+                        if (!playerData.haveEnoughGold(1))
+                            return;
+                        // ===== 玩家乘坐矿车 =====
+                        system.eventManager
+                            .rideMinecart(playerData, 1, { x: -876, y: 47, z: 2811 }, { x: -888, y: 47, z: 2811 }, { x: 8, y: 0, z: 0 })
+                            .then(result => {
+                            if (result)
+                                playerData.setEventCooldown("rail", 10);
+                        });
+                    },
                 },
-                // 过山车支线
-                { at: [{ x: -857, y: 54, z: 2810 }] },
             ],
         },
         events: {
@@ -6141,58 +6142,6 @@ export const maps = {
                 addConsumeGoldTextDisplay({ x: -870, y: 50.5, z: 2837 }, "monorail.name", 1);
                 // 过山车
                 addConsumeGoldTextDisplay({ x: -875, y: 48, z: 2813 }, "rollerCoaster.name", 1);
-            },
-            // ===== 过山车事件 =====
-            "hypixelWorld:playerOnMonorail1": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return false;
-                const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
-                if (leftDuration > 0)
-                    return false;
-                if (!playerData.haveEnoughGold(1))
-                    return;
-                // ===== 玩家乘坐矿车 =====
-                system.eventManager
-                    .rideMinecart(playerData, 1, { x: -927, y: 50, z: 2919 }, { x: -868, y: 50, z: 2838 }, { x: 8, y: 0, z: 0 })
-                    .then(result => {
-                    if (result)
-                        playerData.setEventCooldown("rail", 10);
-                });
-            },
-            "hypixelWorld:playerOnMonorail2": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return false;
-                const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
-                if (leftDuration > 0)
-                    return false;
-                if (!playerData.haveEnoughGold(1))
-                    return;
-                // ===== 玩家乘坐矿车 =====
-                system.eventManager
-                    .rideMinecart(playerData, 1, { x: -870, y: 50, z: 2838 }, { x: -929, y: 50, z: 2919 }, { x: -8, y: 0, z: 0 })
-                    .then(result => {
-                    if (result)
-                        playerData.setEventCooldown("rail", 10);
-                });
-            },
-            "hypixelWorld:playerOnRollerCoaster": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return false;
-                const leftDuration = playerData.getEventCooldownCountdown("rail", "monorail.name");
-                if (leftDuration > 0)
-                    return false;
-                if (!playerData.haveEnoughGold(1))
-                    return;
-                // ===== 玩家乘坐矿车 =====
-                system.eventManager
-                    .rideMinecart(playerData, 1, { x: -876, y: 47, z: 2811 }, { x: -888, y: 47, z: 2811 }, { x: 8, y: 0, z: 0 })
-                    .then(result => {
-                    if (result)
-                        playerData.setEventCooldown("rail", 10);
-                });
             },
         },
     },
@@ -6495,29 +6444,11 @@ export const maps = {
         },
         components: {
             interaction: [
-                {
-                    blocks: ["minecraft:spruce_fence_gate"],
-                },
-                {
-                    at: [{ x: -884, y: 102, z: 1923 }],
-                    trigger: "library:getMysteryPotion1",
-                },
-                {
-                    at: [{ x: -907, y: 102, z: 1909 }],
-                    trigger: "library:getMysteryPotion2",
-                },
-                {
-                    at: [{ x: -927, y: 102, z: 1935 }],
-                    trigger: "library:getMysteryPotion3",
-                },
-                {
-                    at: [{ x: -853, y: 102, z: 1953 }],
-                    trigger: "library:getMysteryPotion4",
-                },
-                {
-                    at: [{ x: -884, y: 111, z: 1966 }],
-                    trigger: "library:getMysteryPotion5",
-                },
+                { at: [{ x: -884, y: 102, z: 1923 }], run: "library:getMysteryPotion1" },
+                { at: [{ x: -907, y: 102, z: 1909 }], run: "library:getMysteryPotion2" },
+                { at: [{ x: -927, y: 102, z: 1935 }], run: "library:getMysteryPotion3" },
+                { at: [{ x: -853, y: 102, z: 1953 }], run: "library:getMysteryPotion4" },
+                { at: [{ x: -884, y: 111, z: 1966 }], run: "library:getMysteryPotion5" },
             ],
             enableMysteryPotion: {
                 locations: [
@@ -9715,46 +9646,107 @@ export const maps = {
         },
         components: {
             time: 18000,
-            interaction: [
-                { blocks: ["minecraft:dark_oak_door", "minecraft:birch_door"] },
-                // 电梯
+            playerPressButton: [
+                // ===== 电梯 =====
+                // 传送到大厅
                 {
                     at: [
                         { x: -63, y: 23, z: -1949 },
                         { x: -63, y: 41, z: -1951 },
                     ],
-                    type: "button",
-                    trigger: "spookyMansionV1:teleportToLobby",
+                    run: (system, playerData) => {
+                        spookyMansionElevator(playerData, { x: -62.5, y: 30, z: -1949.5 }, "lobby");
+                    },
                 },
+                // 传送到地下室
                 {
                     at: [{ x: -63, y: 31, z: -1951 }],
-                    type: "button",
-                    trigger: "spookyMansionV1:teleportToBasement",
+                    run: (system, playerData) => {
+                        spookyMansionElevator(playerData, { x: -62.5, y: 22, z: -1949.5 }, "basement");
+                    },
                 },
+                // 传送到 1 楼
                 {
                     at: [{ x: -63, y: 31, z: -1949 }],
-                    type: "button",
-                    trigger: "spookyMansionV1:teleportTo1stFloor",
+                    run: (system, playerData) => {
+                        spookyMansionElevator(playerData, { x: -62.5, y: 40, z: -1949.5 }, "1stFloor");
+                    },
                 },
-                // 玄关地板陷阱
+                // ===== 玄关地板陷阱 =====
                 {
                     at: [
                         { x: -67, y: 30, z: -1939 },
                         { x: -67, y: 30, z: -1935 },
                     ],
-                    type: "button",
-                    trigger: "spookyMansionV1:doorTrap",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        // 如果仍处于冷却，终止运行
+                        if (system.eventManager.getEventCooldownCountdown("spookyMansionV1:doorTrap", "general", playerData?.player) >
+                            0)
+                            return;
+                        // 如果没有玩家执行，终止运行
+                        if (!playerData)
+                            return;
+                        // 如果玩家金锭不足，终止运行
+                        if (!playerData.consumeGold(1))
+                            return;
+                        // ===== 启动陷阱 =====
+                        // 进入冷却
+                        system.eventManager.setEventCooldown("spookyMansionV1:doorTrap", 10);
+                        // 填充掉地面
+                        lib.BlockUtils.fill({
+                            id: "minecraft:air",
+                            from: { x: -68, y: 29, z: -1939 },
+                            to: { x: -66, y: 29, z: -1935 },
+                        });
+                        lib.PlayerUtils.broadcast({ location: { x: -67, y: 30, z: -1937 }, sound: "mob.irongolem.hit" });
+                        // 5 秒后恢复
+                        minecraft.system.runTimeout(() => {
+                            lib.BlockUtils.fill({
+                                id: "minecraft:stone_bricks",
+                                from: { x: -68, y: 29, z: -1939 },
+                                to: { x: -66, y: 29, z: -1935 },
+                            });
+                            lib.PlayerUtils.broadcast({ location: { x: -67, y: 30, z: -1937 }, sound: "mob.irongolem.hit" });
+                        }, 100);
+                    },
                 },
-                // 秘密通道
+                // ====== 秘密通道 =====
                 {
                     at: [{ x: -47, y: 31, z: -1950 }],
-                    type: "button",
-                    trigger: "spookyMansionV1:setFire1",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: -47, y: 32, z: -1950 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("spookyMansionV1:openSecretPassage");
+                    },
                 },
                 {
                     at: [{ x: -52, y: 31, z: -1929 }],
-                    type: "button",
-                    trigger: "spookyMansionV1:setFire2",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: -52, y: 32, z: -1929 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("spookyMansionV1:openSecretPassage");
+                    },
                 },
             ],
             onGameStart: { trigger: "spookyMansionV1:recover" },
@@ -9792,75 +9784,7 @@ export const maps = {
                 lib.BlockUtils.set({ id: "minecraft:air", location: { x: -52, y: 32, z: -1929 } });
                 lib.BlockUtils.set({ id: "minecraft:air", location: { x: -47, y: 32, z: -1950 } });
             },
-            // 电梯
-            "spookyMansionV1:teleportToLobby": (system, playerData) => {
-                spookyMansionElevator(playerData, { x: -62.5, y: 30, z: -1949.5 }, "lobby");
-            },
-            "spookyMansionV1:teleportTo1stFloor": (system, playerData) => {
-                spookyMansionElevator(playerData, { x: -62.5, y: 40, z: -1949.5 }, "1stFloor");
-            },
-            "spookyMansionV1:teleportToBasement": (system, playerData) => {
-                spookyMansionElevator(playerData, { x: -62.5, y: 22, z: -1949.5 }, "basement");
-            },
-            // 玄关地板陷阱
-            "spookyMansionV1:doorTrap": (system, playerData) => {
-                // ===== 条件检查 =====
-                // 如果仍处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("spookyMansionV1:doorTrap", "general", playerData?.player) > 0)
-                    return;
-                // 如果没有玩家执行，终止运行
-                if (!playerData)
-                    return;
-                // 如果玩家金锭不足，终止运行
-                if (!playerData.consumeGold(1))
-                    return;
-                // ===== 启动陷阱 =====
-                // 进入冷却
-                system.eventManager.setEventCooldown("spookyMansionV1:doorTrap", 10);
-                // 填充掉地面
-                lib.BlockUtils.fill({ id: "minecraft:air", from: { x: -68, y: 29, z: -1939 }, to: { x: -66, y: 29, z: -1935 } });
-                lib.PlayerUtils.broadcast({ location: { x: -67, y: 30, z: -1937 }, sound: "mob.irongolem.hit" });
-                // 5 秒后恢复
-                minecraft.system.runTimeout(() => {
-                    lib.BlockUtils.fill({
-                        id: "minecraft:stone_bricks",
-                        from: { x: -68, y: 29, z: -1939 },
-                        to: { x: -66, y: 29, z: -1935 },
-                    });
-                    lib.PlayerUtils.broadcast({ location: { x: -67, y: 30, z: -1937 }, sound: "mob.irongolem.hit" });
-                }, 100);
-            },
             // 秘密通道
-            "spookyMansionV1:setFire1": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: -47, y: 32, z: -1950 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("spookyMansionV1:openSecretPassage");
-            },
-            "spookyMansionV1:setFire2": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: -52, y: 32, z: -1929 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("spookyMansionV1:openSecretPassage");
-            },
             "spookyMansionV1:openSecretPassage": () => {
                 // ===== 检查条件 =====
                 const isFire = (location) => {
@@ -10238,46 +10162,43 @@ export const maps = {
         },
         components: {
             time: 18000,
-            interaction: [
-                { blocks: ["minecraft:dark_oak_door", "minecraft:birch_door"] },
-                // 电梯
+            playerPressButton: [
+                // ===== 电梯 =====
+                // 传送到大厅
                 {
                     at: [
                         { x: -75, y: 87, z: -2930 },
                         { x: -75, y: 69, z: -2928 },
                     ],
-                    type: "button",
-                    trigger: "spookyMansion:teleportToLobby",
+                    run: "spookyMansion:teleportToLobby",
                 },
+                // 传送到地下室
                 {
                     at: [{ x: -75, y: 77, z: -2930 }],
-                    type: "button",
-                    trigger: "spookyMansion:teleportToBasement",
+                    run: "spookyMansion:teleportToBasement",
                 },
+                // 传送到 1 楼
                 {
                     at: [{ x: -75, y: 77, z: -2928 }],
-                    type: "button",
-                    trigger: "spookyMansion:teleportTo1stFloor",
+                    run: "spookyMansion:teleportTo1stFloor",
                 },
-                // 滚筒陷阱
+                // ===== 滚筒陷阱 =====
                 {
                     at: [
                         { x: -67, y: 69, z: -2881 },
                         { x: -71, y: 69, z: -2881 },
                     ],
-                    type: "button",
-                    trigger: "spookyMansion:barrelTrap",
+                    run: "spookyMansion:barrelTrap",
                 },
-                // 玄关地板陷阱
+                // ===== 玄关地板陷阱 =====
                 {
                     at: [
                         { x: -80, y: 77, z: -2913 },
                         { x: -80, y: 77, z: -2909 },
                     ],
-                    type: "button",
-                    trigger: "spookyMansion:doorTrap",
+                    run: "spookyMansion:doorTrap",
                 },
-                // 挤压装置陷阱
+                // ===== 挤压装置陷阱 =====
                 {
                     at: [
                         { x: -63, y: 77, z: -2888 },
@@ -10285,8 +10206,51 @@ export const maps = {
                         { x: -63, y: 77, z: -2882 },
                         { x: -67, y: 77, z: -2882 },
                     ],
-                    type: "button",
-                    trigger: "spookyMansion:crusherTrap1",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        // 如果仍处于冷却，终止运行
+                        if (system.eventManager.getEventCooldownCountdown("spookyMansion:crusherTrap1") > 0)
+                            return;
+                        // 如果没有玩家执行，终止运行
+                        if (!playerData)
+                            return;
+                        // 如果玩家金锭不足，终止运行
+                        if (!playerData.consumeGold(2))
+                            return;
+                        // ===== 启动陷阱 =====
+                        // 播放陷阱动画，当玩家头在磨制花岗岩内时直接处死
+                        lib.gameSystem.subscribeTimeline("spookyMansionCrusherTrap1Animation", time => {
+                            // 处死被挤压的玩家
+                            system.livingPlayers.allPlayers.forEach(crushedPlayer => {
+                                // 如果玩家头不在磨制花岗岩内，终止运行
+                                const playerInBlock = lib.BlockUtils.get(crushedPlayer.player.location);
+                                if (playerInBlock?.typeId !== "minecraft:polished_andesite")
+                                    return;
+                                // 否则，直接处死玩家
+                                crushedPlayer.setDead(MurderMysteryDeathType.Crushed);
+                            });
+                            // 开陷阱
+                            if (time === 16)
+                                spookyMansionCrusher("on", { x: -64, y: 76, z: -2886 }, { x: -64, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                            if (time === 18) {
+                                spookyMansionCrusher("on", { x: -65, y: 76, z: -2886 }, { x: -66, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                                lib.PlayerUtils.broadcast({
+                                    location: { x: -65, y: 77, z: -2885 },
+                                    sound: "mob.irongolem.hit",
+                                    soundOptions: { pitch: 0.5 },
+                                });
+                            }
+                            // 关陷阱
+                            if (time === 28)
+                                spookyMansionCrusher("off", { x: -66, y: 76, z: -2886 }, { x: -66, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                            if (time === 34)
+                                spookyMansionCrusher("off", { x: -65, y: 76, z: -2886 }, { x: -65, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                            if (time === 40) {
+                                spookyMansionCrusher("off", { x: -64, y: 76, z: -2886 }, { x: -64, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
+                                return false;
+                            }
+                        });
+                    },
                 },
                 {
                     at: [
@@ -10295,19 +10259,94 @@ export const maps = {
                         { x: -55, y: 87, z: -2892 },
                         { x: -55, y: 87, z: -2896 },
                     ],
-                    type: "button",
-                    trigger: "spookyMansion:crusherTrap2",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        // 如果仍处于冷却，终止运行
+                        if (system.eventManager.getEventCooldownCountdown("spookyMansion:crusherTrap1") > 0)
+                            return;
+                        // 如果没有玩家执行，终止运行
+                        if (!playerData)
+                            return;
+                        // 如果玩家金锭不足，终止运行
+                        if (!playerData.consumeGold(2))
+                            return;
+                        // ===== 启动陷阱 =====
+                        // 播放陷阱动画，当玩家头在磨制花岗岩内时直接处死
+                        lib.gameSystem.subscribeTimeline("spookyMansionCrusherTrap1Animation", time => {
+                            // 处死被挤压的玩家
+                            system.livingPlayers.allPlayers.forEach(crushedPlayer => {
+                                // 如果玩家头不在磨制花岗岩内，终止运行
+                                const playerInBlock = lib.BlockUtils.get(crushedPlayer.player.getHeadLocation());
+                                if (playerInBlock?.typeId !== "minecraft:polished_andesite")
+                                    return;
+                                // 否则，直接处死玩家
+                                crushedPlayer.setDead(MurderMysteryDeathType.Crushed);
+                            });
+                            // 开陷阱
+                            if (time === 12)
+                                spookyMansionCrusher("on", { x: -57, y: 89, z: -2895 }, { x: -59, y: 89, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                            if (time === 14)
+                                spookyMansionCrusher("on", { x: -57, y: 88, z: -2895 }, { x: -59, y: 88, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                            if (time === 16)
+                                spookyMansionCrusher("on", { x: -57, y: 87, z: -2895 }, { x: -59, y: 87, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                            if (time === 18) {
+                                spookyMansionCrusher("on", { x: -57, y: 86, z: -2895 }, { x: -59, y: 86, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                                lib.PlayerUtils.broadcast({
+                                    location: { x: -58, y: 87, z: -2894 },
+                                    sound: "mob.irongolem.hit",
+                                    soundOptions: { pitch: 0.5 },
+                                });
+                            }
+                            // 关陷阱
+                            if (time === 28)
+                                spookyMansionCrusher("off", { x: -57, y: 86, z: -2895 }, { x: -59, y: 86, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                            if (time === 32)
+                                spookyMansionCrusher("off", { x: -57, y: 87, z: -2895 }, { x: -59, y: 87, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                            if (time === 36)
+                                spookyMansionCrusher("off", { x: -57, y: 88, z: -2895 }, { x: -59, y: 88, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                            if (time === 40) {
+                                spookyMansionCrusher("off", { x: -57, y: 89, z: -2895 }, { x: -59, y: 89, z: -2893 }, { x: -58, y: 87, z: -2894 });
+                                return false;
+                            }
+                        });
+                    },
                 },
-                // 秘密通道
+                // ===== 秘密通道 =====
                 {
                     at: [{ x: -54, y: 77, z: -2932 }],
-                    type: "button",
-                    trigger: "spookyMansion:setFire1",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: -54, y: 79, z: -2932 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("spookyMansion:openSecretPassage");
+                    },
                 },
                 {
                     at: [{ x: -48, y: 76, z: -2917 }],
-                    type: "button",
-                    trigger: "spookyMansion:setFire2",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return;
+                        if (!playerData.haveEnoughGold(1, false))
+                            return;
+                        const location = { x: -48, y: 79, z: -2917 };
+                        if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
+                            return;
+                        // ===== 放置方块 =====
+                        lib.BlockUtils.set({ id: "minecraft:fire", location });
+                        notify(playerData.player, { sound: "item.firecharge.use" });
+                        playerData.consumeGold(1);
+                        system.eventManager.triggerEvent("spookyMansion:openSecretPassage");
+                    },
                 },
             ],
             onGameStart: { trigger: "spookyMansion:recover" },
@@ -10415,134 +10454,7 @@ export const maps = {
                     lib.PlayerUtils.broadcast({ location: { x: -83, y: 75, z: -2911 }, sound: "mob.irongolem.hit" });
                 }, 100);
             },
-            // 挤压装置陷阱
-            "spookyMansion:crusherTrap1": (system, playerData) => {
-                // ===== 条件检查 =====
-                // 如果仍处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("spookyMansion:crusherTrap1") > 0)
-                    return;
-                // 如果没有玩家执行，终止运行
-                if (!playerData)
-                    return;
-                // 如果玩家金锭不足，终止运行
-                if (!playerData.consumeGold(2))
-                    return;
-                // ===== 启动陷阱 =====
-                // 播放陷阱动画，当玩家头在磨制花岗岩内时直接处死
-                lib.gameSystem.subscribeTimeline("spookyMansionCrusherTrap1Animation", time => {
-                    // 处死被挤压的玩家
-                    system.livingPlayers.allPlayers.forEach(crushedPlayer => {
-                        // 如果玩家头不在磨制花岗岩内，终止运行
-                        const playerInBlock = lib.BlockUtils.get(crushedPlayer.player.location);
-                        if (playerInBlock?.typeId !== "minecraft:polished_andesite")
-                            return;
-                        // 否则，直接处死玩家
-                        crushedPlayer.setDead(MurderMysteryDeathType.Crushed);
-                    });
-                    // 开陷阱
-                    if (time === 16)
-                        spookyMansionCrusher("on", { x: -64, y: 76, z: -2886 }, { x: -64, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
-                    if (time === 18) {
-                        spookyMansionCrusher("on", { x: -65, y: 76, z: -2886 }, { x: -66, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
-                        lib.PlayerUtils.broadcast({
-                            location: { x: -65, y: 77, z: -2885 },
-                            sound: "mob.irongolem.hit",
-                            soundOptions: { pitch: 0.5 },
-                        });
-                    }
-                    // 关陷阱
-                    if (time === 28)
-                        spookyMansionCrusher("off", { x: -66, y: 76, z: -2886 }, { x: -66, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
-                    if (time === 34)
-                        spookyMansionCrusher("off", { x: -65, y: 76, z: -2886 }, { x: -65, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
-                    if (time === 40) {
-                        spookyMansionCrusher("off", { x: -64, y: 76, z: -2886 }, { x: -64, y: 78, z: -2884 }, { x: -65, y: 77, z: -2885 });
-                        return false;
-                    }
-                });
-            },
-            "spookyMansion:crusherTrap2": (system, playerData) => {
-                // ===== 条件检查 =====
-                // 如果仍处于冷却，终止运行
-                if (system.eventManager.getEventCooldownCountdown("spookyMansion:crusherTrap1") > 0)
-                    return;
-                // 如果没有玩家执行，终止运行
-                if (!playerData)
-                    return;
-                // 如果玩家金锭不足，终止运行
-                if (!playerData.consumeGold(2))
-                    return;
-                // ===== 启动陷阱 =====
-                // 播放陷阱动画，当玩家头在磨制花岗岩内时直接处死
-                lib.gameSystem.subscribeTimeline("spookyMansionCrusherTrap1Animation", time => {
-                    // 处死被挤压的玩家
-                    system.livingPlayers.allPlayers.forEach(crushedPlayer => {
-                        // 如果玩家头不在磨制花岗岩内，终止运行
-                        const playerInBlock = lib.BlockUtils.get(crushedPlayer.player.getHeadLocation());
-                        if (playerInBlock?.typeId !== "minecraft:polished_andesite")
-                            return;
-                        // 否则，直接处死玩家
-                        crushedPlayer.setDead(MurderMysteryDeathType.Crushed);
-                    });
-                    // 开陷阱
-                    if (time === 12)
-                        spookyMansionCrusher("on", { x: -57, y: 89, z: -2895 }, { x: -59, y: 89, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                    if (time === 14)
-                        spookyMansionCrusher("on", { x: -57, y: 88, z: -2895 }, { x: -59, y: 88, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                    if (time === 16)
-                        spookyMansionCrusher("on", { x: -57, y: 87, z: -2895 }, { x: -59, y: 87, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                    if (time === 18) {
-                        spookyMansionCrusher("on", { x: -57, y: 86, z: -2895 }, { x: -59, y: 86, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                        lib.PlayerUtils.broadcast({
-                            location: { x: -58, y: 87, z: -2894 },
-                            sound: "mob.irongolem.hit",
-                            soundOptions: { pitch: 0.5 },
-                        });
-                    }
-                    // 关陷阱
-                    if (time === 28)
-                        spookyMansionCrusher("off", { x: -57, y: 86, z: -2895 }, { x: -59, y: 86, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                    if (time === 32)
-                        spookyMansionCrusher("off", { x: -57, y: 87, z: -2895 }, { x: -59, y: 87, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                    if (time === 36)
-                        spookyMansionCrusher("off", { x: -57, y: 88, z: -2895 }, { x: -59, y: 88, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                    if (time === 40) {
-                        spookyMansionCrusher("off", { x: -57, y: 89, z: -2895 }, { x: -59, y: 89, z: -2893 }, { x: -58, y: 87, z: -2894 });
-                        return false;
-                    }
-                });
-            },
             // 秘密通道
-            "spookyMansion:setFire1": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: -54, y: 79, z: -2932 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("spookyMansion:openSecretPassage");
-            },
-            "spookyMansion:setFire2": (system, playerData) => {
-                // ===== 条件检查 =====
-                if (!playerData)
-                    return;
-                if (!playerData.haveEnoughGold(1, false))
-                    return;
-                const location = { x: -48, y: 79, z: -2917 };
-                if (lib.BlockUtils.match({ id: "minecraft:fire", location }))
-                    return;
-                // ===== 放置方块 =====
-                lib.BlockUtils.set({ id: "minecraft:fire", location });
-                notify(playerData.player, { sound: "item.firecharge.use" });
-                playerData.consumeGold(1);
-                system.eventManager.triggerEvent("spookyMansion:openSecretPassage");
-            },
             "spookyMansion:openSecretPassage": () => {
                 // ===== 检查条件 =====
                 const isFire = (location) => {
@@ -10949,9 +10861,7 @@ export const maps = {
             ],
             hasFullFunction: false,
         },
-        components: {
-            interaction: [{ blocks: ["minecraft:dark_oak_door"] }],
-        },
+        components: {},
     },
     // #endregion
     // #region - 高坠塔
@@ -11258,7 +11168,7 @@ export const maps = {
         },
         components: {
             playerHurt: [{ cause: minecraft.EntityDamageCause.fall, trigger: "towerFall:playerHitGround" }],
-            interaction: [
+            playerPushLever: [
                 {
                     at: [
                         { x: 1122, y: 119, z: -4026 },
@@ -11266,7 +11176,51 @@ export const maps = {
                         { x: 1112, y: 113, z: -4035 },
                         { x: 1112, y: 113, z: -4017 },
                     ],
-                    trigger: "towerfall:openTrap",
+                    run: (system, playerData) => {
+                        // ===== 条件检查 =====
+                        if (!playerData)
+                            return 0;
+                        // 如果仍处于冷却，警告玩家
+                        if (system.eventManager.getEventCooldownCountdown("towerfall:trap", "general", playerData.player) > 0)
+                            return 0;
+                        // 如果玩家金锭不足，恢复回未拉下状态
+                        if (!playerData.consumeGold(1))
+                            return 0;
+                        // ===== 放置陷阱 =====
+                        const setStructureStage = (stage) => {
+                            lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_stage${stage}`, {
+                                x: 1099,
+                                y: 110,
+                                z: -4031,
+                            });
+                            lib.PlayerUtils.broadcast({ sound: "tile.piston.in" });
+                        };
+                        lib.gameSystem.subscribeTimeline("towerfallTrapAnimation", time => {
+                            if (time === 1)
+                                setStructureStage(1);
+                            if (time === 2)
+                                setStructureStage(2);
+                            if (time === 3)
+                                setStructureStage(3);
+                            if (time === 4)
+                                setStructureStage(4);
+                            if (time === 101)
+                                setStructureStage(5);
+                            if (time === 102)
+                                setStructureStage(6);
+                            if (time === 103)
+                                setStructureStage(7);
+                            if (time === 104)
+                                setStructureStage(8);
+                            if (time >= 105) {
+                                lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_full`, { x: 1099, y: 110, z: -4031 });
+                                return false;
+                            }
+                        });
+                        // 进入冷却
+                        system.eventManager.setEventCooldown("towerfall:trap", 10);
+                        return 5;
+                    },
                 },
             ],
             onGameStart: { trigger: "towerfall:recover" },
@@ -11286,56 +11240,6 @@ export const maps = {
                 addConsumeGoldTextDisplay({ x: 1117, y: 112.5, z: -4026 }, "trap.name", 1);
                 addConsumeGoldTextDisplay({ x: 1111, y: 112.5, z: -4017 }, "trap.name", 1);
                 addConsumeGoldTextDisplay({ x: 1111, y: 112.5, z: -4035 }, "trap.name", 1);
-            },
-            "towerfall:openTrap": (system, playerData) => {
-                // ===== 条件检查 =====
-                const leverLocations = [
-                    { x: 1122, y: 119, z: -4026 },
-                    { x: 1117, y: 113, z: -4026 },
-                    { x: 1112, y: 113, z: -4035 },
-                    { x: 1112, y: 113, z: -4017 },
-                ];
-                if (!playerData)
-                    return;
-                // 如果仍处于冷却，警告玩家
-                if (system.eventManager.getEventCooldownCountdown("towerfall:trap", "general", playerData.player) > 0)
-                    return false;
-                // 如果玩家金锭不足，恢复回未拉下状态
-                if (!playerData.consumeGold(1)) {
-                    setLeverState(leverLocations, false);
-                    return;
-                }
-                // ===== 放置陷阱 =====
-                const setStructureStage = (stage) => {
-                    lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_stage${stage}`, { x: 1099, y: 110, z: -4031 });
-                    lib.PlayerUtils.broadcast({ sound: "tile.piston.in" });
-                };
-                lib.gameSystem.subscribeTimeline("towerfallTrapAnimation", time => {
-                    if (time === 1)
-                        setStructureStage(1);
-                    if (time === 2)
-                        setStructureStage(2);
-                    if (time === 3)
-                        setStructureStage(3);
-                    if (time === 4)
-                        setStructureStage(4);
-                    if (time === 101)
-                        setStructureStage(5);
-                    if (time === 102)
-                        setStructureStage(6);
-                    if (time === 103)
-                        setStructureStage(7);
-                    if (time === 104)
-                        setStructureStage(8);
-                    if (time >= 105) {
-                        lib.StructureUtils.placeAsync(`murder_mystery:towerfall/trap_full`, { x: 1099, y: 110, z: -4031 });
-                        return false;
-                    }
-                });
-                // 短暂禁用陷阱的全部拉杆，并将拉杆设置为打开状态，10 秒后恢复原状
-                banLever(leverLocations, 10, "towerfall");
-                // 进入冷却
-                system.eventManager.setEventCooldown("towerfall:trap", 10);
             },
         },
     },

@@ -37,6 +37,26 @@
   - 现在新版地图的两个挤压陷阱可使用
   - 现在新版地图的滚筒陷阱可使用
 
+### 交互机制
+
+- 现在交互机制由白名单机制变为了黑名单机制
+- 但是，以下方块仍然无法交互（主要是打开 UI）
+  - `minecraft:flower_pot`
+  - `minecraft:hopper`
+  - `minecraft:chest`
+  - `minecraft:trapped_chest`
+  - `minecraft:ender_chest`
+  - `minecraft:furnace`
+  - `minecraft:brewing_stand`
+  - `minecraft:crafting_table`
+  - `minecraft:anvil`
+  - `minecraft:chipped_anvil`
+  - `minecraft:damaged_anvil`
+  - `minecraft:cake`
+  - `minecraft:dispenser`
+  - `minecraft:dropper`
+  - `minecraft:frame`
+
 ### 临终遗言
 
 - #3 正式引入临终遗言！
@@ -72,3 +92,7 @@
 - 新增了密室杀手系统的静态方法`getWorldState`和`setWorldState`，新增了`WorldDynamicProperties`接口
 - 为`data.ts`新增了`LastWordData`接口和`lastWords`数据
 - 为`lib.ts`新增了带有权重的随机函数
+- 拆分了`interaction`组件为 3 个新的组件：
+  - `interaction`组件：仅保留`at`和`run`，`at`为交互位置，而`run`为运行的事件，可以指定为字符串，指定为字符串时触发对应事件，也可以直接执行一个函数
+  - `playerPressButton`组件：专门用于在玩家按下按钮时执行事件，参数与`interaction`一致
+  - `playerPushLever`组件：专门用于在玩家拉下拉杆时执行事件，参数与`interaction`一致，但`run`指定为函数类型时，需要将返回类型指定为`number`，以指代拉杆禁用的时长，单位：秒
