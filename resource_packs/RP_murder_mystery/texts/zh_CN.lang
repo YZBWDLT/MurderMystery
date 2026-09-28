@@ -318,8 +318,8 @@ ui.settings.main.enableMap=启用地图...
 ui.settings.main.waiting=等待时...
 ui.settings.main.gaming=游戏时...
 ui.settings.main.goldSpawn=金锭生成...
-ui.settings.main.murdererSword=杀手刀剑...
-ui.settings.main.miscellaneous=杂项...
+ui.settings.main.detective=侦探...
+ui.settings.main.murderer=杀手...
 ui.settings.main.developerSettings=§l开发者设置
 ui.settings.main.fakePlayerManager=管理假玩家...
 ui.settings.main.restoreDefault=恢复默认设置
@@ -372,14 +372,16 @@ ui.settings.gaming.timePerGame.title=游戏时长（秒）
 ui.settings.gaming.timePerGame.description=一局的游戏时长。
 ui.settings.gaming.getSpecialItemDelay.title=获取道具时长（秒）
 ui.settings.gaming.getSpecialItemDelay.description=在游戏开始多久后给予杀手和侦探物品。
-ui.settings.gaming.detectiveBowCooldown.title=侦探弓冷却（秒）
-ui.settings.gaming.detectiveBowCooldown.description=侦探在射箭之后，多久后重新装填一根箭。
-ui.settings.gaming.pickupBowMethod.title=弓拾取形式
-ui.settings.gaming.pickupBowMethod.description=平民如何拾取弓。
-ui.settings.gaming.pickupBowMethod.rightClick=右键拾取
-ui.settings.gaming.pickupBowMethod.nearby=接近拾取
 ui.settings.gaming.showRoleInSpectatorTeleportUI.title=旁观显示身份
-ui.settings.gaming.showRoleInSpectatorTeleportUI.description=旁观模式的传送列表中，是否显示身份。
+ui.settings.gaming.showRoleInSpectatorTeleportUI.description=旁观模式的传送列表中和旁观者的定位栏中是否显示身份。
+ui.settings.gaming.infoboardLastLine.title=信息板最后一行
+ui.settings.gaming.infoboardLastLine.description=信息板最后一行的内容，使用黄色字体。
+ui.settings.gaming.getGoldHint.title=获取金锭提示
+ui.settings.gaming.getGoldHint.description=获取金锭时是否提示玩家。
+ui.settings.gaming.applyNightVision.title=启用夜视效果
+ui.settings.gaming.applyNightVision.description=是否对所有玩家施加夜视状态效果。
+ui.settings.gaming.alwaysShowHero.title=常显示英雄
+ui.settings.gaming.alwaysShowHero.description=无论是谁杀死了杀手都显示英雄，哪怕这个英雄是杀手自己。
 
 ### 金锭生成设置 UI
 ui.settings.goldSpawn.title=金锭生成设置
@@ -393,29 +395,27 @@ ui.settings.goldSpawn.spawnInterval.description=对于每位玩家，金锭的�
 ui.settings.goldSpawn.spawnRadius.title=生成半径
 ui.settings.goldSpawn.spawnRadius.description=在玩家附近多少格的金点会尝试生成。
 
-### 杀手刀剑设置 UI
-ui.settings.murdererSword.title=杀手刀剑设置
-ui.settings.murdererSword.description=控制杀手的刀的表现。
-ui.settings.murdererSword.knifeCooldown.title=飞刀冷却（秒）
-ui.settings.murdererSword.knifeCooldown.description=杀手在飞刀之后，多久后重新装填飞刀。
-ui.settings.murdererSword.knifeCollideArrowDistance.title=刀箭相碰距离（x0.1格）
-ui.settings.murdererSword.knifeCollideArrowDistance.description=杀手飞刀距离箭多近时视为相碰。
-ui.settings.murdererSword.knifeSpeed.title=飞刀速度
-ui.settings.murdererSword.knifeSpeed.description=杀手飞刀投掷出去的速度。
-ui.settings.murdererSword.knifeThrowTime.title=飞刀蓄力时间（x0.05秒）
-ui.settings.murdererSword.knifeThrowTime.description=杀手飞刀需要蓄力多久才能投掷出去。
+### 侦探设置 UI
+ui.settings.detective.title=侦探设置
+ui.settings.detective.description=控制游戏内侦探的表现。
+ui.settings.detective.bowCooldown.title=侦探弓冷却（秒）
+ui.settings.detective.bowCooldown.description=侦探在射箭之后，多久后重新装填一根箭。
+ui.settings.detective.pickupBowMethod.title=弓拾取形式
+ui.settings.detective.pickupBowMethod.description=平民如何拾取弓。
+ui.settings.detective.pickupBowMethod.rightClick=右键拾取
+ui.settings.detective.pickupBowMethod.nearby=接近拾取
 
-### 杂项设置 UI
-ui.settings.miscellaneous.title=杂项设置
-ui.settings.miscellaneous.description=控制游戏中一些其他内容的设置项。
-ui.settings.miscellaneous.infoboardLastLine.title=信息板最后一行
-ui.settings.miscellaneous.infoboardLastLine.description=信息板最后一行的内容，使用黄色字体。
-ui.settings.miscellaneous.getGoldHint.title=获取金锭提示
-ui.settings.miscellaneous.getGoldHint.description=获取金锭时是否提示玩家。
-ui.settings.miscellaneous.applyNightVision.title=启用夜视效果
-ui.settings.miscellaneous.applyNightVision.description=是否对所有玩家施加夜视状态效果。
-ui.settings.miscellaneous.alwaysShowHero.title=常显示英雄
-ui.settings.miscellaneous.alwaysShowHero.description=无论是谁杀死了杀手都显示英雄，哪怕这个英雄是杀手自己。
+### 杀手设置 UI
+ui.settings.murderer.title=杀手设置
+ui.settings.murderer.description=控制游戏内杀手的表现。
+ui.settings.murderer.knifeCooldown.title=飞刀冷却（秒）
+ui.settings.murderer.knifeCooldown.description=杀手在飞刀之后，多久后重新装填飞刀。
+ui.settings.murderer.knifeCollideArrowDistance.title=刀箭相碰距离（x0.1格）
+ui.settings.murderer.knifeCollideArrowDistance.description=杀手飞刀距离箭多近时视为相碰。
+ui.settings.murderer.knifeSpeed.title=飞刀速度
+ui.settings.murderer.knifeSpeed.description=杀手飞刀投掷出去的速度。
+ui.settings.murderer.knifeThrowTime.title=飞刀蓄力时间（x0.05秒）
+ui.settings.murderer.knifeThrowTime.description=杀手飞刀需要蓄力多久才能投掷出去。
 
 ### 假玩家管理器 UI
 ui.settings.fakePlayerManager.title=假玩家管理器

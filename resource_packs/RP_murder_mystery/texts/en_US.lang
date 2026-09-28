@@ -318,8 +318,8 @@ ui.settings.main.enableMap=Enable Map...
 ui.settings.main.waiting=Waiting...
 ui.settings.main.gaming=Gaming...
 ui.settings.main.goldSpawn=Gold Spawn...
-ui.settings.main.murdererSword=Murderer Sword...
-ui.settings.main.miscellaneous=Miscellaneous...
+ui.settings.main.detective=Detective...
+ui.settings.main.murderer=Murderer...
 ui.settings.main.developerSettings=§lDeveloper Settings
 ui.settings.main.fakePlayerManager=Manage Fake Player...
 ui.settings.main.restoreDefault=Restore Default Settings
@@ -372,14 +372,16 @@ ui.settings.gaming.timePerGame.title=Game Duration (s)
 ui.settings.gaming.timePerGame.description=Duration of a single game round.
 ui.settings.gaming.getSpecialItemDelay.title=Get Special Item Delay (s)
 ui.settings.gaming.getSpecialItemDelay.description=How long after the game starts before the Murderer and Detective receive their items.
-ui.settings.gaming.detectiveBowCooldown.title=Detective Bow Cooldown (seconds)
-ui.settings.gaming.detectiveBowCooldown.description=How long after the detective fires an arrow before they reload a new one.
-ui.settings.gaming.pickupBowMethod.title=Bow Pickup Method
-ui.settings.gaming.pickupBowMethod.description=How Innocents can pick up the bow.
-ui.settings.gaming.pickupBowMethod.rightClick=Right-click to pick up
-ui.settings.gaming.pickupBowMethod.nearby=Nearby to pick up
 ui.settings.gaming.showRoleInSpectatorTeleportUI.title=Show Role for Spectators
-ui.settings.gaming.showRoleInSpectatorTeleportUI.description=Whether to display the role in the spectator mode teleport list.
+ui.settings.gaming.showRoleInSpectatorTeleportUI.description=Whether to display the role in the spectator mode teleport list and in the spectator's Locator Bar.
+ui.settings.gaming.infoboardLastLine.title=Last Line of Infoboard
+ui.settings.gaming.infoboardLastLine.description=The content of last line of infoboard, with the color of yellow.
+ui.settings.gaming.getGoldHint.title=Gold Pickup Hint
+ui.settings.gaming.getGoldHint.description=Whether to notify the player when picking up gold ingots.
+ui.settings.gaming.applyNightVision.title=Enable Night Vision Effect
+ui.settings.gaming.applyNightVision.description=Whether to apply the night vision status effect to all players.
+ui.settings.gaming.alwaysShowHero.title=Always Show Hero
+ui.settings.gaming.alwaysShowHero.description=Show the hero no matter who killed the murderer, even if the hero is the murderer themselves.
 
 ### Gold Spawn Settings UI
 ui.settings.goldSpawn.title=Gold Spawn Settings
@@ -393,29 +395,27 @@ ui.settings.goldSpawn.spawnInterval.description=For each player, the average gen
 ui.settings.goldSpawn.spawnRadius.title=Spawn Radius
 ui.settings.goldSpawn.spawnRadius.description=Within how many blocks of a player will gold points attempt to spawn.
 
-### Murderer Sword Settings UI
-ui.settings.murdererSword.title=Murderer Sword Settings
-ui.settings.murdererSword.description=Controls Murderer's sword.
-ui.settings.murdererSword.knifeCooldown.title=Knife Cooldown (seconds)
-ui.settings.murdererSword.knifeCooldown.description=How long after the murderer throws a knife before they can recharge another one.
-ui.settings.murdererSword.knifeCollideArrowDistance.title=Collision Distance Between Knife And Arrow (x0.1 Blocks)
-ui.settings.murdererSword.knifeCollideArrowDistance.description=How close the Murderer's Thrown Knife is to the arrow is regarded as a collision. (x0.1 blocks)
-ui.settings.murdererSword.knifeSpeed.title=Speed of Thrown Knife
-ui.settings.murdererSword.knifeSpeed.description=Determine the speed of Murderer's Thrown Knife.
-ui.settings.murdererSword.knifeThrowTime.title=Draw Time of Thrown Knife (x0.05 seconds)
-ui.settings.murdererSword.knifeThrowTime.description=How long does it take to throw the Murderer's Thrown Knife in ticks.
+### Detective Settings UI
+ui.settings.detective.title=Detective Settings
+ui.settings.detective.description=Controls the Detective's behavior in-game.
+ui.settings.detective.bowCooldown.title=Detective Bow Cooldown (seconds)
+ui.settings.detective.bowCooldown.description=How long after the detective fires an arrow before they reload a new one.
+ui.settings.detective.pickupBowMethod.title=Bow Pickup Method
+ui.settings.detective.pickupBowMethod.description=How Innocents can pick up the bow.
+ui.settings.detective.pickupBowMethod.rightClick=Right-click to pick up
+ui.settings.detective.pickupBowMethod.nearby=Nearby to pick up
 
-### Miscellaneous Settings UI
-ui.settings.miscellaneous.title=Miscellaneous Settings
-ui.settings.miscellaneous.description=Control other things in game.
-ui.settings.miscellaneous.infoboardLastLine.title=Last Line of Infoboard
-ui.settings.miscellaneous.infoboardLastLine.description=The content of last line of infoboard, with the color of yellow.
-ui.settings.miscellaneous.getGoldHint.title=Gold Pickup Hint
-ui.settings.miscellaneous.getGoldHint.description=Whether to notify the player when picking up gold ingots.
-ui.settings.miscellaneous.applyNightVision.title=Enable Night Vision Effect
-ui.settings.miscellaneous.applyNightVision.description=Whether to apply the night vision status effect to all players.
-ui.settings.miscellaneous.alwaysShowHero.title=Always Show Hero
-ui.settings.miscellaneous.alwaysShowHero.description=Show the hero no matter who killed the murderer, even if the hero is the murderer themselves.
+### Murderer Settings UI
+ui.settings.murderer.title=Murderer Settings
+ui.settings.murderer.description=Controls the Murderer's behavior in-game
+ui.settings.murderer.knifeCooldown.title=Knife Cooldown (seconds)
+ui.settings.murderer.knifeCooldown.description=How long after the murderer throws a knife before they can recharge another one.
+ui.settings.murderer.knifeCollideArrowDistance.title=Collision Distance Between Knife And Arrow (x0.1 Blocks)
+ui.settings.murderer.knifeCollideArrowDistance.description=How close the Murderer's Thrown Knife is to the arrow is regarded as a collision. (x0.1 blocks)
+ui.settings.murderer.knifeSpeed.title=Speed of Thrown Knife
+ui.settings.murderer.knifeSpeed.description=Determine the speed of Murderer's Thrown Knife.
+ui.settings.murderer.knifeThrowTime.title=Draw Time of Thrown Knife (x0.05 seconds)
+ui.settings.murderer.knifeThrowTime.description=How long does it take to throw the Murderer's Thrown Knife in ticks.
 
 ### Manage Fake Player UI
 ui.settings.fakePlayerManager.title=Manage Fake Player

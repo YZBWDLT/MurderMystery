@@ -615,7 +615,7 @@ export class MurderMysterySystem {
             { translate: "infoboard.mode", with: { rawtext: [{ translate: `mode.${mapMode}` }] } },
             ...optOutSpectateEnabled,
             { text: `` },
-            { text: `§e${this.settings.miscellaneous.infoboardLastLine}` },
+            { text: `§e${this.settings.gaming.infoboardLastLine}` },
         ];
         return texts;
     }
@@ -643,7 +643,7 @@ export class MurderMysterySystem {
         // 如果英雄不存在，对系统返回无英雄的情况
         if (!probableHero) return this.enterGameOverStage(reason);
         // 如果未指定常显示杀手，则英雄为杀手或首位侦探时都返回无英雄的情况
-        if (!this.settings.miscellaneous.alwaysShowHero) {
+        if (!this.settings.gaming.alwaysShowHero) {
             if (probableHero.role === MurderMysteryPlayerRole.Murderer) return this.enterGameOverStage(reason);
             if (probableHero.role === MurderMysteryPlayerRole.Detective && probableHero.isFirstDetective)
                 return this.enterGameOverStage(reason);
@@ -1217,14 +1217,20 @@ interface MurderMysteryGameSettings {
     /** 在游戏开始多久后给予杀手和侦探物品。单位：秒。 */
     getSpecialItemDelay: number;
 
-    /** 侦探在射箭之后，多久后重新装填一根箭。单位：秒。 */
-    detectiveBowCooldown: number;
-
-    /** 平民如何拾取弓。可以选择右键拾取或接近拾取。 */
-    pickupBowMethod: "rightClick" | "nearby";
-
     /** 旁观模式的传送列表中，是否显示身份。 */
     showRoleInSpectatorTeleportUI: boolean;
+
+    /** 信息板最后一行的内容。默认为黄色字体。 */
+    infoboardLastLine: string;
+
+    /** 获取金锭时是否提示玩家。 */
+    getGoldHint: boolean;
+
+    /** 是否对所有玩家施加夜视状态效果。 */
+    applyNightVision: boolean;
+
+    /** 无论是谁杀死了杀手都显示英雄，哪怕这个英雄是杀手自己。 */
+    alwaysShowHero: boolean;
 }
 
 interface MurderMysteryGoldSpawnSettings {
@@ -1241,7 +1247,7 @@ interface MurderMysteryGoldSpawnSettings {
     spawnInterval: number;
 }
 
-interface MurderMysteryMurdererSwordSettings {
+interface MurderMysteryMurdererSettings {
     /** 杀手在飞刀之后，多久后重新装填飞刀。单位：秒。 */
     knifeCooldown: number;
 
@@ -1255,18 +1261,12 @@ interface MurderMysteryMurdererSwordSettings {
     knifeThrowTime: number;
 }
 
-interface MurderMysteryMiscellaneousSettings {
-    /** 信息板最后一行的内容。默认为黄色字体。 */
-    infoboardLastLine: string;
+interface MurderMysteryDetectiveSettings {
+    /** 侦探在射箭之后，多久后重新装填一根箭。单位：秒。 */
+    bowCooldown: number;
 
-    /** 获取金锭时是否提示玩家。 */
-    getGoldHint: boolean;
-
-    /** 是否对所有玩家施加夜视状态效果。 */
-    applyNightVision: boolean;
-
-    /** 无论是谁杀死了杀手都显示英雄，哪怕这个英雄是杀手自己。 */
-    alwaysShowHero: boolean;
+    /** 平民如何拾取侦探的弓。可以选择右键拾取或接近拾取。 */
+    pickupBowMethod: "rightClick" | "nearby";
 }
 
 /** 密室杀手设置。在设置内包含众多玩家可以调控的设置项。 */
@@ -1300,9 +1300,11 @@ class MurderMysterySettings {
     gaming: MurderMysteryGameSettings = {
         timePerGame: 270,
         getSpecialItemDelay: 15,
-        detectiveBowCooldown: 5,
-        pickupBowMethod: "nearby",
         showRoleInSpectatorTeleportUI: true,
+        getGoldHint: true,
+        infoboardLastLine: "YZBWDLT",
+        applyNightVision: false,
+        alwaysShowHero: false,
     };
 
     /** 金锭生成设置，控制如何生成金锭。 */
@@ -1313,22 +1315,21 @@ class MurderMysterySettings {
         spawnInterval: 16,
     };
 
-    /** 杀手刀剑设置，控制杀手的刀的表现。 */
-    murdererSword: MurderMysteryMurdererSwordSettings = {
+    /** 侦探设置，控制游戏内侦探的表现。 */
+    detective: MurderMysteryDetectiveSettings = {
+        bowCooldown: 5,
+        pickupBowMethod: "nearby",
+    };
+
+    /** 杀手设置，控制游戏内杀手的表现。 */
+    murderer: MurderMysteryMurdererSettings = {
         knifeCooldown: 5,
         knifeCollideArrowDistance: 2.5,
         knifeSpeed: 1.0,
         knifeThrowTime: 10,
     };
 
-    /** 杂项设置，控制游戏中一些其他内容的设置项。 */
-    miscellaneous: MurderMysteryMiscellaneousSettings = {
-        getGoldHint: true,
-        infoboardLastLine: "YZBWDLT",
-        applyNightVision: false,
-        alwaysShowHero: false,
-    };
-
+    /** 地图启用状态，控制系统可以使用哪些地图。 */
     mapEnabled: Record<keyof typeof gameData.maps, boolean> = {};
 
     // #region - 保存与加载设置
@@ -1464,7 +1465,7 @@ class MurderMysterySettings {
                 {
                     type: "button",
                     text: { translate: "ui.settings.main.gaming" },
-                    icon: "textures/items/bow_standby",
+                    icon: "textures/items/diamond_pickaxe",
                     onClick: () => this.showGamingUI(system, player),
                 },
                 {
@@ -1475,15 +1476,15 @@ class MurderMysterySettings {
                 },
                 {
                     type: "button",
-                    text: { translate: "ui.settings.main.murdererSword" },
-                    icon: "textures/items/iron_sword",
-                    onClick: () => this.showMurdererSwordUI(system, player),
+                    text: { translate: "ui.settings.main.detective" },
+                    icon: "textures/items/bow_standby",
+                    onClick: () => this.showDetectiveUI(system, player),
                 },
                 {
                     type: "button",
-                    text: { translate: "ui.settings.main.miscellaneous" },
-                    icon: "textures/items/diamond_pickaxe",
-                    onClick: () => this.showMiscellaneousUI(system, player),
+                    text: { translate: "ui.settings.main.murderer" },
+                    icon: "textures/items/iron_sword",
+                    onClick: () => this.showMurdererUI(system, player),
                 },
             );
 
@@ -1507,9 +1508,9 @@ class MurderMysterySettings {
                         system.settings.gaming = defaultSettings.gaming;
                         system.settings.goldSpawn = defaultSettings.goldSpawn;
                         system.settings.mapEnabled = defaultSettings.mapEnabled;
-                        system.settings.miscellaneous = defaultSettings.miscellaneous;
-                        system.settings.murdererSword = defaultSettings.murdererSword;
                         system.settings.waiting = defaultSettings.waiting;
+                        system.settings.murderer = defaultSettings.murderer;
+                        system.settings.detective = defaultSettings.detective;
                         this.saveSettings(system);
                         lib.PlayerUtils.notify(player, {
                             message: { translate: "chat.settings.restoreDefault" },
@@ -1880,12 +1881,13 @@ class MurderMysterySettings {
                     type: "slider",
                     description: { translate: "ui.settings.waiting.startCountdown.title" },
                     tipText: { translate: "ui.settings.waiting.startCountdown.description" },
-                    default: startCountdown,
+                    default: startCountdown - 1,
                     min: 5,
                     max: 120,
                     step: 5,
                     onSubmit: result => {
-                        system.settings.waiting.startCountdown = result;
+                        // 实际时长为选择的时长 +1 秒，用于正确显示倒计时
+                        system.settings.waiting.startCountdown = result + 1;
                     },
                 },
             ],
@@ -1900,14 +1902,15 @@ class MurderMysterySettings {
 
     /** 对玩家显示游戏时 UI。 */
     private static showGamingUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { timePerGame, getSpecialItemDelay, detectiveBowCooldown, pickupBowMethod, showRoleInSpectatorTeleportUI } =
-            system.settings.gaming;
-        const pickupBowMethodList: Record<"rightClick" | "nearby", number> = {
-            rightClick: 0,
-            nearby: 1,
-        };
-        const pickupBowMethods: ["rightClick", "nearby"] = ["rightClick", "nearby"];
-
+        const {
+            timePerGame,
+            getSpecialItemDelay,
+            showRoleInSpectatorTeleportUI,
+            infoboardLastLine,
+            getGoldHint,
+            applyNightVision,
+            alwaysShowHero,
+        } = system.settings.gaming;
         this.generateSettingsUI(
             system,
             player,
@@ -1938,31 +1941,6 @@ class MurderMysterySettings {
                     },
                 },
                 {
-                    type: "slider",
-                    description: { translate: "ui.settings.gaming.detectiveBowCooldown.title" },
-                    tipText: { translate: "ui.settings.gaming.detectiveBowCooldown.description" },
-                    default: detectiveBowCooldown,
-                    min: 0,
-                    max: 10,
-                    step: 1,
-                    onSubmit: result => {
-                        system.settings.gaming.detectiveBowCooldown = result;
-                    },
-                },
-                {
-                    type: "dropdown",
-                    description: { translate: "ui.settings.gaming.pickupBowMethod.title" },
-                    tipText: { translate: "ui.settings.gaming.pickupBowMethod.description" },
-                    items: [
-                        { translate: "ui.settings.gaming.pickupBowMethod.rightClick" },
-                        { translate: "ui.settings.gaming.pickupBowMethod.nearby" },
-                    ],
-                    default: pickupBowMethodList[pickupBowMethod],
-                    onSubmit: result => {
-                        system.settings.gaming.pickupBowMethod = pickupBowMethods[result] ?? "nearby";
-                    },
-                },
-                {
                     type: "toggle",
                     description: { translate: "ui.settings.gaming.showRoleInSpectatorTeleportUI.title" },
                     tipText: { translate: "ui.settings.gaming.showRoleInSpectatorTeleportUI.description" },
@@ -1971,10 +1949,96 @@ class MurderMysterySettings {
                         system.settings.gaming.showRoleInSpectatorTeleportUI = result;
                     },
                 },
+                {
+                    type: "textField",
+                    description: { translate: "ui.settings.gaming.infoboardLastLine.title" },
+                    tipText: { translate: "ui.settings.gaming.infoboardLastLine.description" },
+                    default: infoboardLastLine,
+                    placeholderText: "",
+                    onSubmit: result => {
+                        system.settings.gaming.infoboardLastLine = result;
+                    },
+                },
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.gaming.getGoldHint.title" },
+                    tipText: { translate: "ui.settings.gaming.getGoldHint.description" },
+                    default: getGoldHint,
+                    onSubmit: result => {
+                        system.settings.gaming.getGoldHint = result;
+                    },
+                },
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.gaming.applyNightVision.title" },
+                    tipText: { translate: "ui.settings.gaming.applyNightVision.description" },
+                    default: applyNightVision,
+                    onSubmit: result => {
+                        system.settings.gaming.applyNightVision = result;
+                    },
+                },
+                {
+                    type: "toggle",
+                    description: { translate: "ui.settings.gaming.alwaysShowHero.title" },
+                    tipText: { translate: "ui.settings.gaming.alwaysShowHero.description" },
+                    default: alwaysShowHero,
+                    onSubmit: result => {
+                        system.settings.gaming.alwaysShowHero = result;
+                    },
+                },
             ],
             () => {
                 // 如果要设置的游戏时间小于当前剩余的游戏时间，则直接改为待设置的游戏时间
                 if (system.settings.gaming.timePerGame < system.timeLeft) system.timeLeft = system.settings.gaming.timePerGame;
+                // 若启用夜视，则立刻应用组件，否则立刻移除夜视效果
+                if (system.settings.gaming.applyNightVision) MurderMysteryComponents.applyNightVision(system);
+                else {
+                    lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
+                }
+            },
+        );
+    }
+
+    private static showDetectiveUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const { bowCooldown, pickupBowMethod } = system.settings.detective;
+        const pickupBowMethodList: Record<"rightClick" | "nearby", number> = {
+            rightClick: 0,
+            nearby: 1,
+        };
+        const pickupBowMethods: ["rightClick", "nearby"] = ["rightClick", "nearby"];
+
+        this.generateSettingsUI(
+            system,
+            player,
+            "detective",
+            [
+                {
+                    type: "slider",
+                    description: { translate: "ui.settings.detective.bowCooldown.title" },
+                    tipText: { translate: "ui.settings.detective.bowCooldown.description" },
+                    default: bowCooldown,
+                    min: 0,
+                    max: 10,
+                    step: 1,
+                    onSubmit: result => {
+                        system.settings.detective.bowCooldown = result;
+                    },
+                },
+                {
+                    type: "dropdown",
+                    description: { translate: "ui.settings.detective.pickupBowMethod.title" },
+                    tipText: { translate: "ui.settings.detective.pickupBowMethod.description" },
+                    items: [
+                        { translate: "ui.settings.detective.pickupBowMethod.rightClick" },
+                        { translate: "ui.settings.detective.pickupBowMethod.nearby" },
+                    ],
+                    default: pickupBowMethodList[pickupBowMethod],
+                    onSubmit: result => {
+                        system.settings.detective.pickupBowMethod = pickupBowMethods[result] ?? "nearby";
+                    },
+                },
+            ],
+            () => {
                 // 重新注册弓箭检测组件
                 MurderMysteryComponents.playerPickupBowTest(system);
             },
@@ -2037,114 +2101,58 @@ class MurderMysterySettings {
     }
 
     /** 对玩家显示杀手刀剑 UI。 */
-    private static showMurdererSwordUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { knifeCooldown, knifeCollideArrowDistance, knifeSpeed, knifeThrowTime } = system.settings.murdererSword;
-        this.generateSettingsUI(system, player, "murdererSword", [
+    private static showMurdererUI(system: MurderMysterySystem, player: minecraft.Player) {
+        const { knifeCooldown, knifeCollideArrowDistance, knifeSpeed, knifeThrowTime } = system.settings.murderer;
+        this.generateSettingsUI(system, player, "murderer", [
             {
                 type: "slider",
-                description: { translate: "ui.settings.murdererSword.knifeCooldown.title" },
-                tipText: { translate: "ui.settings.murdererSword.knifeCooldown.description" },
+                description: { translate: "ui.settings.murderer.knifeCooldown.title" },
+                tipText: { translate: "ui.settings.murderer.knifeCooldown.description" },
                 default: knifeCooldown,
                 min: 0,
                 max: 10,
                 step: 1,
                 onSubmit: result => {
-                    system.settings.murdererSword.knifeCooldown = result;
+                    system.settings.murderer.knifeCooldown = result;
                 },
             },
             {
                 type: "slider",
-                description: { translate: "ui.settings.murdererSword.knifeCollideArrowDistance.title" },
-                tipText: { translate: "ui.settings.murdererSword.knifeCollideArrowDistance.description" },
+                description: { translate: "ui.settings.murderer.knifeCollideArrowDistance.title" },
+                tipText: { translate: "ui.settings.murderer.knifeCollideArrowDistance.description" },
                 default: knifeCollideArrowDistance * 10,
                 min: 5,
                 max: 50,
                 step: 5,
                 onSubmit: result => {
-                    system.settings.murdererSword.knifeCollideArrowDistance = result / 10;
+                    system.settings.murderer.knifeCollideArrowDistance = result / 10;
                 },
             },
             {
                 type: "slider",
-                description: { translate: "ui.settings.murdererSword.knifeSpeed.title" },
-                tipText: { translate: "ui.settings.murdererSword.knifeSpeed.description" },
+                description: { translate: "ui.settings.murderer.knifeSpeed.title" },
+                tipText: { translate: "ui.settings.murderer.knifeSpeed.description" },
                 default: knifeSpeed * 10,
                 min: 1,
                 max: 40,
                 step: 3,
                 onSubmit: result => {
-                    system.settings.murdererSword.knifeSpeed = result / 10;
+                    system.settings.murderer.knifeSpeed = result / 10;
                 },
             },
             {
                 type: "slider",
-                description: { translate: "ui.settings.murdererSword.knifeThrowTime.title" },
-                tipText: { translate: "ui.settings.murdererSword.knifeThrowTime.description" },
+                description: { translate: "ui.settings.murderer.knifeThrowTime.title" },
+                tipText: { translate: "ui.settings.murderer.knifeThrowTime.description" },
                 default: knifeThrowTime,
                 min: 0,
                 max: 50,
                 step: 5,
                 onSubmit: result => {
-                    system.settings.murdererSword.knifeThrowTime = result;
+                    system.settings.murderer.knifeThrowTime = result;
                 },
             },
         ]);
-    }
-
-    /** 对玩家显示杂项 UI。 */
-    private static showMiscellaneousUI(system: MurderMysterySystem, player: minecraft.Player) {
-        const { infoboardLastLine, getGoldHint, applyNightVision, alwaysShowHero } = system.settings.miscellaneous;
-        this.generateSettingsUI(
-            system,
-            player,
-            "miscellaneous",
-            [
-                {
-                    type: "textField",
-                    description: { translate: "ui.settings.miscellaneous.infoboardLastLine.title" },
-                    tipText: { translate: "ui.settings.miscellaneous.infoboardLastLine.description" },
-                    default: infoboardLastLine,
-                    placeholderText: "",
-                    onSubmit: result => {
-                        system.settings.miscellaneous.infoboardLastLine = result;
-                    },
-                },
-                {
-                    type: "toggle",
-                    description: { translate: "ui.settings.miscellaneous.getGoldHint.title" },
-                    tipText: { translate: "ui.settings.miscellaneous.getGoldHint.description" },
-                    default: getGoldHint,
-                    onSubmit: result => {
-                        system.settings.miscellaneous.getGoldHint = result;
-                    },
-                },
-                {
-                    type: "toggle",
-                    description: { translate: "ui.settings.miscellaneous.applyNightVision.title" },
-                    tipText: { translate: "ui.settings.miscellaneous.applyNightVision.description" },
-                    default: applyNightVision,
-                    onSubmit: result => {
-                        system.settings.miscellaneous.applyNightVision = result;
-                    },
-                },
-                {
-                    type: "toggle",
-                    description: { translate: "ui.settings.miscellaneous.alwaysShowHero.title" },
-                    tipText: { translate: "ui.settings.miscellaneous.alwaysShowHero.description" },
-                    default: alwaysShowHero,
-                    onSubmit: result => {
-                        system.settings.miscellaneous.alwaysShowHero = result;
-                    },
-                },
-            ],
-            () => {
-                // 若启用夜视，则立刻应用组件，否则立刻移除夜视效果
-                if (system.settings.miscellaneous.applyNightVision) MurderMysteryComponents.applyNightVision(system);
-                else {
-                    lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
-                }
-            },
-        );
     }
 
     /** 对玩家显示假玩家管理器 UI。 */
@@ -2484,7 +2492,7 @@ class MurderMysteryComponents {
      * @description 会在游戏开始时尝试对所有玩家施加夜视效果。
      */
     static applyNightVision(system: MurderMysterySystem) {
-        if (!system.settings.miscellaneous.applyNightVision) return;
+        if (!system.settings.gaming.applyNightVision) return;
         lib.PlayerUtils.getAll().forEach(player => player.runCommand("effect @s night_vision infinite 0 true"));
     }
 
@@ -2720,7 +2728,7 @@ class MurderMysteryComponents {
             event => {
                 const { entity: player, items: goldIngot } = event;
                 if (!isPlayer(player)) return;
-                if (system.settings.miscellaneous.getGoldHint)
+                if (system.settings.gaming.getGoldHint)
                     player.sendMessage({ translate: "chat.pickedUpGold", with: [`${goldIngot[0]?.amount}`] });
                 const inventoryUtils = lib.ItemUtils.inventory;
                 // 锁定玩家的金锭到快捷栏的最后一位
@@ -2830,7 +2838,7 @@ class MurderMysteryComponents {
         lib.gameSystem.unsubscribeTimeline("playerGetBowTestNearby");
         lib.gameSystem.unsubscribeEvent("playerGetBowTestRightClick");
 
-        const pickupBowMethod = system.settings.gaming.pickupBowMethod;
+        const pickupBowMethod = system.settings.detective.pickupBowMethod;
         const isAliveInnocentData = (playerData: MurderMysteryPlayer | undefined): playerData is MurderMysteryPlayer => {
             if (!playerData) return false;
             if (playerData.role !== MurderMysteryPlayerRole.Innocent) return false;
@@ -3474,7 +3482,7 @@ export class MurderMysteryPlayer {
             { text: "" },
             ...throwKnifeLine,
             ...chargeLine,
-            { text: `§e${this.system.settings.miscellaneous.infoboardLastLine}` },
+            { text: `§e${this.system.settings.gaming.infoboardLastLine}` },
         ];
         this.player.onScreenDisplay.setActionBar(lib.JSUtils.lineText(texts));
     }
@@ -3535,7 +3543,7 @@ export class MurderMysteryPlayer {
         if (this.role !== MurderMysteryPlayerRole.Detective) return;
 
         // 设置侦探的冷却时间
-        this.startCharging(20 * this.system.settings.gaming.detectiveBowCooldown);
+        this.startCharging(20 * this.system.settings.detective.bowCooldown);
     }
 
     /** 掉落弓。
@@ -3607,7 +3615,7 @@ export class MurderMysteryPlayer {
         // ===== 变量准备 =====
         const murderer = this.player;
         let pitch = 0.7;
-        const knifeThrowTime = this.system.settings.murdererSword.knifeThrowTime;
+        const knifeThrowTime = this.system.settings.murderer.knifeThrowTime;
         const stopThrowing = (shouldSendMessage: boolean = true) => {
             // 终止主程序
             lib.gameSystem.unsubscribeTimelines(`${murderer.id}ThrowingKnife`);
@@ -3665,13 +3673,13 @@ export class MurderMysteryPlayer {
         const knife = lib.EntityUtils.add(swordId, this.player.getHeadLocation());
         const projectileComp = knife.getComponent("projectile") as minecraft.EntityProjectileComponent;
         projectileComp.owner = this.player;
-        projectileComp.shoot(lib.Vector3Utils.scale(this.player.getViewDirection(), this.system.settings.murdererSword.knifeSpeed), {
+        projectileComp.shoot(lib.Vector3Utils.scale(this.player.getViewDirection(), this.system.settings.murderer.knifeSpeed), {
             uncertainty: 0,
         });
         // 播放飞刀音效
         if (isPlayer(this.player)) this.player.playSound("mob.enderdragon.flap");
         // 令杀手进入冷却
-        this.startCharging(20 * this.system.settings.murdererSword.knifeCooldown);
+        this.startCharging(20 * this.system.settings.murderer.knifeCooldown);
         this.throwingTime = 0;
         // 返回飞刀信息
         return knife;
@@ -3769,7 +3777,7 @@ export class MurderMysteryPlayer {
             // ===== 变量准备 =====
             const location = knife.location;
             const dimension = knife.dimension;
-            const knifeCollideArrowDistance = this.system.settings.murdererSword.knifeCollideArrowDistance;
+            const knifeCollideArrowDistance = this.system.settings.murderer.knifeCollideArrowDistance;
             const arrowNearby = lib.EntityUtils.getNearby("minecraft:arrow", location, knifeCollideArrowDistance).filter(
                 arrow => !MurderMysterySystem.getEntityState(arrow, "murder_mystery:hit", false),
             )[0];
