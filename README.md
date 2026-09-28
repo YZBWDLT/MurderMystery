@@ -18,81 +18,31 @@
 
 如果还有什么想要了解的，请联系我们的 QQ 群，进群申请填写为「GitHub 密室杀手」。
 
-## 1.0 - Pre 1 更新日志
+## 1.0 - Pre 2 更新日志
 
 一起来看看本周的更新吧，祝你躲过杀手的追击！
 
 ### 地图
 
-- 新增地图雪景球
-- 现在地图暗景秋色的陷阱有了 15 秒的冷却
-- 扩大了复活节游乐园和 Hypixel 游乐园的底部范围
-- #12 现在画不再能被破坏
-- 修复了一些头颅未更新的问题
-- 现在地图内的陷阱在冷却时使用不再提示剩余冷却时间，同步 Hypixel
-- 新增了地图阴森庄园和阴森庄园 V1 的全部功能
-  - 现在两张地图的电梯均可使用
-  - 现在两张地图的秘密通道均可使用
-  - 现在两张地图的玄关地板陷阱均可使用
-  - 现在新版地图的两个挤压陷阱可使用
-  - 现在新版地图的滚筒陷阱可使用
+- 现在地图雪景球不再会掉进轨道里
+- 现在地图雪中平安夜 V1 不再能够出图了
+- 现在地图阴森庄园和阴森庄园 V1 不再能通过弓箭压住木按钮，导致按下按钮的事件无法触发
+- 现在地图游轮不再默认带有假人
 
 ### 交互机制
 
-- 现在交互机制由白名单机制变为了黑名单机制
-- 但是，以下方块仍然无法交互（主要是打开 UI）
-  - `minecraft:flower_pot`
-  - `minecraft:hopper`
-  - `minecraft:chest`
-  - `minecraft:trapped_chest`
-  - `minecraft:ender_chest`
-  - `minecraft:furnace`
-  - `minecraft:brewing_stand`
-  - `minecraft:crafting_table`
-  - `minecraft:anvil`
-  - `minecraft:chipped_anvil`
-  - `minecraft:damaged_anvil`
-  - `minecraft:cake`
-  - `minecraft:dispenser`
-  - `minecraft:dropper`
-  - `minecraft:frame`
+- 现在床不再能交互了
 
-### 临终遗言
+### 定位器
 
-- #3 正式引入临终遗言！
-- 现在玩家可以选择临终遗言，在被杀死后会在尸体上方显示特定内容
-- 临终遗言会在 20 秒后消失
-- 一共添加了 16 种临终遗言，其中有 14 种为 Hypixel 的原版临终遗言，另 2 种为原创
-
-### 杀手飞刀
-
-- #23 现在杀手在手持飞刀时会显示红石粉粒子效果
-- #59 修复了飞刀入水未清除的问题
+- 现在定位器物品是始终给予的，而不再是在特定时段给予定位器
+- 定位器在平民（侦探）玩家小于等于 2 人时，会对所有玩家显示其他玩家的位置
+- 定位器在平民（侦探）玩家小于等于 1 人时，会对杀手隐藏最后一名玩家的位置
+- 定位器在游戏剩余 30 秒时，会重新对杀手隐藏最后一名玩家的位置
+- 定位器会对旁观者或死去的玩家显示所有玩家的位置
 
 ### 设置
 
-- 将启用夜视效果设置移动到了杂项设置中
-- #51 为杂项设置新增了常显示英雄设置
-
 ### 漏洞修复
 
-- 修复了头颅顶面错误旋转的问题
-- 现在在拥有神秘药水状态效果时喝下已知药效的药水时，不再返回未知效果的药水
-
 ### 技术性
-
-- 更新了行为包和资源包的版本为`1.0.19`
-- 为`lib`新增了一个`Vector3Utils.toString()`静态方法，以将坐标转换为`"X Y Z"`的字符串形式
-- 彻底移除了事件的数据驱动，现在事件的类型为`Record<string, (system: MurderMysterySystem, playerData?: MurderMysteryPlayer) => void>`，而不再是`Record<string, MurderMysteryEvents>`
-- 令事件管理器对`data.ts`开放了多个函数：`getMysteryPotion`、`intoHauntedHouseDoor`、`rideMinecart`
-- 现在事件管理器的`intoHauntedHouseDoor`、`rideMinecart`是异步的，会返回`Promise<boolean>`，在对应事件结束后返回
-- 移除了事件管理器的多个函数：`setBlock`、`fillBlock`、`setStructure`、`setEntity`、`setText`、`setPlayerDead`、`teleport`，它们都可以用脚本系统的其他函数代替
-- 更改了`lib.gameSystem.subscribeTimeline`方法，现在其回调函数支持传入一个`time`参数，以代表时间线执行的时间
-- 将密室杀手系统的静态方法`getState`和`setState`更名为`getEntityState`和`setEntityState`，将接口`DynamicProperties`更名为`EntityDynamicProperties`
-- 新增了密室杀手系统的静态方法`getWorldState`和`setWorldState`，新增了`WorldDynamicProperties`接口
-- 为`data.ts`新增了`LastWordData`接口和`lastWords`数据
-- 为`lib.ts`新增了带有权重的随机函数
-- 拆分了`interaction`组件为 3 个新的组件：
-  - `interaction`组件：仅保留`at`和`run`，`at`为交互位置，而`run`为运行的事件，可以指定为字符串，指定为字符串时触发对应事件，也可以直接执行一个函数
-  - `playerPressButton`组件：专门用于在玩家按下按钮时执行事件，参数与`interaction`一致
-  - `playerPushLever`组件：专门用于在玩家拉下拉杆时执行事件，参数与`interaction`一致，但`run`指定为函数类型时，需要将返回类型指定为`number`，以指代拉杆禁用的时长，单位：秒

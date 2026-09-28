@@ -226,7 +226,6 @@ chat.spectatorTeleport.playerIsInvalid=§c你不能传送到一名无效玩家�
 chat.spectatorTeleport.teleported=§a已传送到§6%s§a的位置处
 
 ### 获得定位器
-chat.innocentGetLocator=§e你的定位器现在可以指向侦探掉落的弓，手持使用！
 chat.murdererGetLocator.innocent=§c小心！§e现在杀手可以易如反掌地定位玩家！
 chat.murdererGetLocator.detective=§c小心！§e现在杀手可以易如反掌地定位玩家！
 chat.murdererGetLocator.murderer=§e你的定位器现在可以指向其他玩家！手持使用，以此来定位剩余平民！

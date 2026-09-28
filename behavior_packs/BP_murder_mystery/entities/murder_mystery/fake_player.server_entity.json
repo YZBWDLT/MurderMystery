@@ -24,7 +24,9 @@
             "minecraft:persistent": {},
             "minecraft:health": { "value": 20, "max": 20 },
             "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
-            "minecraft:equipment": { "slot_drop_chance": [{ "slot": "slot.weapon.mainhand", "drop_chance": 0 }] }
+            "minecraft:equipment": { "slot_drop_chance": [{ "slot": "slot.weapon.mainhand", "drop_chance": 0 }] },
+            "minecraft:inventory": { "inventory_size": 27 },
+            "minecraft:equippable": {}
         },
         "events": {
             "murder_mystery:npc_steve": {

@@ -226,7 +226,6 @@ chat.spectatorTeleport.playerIsInvalid=§cYou can't teleport to an invalid playe
 chat.spectatorTeleport.teleported=§aHas been teleported to §6%s§a's location
 
 ### Get Locator
-chat.innocentGetLocator=§eYou've got a locator! Hold it to find the dropped bow!
 chat.murdererGetLocator.innocent=§cWatch out! §eThe Murderer can now find survivors easily!
 chat.murdererGetLocator.detective=§cWatch out! §eThe Murderer can now find survivors easily!
 chat.murdererGetLocator.murderer=§eYou've got a locator! Hold it to find the remaining survivors!

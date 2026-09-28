@@ -98,7 +98,7 @@ export class MurderMysterySystem {
     }
     // #region - 系统变量
     /** 系统版本。 */
-    version = "1.0 - Pre 1";
+    version = "1.0 - Pre 2";
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage;
     /** 游戏设置信息，获取管理员等输入的设置信息，并自动应用于设置中。 */
@@ -203,9 +203,10 @@ export class MurderMysterySystem {
             this.isSolo = true;
         // 移除多余实体
         this.removeAllEntities();
-        // 移除所有玩家的所有物品，新增设置物品
+        // 移除所有玩家的所有物品，新增设置物品和定位器物品
         lib.PlayerUtils.getAll().forEach(player => {
             player.getComponent("inventory")?.container.clearAll();
+            lib.ItemUtils.inventory.set(player, 4, "murder_mystery:locator", { itemLock: minecraft.ItemLockMode.slot });
             lib.ItemUtils.inventory.set(player, 6, "murder_mystery:settings", { itemLock: minecraft.ItemLockMode.slot });
         });
         // 注册必选组件
@@ -266,7 +267,9 @@ export class MurderMysterySystem {
         // 提醒玩家游戏结束，并返回胜者信息
         this.gameOverNotice(reason, hero);
         // 移除所有玩家的所有定位栏
-        lib.PlayerUtils.getAll().forEach(player => player.locatorBar.removeAllWaypoints());
+        lib.PlayerUtils.getAll().forEach(player => lib.LocatorBarUtils.removeAll(player));
+        // 移除所有假玩家手上的物品
+        lib.EntityUtils.get("overworld", { type: "murder_mystery:fake_player" }).forEach(fakePlayer => fakePlayer.runCommand("replaceitem entity @s slot.weapon.mainhand 0 air"));
         // 注册组件
         this.general();
         MurderMysteryComponents.preventPlayerPickupGold();
@@ -429,6 +432,7 @@ export class MurderMysterySystem {
             player.nameTag = player.name;
             player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Jump, true);
             player.inputPermissions.setPermissionCategory(minecraft.InputPermissionCategory.Dismount, true);
+            lib.LocatorBarUtils.removeAll(player);
             // 强制关闭所有 UI
             lib.UIUtils.close(player);
         }
@@ -1902,7 +1906,11 @@ class MurderMysteryComponents {
         });
     }
     /** 玩家和方块交互组件。
-     * @description （实际内容有待更新）
+     * @description 禁止玩家和黑名单内的方块交互。
+     * @description 游戏结束后，禁止玩家和方块交互。
+     * @description 当玩家和方块交互时，通过`interaction`组件的指定值执行事件。
+     * @description 当玩家和按钮交互时，通过`playerPressButton`组件的指定值执行事件。
+     * @description 当玩家和拉杆交互时，通过`playerPushButton`组件的指定值执行事件。
      */
     static interaction(system) {
         // ===== 检查玩家交互 =====
@@ -1928,15 +1936,17 @@ class MurderMysteryComponents {
                 "minecraft:dispenser",
                 "minecraft:dropper",
                 "minecraft:frame",
+                "minecraft:bed",
             ];
             // --- 检查交互黑名单 ---
             // 如果交互黑名单包含指定方块类型，并且玩家不为创造模式，则取消事件
-            if (banList.includes(block.typeId) && player.getGameMode() !== minecraft.GameMode.Creative)
+            const creativePlayer = player.getGameMode() === minecraft.GameMode.Creative;
+            if (banList.includes(block.typeId) && !creativePlayer)
                 event.cancel = true;
             // --- 执行指定的事件 ---
             // 如果非游戏阶段，终止运行
             const isGaming = system.gameStage === GameStage.GamingStage;
-            if (!isGaming) {
+            if (!isGaming && !creativePlayer) {
                 event.cancel = true;
                 return;
             }
@@ -2178,7 +2188,6 @@ class MurderMysteryComponents {
                     sound: "note.hat",
                 });
             if (system.timeLeft === 30) {
-                system.livingPlayers.murderer.forEach(murderer => murderer.getLocator());
                 system.livingPlayers.allPlayers.forEach(playerData => {
                     if (isPlayer(playerData.player))
                         lib.PlayerUtils.notify(playerData.player, {
@@ -2527,7 +2536,9 @@ class MurderMysteryComponents {
             });
         }
         // 真实玩家退出
-        lib.gameSystem.subscribeEvent("playerLeaveTest", minecraft.world.beforeEvents.playerLeave, event => playerLeaveLogic(event.player));
+        lib.gameSystem.subscribeEvent("playerLeaveTest", minecraft.world.beforeEvents.playerLeave, event => {
+            playerLeaveLogic(event.player);
+        });
         // 虚拟玩家退出
         lib.gameSystem.subscribeEvent("fakePlayerLeaveTest", minecraft.world.beforeEvents.entityRemove, event => {
             if (event.removedEntity.typeId !== "murder_mystery:fake_player")
@@ -2544,7 +2555,6 @@ class MurderMysteryComponents {
             if (!initialSpawn)
                 return;
             system.addPlayer({ player, role: MurderMysteryPlayerRole.Spectator });
-            player.setGameMode(minecraft.GameMode.Spectator);
             player.teleport(lib.JSUtils.array.random(system.mapData.description.spawnPoints));
         });
         lib.gameSystem.subscribeEvent("fakePlayerJoinTest", minecraft.world.afterEvents.entitySpawn, event => {
@@ -2634,12 +2644,10 @@ class MurderMysteryComponents {
             if (!playerData)
                 return;
             // 当玩家手持定位器时，显示定位栏
-            if (itemStack?.typeId === "murder_mystery:locator") {
+            if (itemStack?.typeId === "murder_mystery:locator")
                 playerData.showLocatorBar();
-            }
-            else {
+            else
                 playerData.hideLocatorBar();
-            }
         });
     }
     /** 杀手速度组件。
@@ -2770,9 +2778,8 @@ export class MurderMysteryPlayer {
                 this.player.setGameMode(minecraft.GameMode.Spectator);
         }
         // 如果是侦探，标记为首位侦探
-        if (this.role === MurderMysteryPlayerRole.Detective) {
+        if (this.role === MurderMysteryPlayerRole.Detective)
             this.isFirstDetective = true;
-        }
         // 为玩家展示身份
         this.showRole();
     }
@@ -2796,8 +2803,8 @@ export class MurderMysteryPlayer {
     chargingTime = 0;
     /** 杀手的飞刀的蓄力时间。单位：游戏刻。 */
     throwingTime = 0;
-    /** 正在显示定位栏。 */
-    isShowingLocatorBar = false;
+    /** 定位栏是否启用。仅当启用定位栏后，玩家手持定位器时才能够显示定位栏。 */
+    locatorBarEnabled = false;
     /** 对玩家展示身份。
      * @remarks 只对非旁观者的玩家生效。
      */
@@ -2849,6 +2856,9 @@ export class MurderMysteryPlayer {
         this.isDead = true;
         this.chargingTime = 0;
         this.system.removeLivingPlayer(this);
+        // 更新所有玩家的定位栏，并且为该玩家显示定位栏
+        this.showLocatorBar();
+        this.system.players.allPlayers.forEach(playerData => playerData.updateLocatorBar());
         // 添加死亡次数
         const currentDeathCount = MurderMysterySystem.getEntityState(player, "murder_mystery:deathCount.total", 0);
         MurderMysterySystem.setEntityState(player, "murder_mystery:deathCount.total", currentDeathCount + 1);
@@ -3017,6 +3027,11 @@ export class MurderMysteryPlayer {
     }
     /** 获取弓箭。 */
     getBow(giveArrow = true) {
+        // 如果是非玩家，在手上给予后终止运行
+        if (!isPlayer(this.player)) {
+            this.player.runCommand("replaceitem entity @s slot.weapon.mainhand 0 bow");
+            return;
+        }
         // 新增箭并移除金锭，并提示玩家
         lib.ItemUtils.inventory.set(this.player, this.role === MurderMysteryPlayerRole.Murderer ? 2 : 1, "minecraft:bow", {
             unbreakable: true,
@@ -3039,6 +3054,8 @@ export class MurderMysteryPlayer {
             lib.ItemUtils.removeItem(this.player, "minecraft:arrow");
         }
         this.getBow();
+        // 移除弓实体
+        bowEntity.remove();
         // 通知其他玩家
         this.system.livingPlayers.allPlayers.forEach(playerData => {
             const player = playerData.player;
@@ -3046,11 +3063,8 @@ export class MurderMysteryPlayer {
                 return;
             if (isPlayer(player))
                 player.sendMessage({ translate: "chat.bowPicked" });
+            playerData.updateLocatorBar();
         });
-        // 为所有平民禁用定位器
-        [...this.system.livingPlayers.innocent, ...this.system.livingPlayers.detective].forEach(innocent => innocent.removeLocator());
-        // 移除弓实体
-        bowEntity.remove();
     }
     // #endregion
     // #region - 侦探
@@ -3089,12 +3103,8 @@ export class MurderMysteryPlayer {
         // 生成弓
         const bowLocation = forceLocation ?? this.player.location;
         lib.EntityUtils.add(bowEntityId, bowLocation);
-        // 为所有平民解锁定位器
-        this.system.livingPlayers.innocent.forEach(innocent => {
-            if (isPlayer(innocent.player))
-                innocent.player.sendMessage({ translate: "chat.innocentGetLocator" });
-            innocent.getLocator();
-        });
+        // 对平民启用定位栏
+        this.system.livingPlayers.innocent.forEach(innocent => innocent.updateLocatorBar());
     }
     // #endregion
     // #region - 杀手 & 杀手飞刀
@@ -3102,8 +3112,10 @@ export class MurderMysteryPlayer {
     getSword() {
         if (this.role !== MurderMysteryPlayerRole.Murderer)
             return;
-        if (!isPlayer(this.player))
+        if (!isPlayer(this.player)) {
+            this.player.runCommand("replaceitem entity @s slot.weapon.mainhand 0 murder_mystery:iron_sword");
             return;
+        }
         lib.ItemUtils.inventory.set(this.player, 1, swordId, {
             unbreakable: true,
             itemLock: minecraft.ItemLockMode.slot,
@@ -3380,98 +3392,76 @@ export class MurderMysteryPlayer {
     }
     // #endregion
     // #region - 定位栏
-    /** 使玩家获取定位器。 */
-    getLocator() {
-        lib.ItemUtils.inventory.set(this.player, 4, "murder_mystery:locator", {
-            itemLock: minecraft.ItemLockMode.slot,
-        });
-        // 如果玩家此时恰好手持 5 号位，则显示定位栏
-        if (isPlayer(this.player) && this.player.selectedSlotIndex === 4)
-            this.showLocatorBar();
-    }
-    /** 移除玩家的定位器。 */
-    removeLocator() {
-        lib.ItemUtils.inventory.remove(this.player, 4);
-        this.hideLocatorBar();
-    }
-    /** 为玩家显示定位栏。 */
+    /** 对玩家显示定位栏，当玩家手持定位器时自动显示定位栏。 */
     showLocatorBar() {
-        // 若正在显示定位栏，则直接终止运行
-        if (this.isShowingLocatorBar)
+        this.locatorBarEnabled = true;
+        if (isPlayer(this.player) && this.player.selectedSlotIndex === 4)
+            this.updateLocatorBar();
+    }
+    /** 对玩家禁用定位栏。 */
+    hideLocatorBar() {
+        this.locatorBarEnabled = false;
+        const player = this.player;
+        if (!isPlayer(player))
+            return;
+        lib.LocatorBarUtils.removeAll(player);
+    }
+    /** 为玩家更新定位栏。
+     * - 对平民，在剩余 2 名平民/侦探时，显示剩余所有玩家的位置；同时，显示掉落的弓的位置。
+     * - 对侦探，在剩余 2 名平民/侦探时，显示剩余所有玩家的位置。
+     * - 对杀手，在剩余 2 名平民/侦探时，显示剩余所有玩家的位置；在剩余 1 名平民/侦探时，隐藏剩余的玩家位置；但在最后 30 秒，将强制显示所有玩家位置。
+     * - 对旁观者，显示剩余所有玩家的位置。
+     */
+    updateLocatorBar() {
+        // 若未启用定位栏，则直接终止运行
+        if (!this.locatorBarEnabled)
             return;
         // 如果不是玩家，则直接终止运行
         const player = this.player;
         if (!isPlayer(player))
             return;
-        // 杀手的定位栏，定位到其他所有存活的玩家
-        if (this.role === MurderMysteryPlayerRole.Murderer) {
-            player.locatorBar.removeAllWaypoints();
+        // 移除所有玩家原有的定位栏
+        lib.LocatorBarUtils.removeAll(player);
+        // 对平民添加弓的位置
+        const bowLocation = lib.EntityUtils.getType("murder_mystery:item_bow")[0]?.location;
+        const bowIconPath = "textures/locator_bar/bow";
+        if (bowLocation && this.role === MurderMysteryPlayerRole.Innocent)
+            lib.LocatorBarUtils.addLocation(player, bowLocation, {
+                textureBoundsList: [
+                    { texture: { path: bowIconPath, iconHeight: 1, iconWidth: 1 }, lowerBound: 0, upperBound: 25 },
+                    { texture: { path: bowIconPath, iconHeight: 0.75, iconWidth: 0.75 }, lowerBound: 25, upperBound: 50 },
+                    { texture: { path: bowIconPath, iconHeight: 0.5, iconWidth: 0.5 }, lowerBound: 50, upperBound: 75 },
+                    { texture: { path: bowIconPath, iconHeight: 0.25, iconWidth: 0.25 }, lowerBound: 75 },
+                ],
+            }, { red: 0.333, green: 1, blue: 1 });
+        const nonMurdererCount = this.system.livingPlayers.detective.length + this.system.livingPlayers.innocent.length;
+        const addAllPlayers = (markSpecialRole = false) => {
             this.system.livingPlayers.allPlayers.forEach(playerData => {
                 // 不注册自己的定位栏
                 if (player.id === playerData.player.id)
                     return;
-                // 如果是杀手，注册红色的定位栏
-                const locatesMurderer = playerData.role === MurderMysteryPlayerRole.Murderer;
-                const waypoint = new minecraft.EntityWaypoint(playerData.player, {
-                    textureBoundsList: [
-                        { texture: minecraft.WaypointTexture.Square, lowerBound: 0, upperBound: 25 },
-                        { texture: minecraft.WaypointTexture.Circle, lowerBound: 25, upperBound: 50 },
-                        { texture: minecraft.WaypointTexture.SmallSquare, lowerBound: 50, upperBound: 75 },
-                        { texture: minecraft.WaypointTexture.SmallStar, lowerBound: 75 },
-                    ],
-                }, { showDead: false, showInvisible: true, showSneaking: true }, locatesMurderer ? { red: 1, green: 0, blue: 0 } : { red: 1, green: 1, blue: 1 });
-                player.locatorBar.addWaypoint(waypoint);
+                const entityRules = { showDead: false, showInvisible: true, showSneaking: true };
+                // 如果是杀手，注册红色的定位栏；如果是侦探，注册青色的定位栏
+                let color = { red: 1, green: 1, blue: 1 };
+                if (markSpecialRole && playerData.role === MurderMysteryPlayerRole.Murderer)
+                    color = { red: 1, green: 0, blue: 0 };
+                if (markSpecialRole && playerData.role === MurderMysteryPlayerRole.Detective)
+                    color = { red: 0.33, green: 1, blue: 1 };
+                lib.LocatorBarUtils.addDefaultIconEntity(player, playerData.player, 0, 25, 50, 75, entityRules, color);
             });
-            this.isShowingLocatorBar = true;
-            return;
-        }
-        // 平民的定位栏，定位到弓的位置
-        if (this.role === MurderMysteryPlayerRole.Innocent) {
-            const bow = lib.EntityUtils.getType("murder_mystery:item_bow")[0];
-            if (!bow)
-                return;
-            const { dimension, location } = bow;
-            const waypoint = new minecraft.LocationWaypoint({ dimension, ...location }, {
-                textureBoundsList: [
-                    {
-                        texture: { path: "textures/locator_bar/bow", iconHeight: 1, iconWidth: 1 },
-                        lowerBound: 0,
-                        upperBound: 25,
-                    },
-                    {
-                        texture: { path: "textures/locator_bar/bow", iconHeight: 0.75, iconWidth: 0.75 },
-                        lowerBound: 25,
-                        upperBound: 50,
-                    },
-                    {
-                        texture: { path: "textures/locator_bar/bow", iconHeight: 0.5, iconWidth: 0.5 },
-                        lowerBound: 50,
-                        upperBound: 75,
-                    },
-                    {
-                        texture: { path: "textures/locator_bar/bow", iconHeight: 0.25, iconWidth: 0.25 },
-                        lowerBound: 75,
-                    },
-                ],
-            }, { red: 0.333, green: 1, blue: 1 });
-            player.locatorBar.removeAllWaypoints();
-            player.locatorBar.addWaypoint(waypoint);
-            this.isShowingLocatorBar = true;
-            return;
-        }
-    }
-    /** 为玩家隐藏定位栏。 */
-    hideLocatorBar() {
-        // 若未在显示定位栏，则直接终止运行
-        if (!this.isShowingLocatorBar)
-            return;
-        // 如果不是玩家，则直接终止运行
-        const player = this.player;
-        if (!isPlayer(player))
-            return;
-        // 隐藏定位栏
-        player.locatorBar.removeAllWaypoints();
-        this.isShowingLocatorBar = false;
+        };
+        // 剩余 2 名平民/侦探时，对所有玩家添加其他玩家的位置
+        if (nonMurdererCount <= 2 && nonMurdererCount > 1)
+            addAllPlayers();
+        // 剩余 1 名平民/侦探时，对非杀手添加杀手的位置
+        else if (nonMurdererCount <= 1 && this.role !== MurderMysteryPlayerRole.Murderer)
+            addAllPlayers(true);
+        // 剩余 30 秒时，对杀手添加其他玩家的位置
+        if (this.system.timeLeft <= 30 && this.role === MurderMysteryPlayerRole.Murderer)
+            addAllPlayers();
+        // 对旁观者，添加其他玩家的位置
+        if (this.isDead)
+            addAllPlayers(this.system.settings.gaming.showRoleInSpectatorTeleportUI);
     }
     // #endregion
     // #region - 事件冷却
