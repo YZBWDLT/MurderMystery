@@ -6,7 +6,7 @@
             "menu_category": { "category": "items" }
         },
         "components": {
-            "minecraft:icon": "map_filled"
+            "minecraft:icon": "compass_item"
         }
     }
 }

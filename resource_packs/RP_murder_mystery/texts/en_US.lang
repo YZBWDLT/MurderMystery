@@ -320,6 +320,7 @@ ui.settings.main.gaming=Gaming...
 ui.settings.main.goldSpawn=Gold Spawn...
 ui.settings.main.detective=Detective...
 ui.settings.main.murderer=Murderer...
+ui.settings.main.locator=Locator...
 ui.settings.main.developerSettings=§lDeveloper Settings
 ui.settings.main.fakePlayerManager=Manage Fake Player...
 ui.settings.main.restoreDefault=Restore Default Settings
@@ -382,6 +383,10 @@ ui.settings.gaming.applyNightVision.title=Enable Night Vision Effect
 ui.settings.gaming.applyNightVision.description=Whether to apply the night vision status effect to all players.
 ui.settings.gaming.alwaysShowHero.title=Always Show Hero
 ui.settings.gaming.alwaysShowHero.description=Show the hero no matter who killed the murderer, even if the hero is the murderer themselves.
+ui.settings.gaming.lastWordAlwaysShow.title=Last Words Always Show
+ui.settings.gaming.lastWordAlwaysShow.description=Whether last words can be shown through walls.
+ui.settings.gaming.lastWordKeepTime.title=Last Words Duration (seconds)
+ui.settings.gaming.lastWordKeepTime.description=The duration for which last words are kept. After this time, the last words will automatically disappear.
 
 ### Gold Spawn Settings UI
 ui.settings.goldSpawn.title=Gold Spawn Settings
@@ -408,6 +413,12 @@ ui.settings.detective.pickupBowMethod.nearby=Nearby to pick up
 ### Murderer Settings UI
 ui.settings.murderer.title=Murderer Settings
 ui.settings.murderer.description=Controls the Murderer's behavior in-game
+ui.settings.murderer.general=§lGeneral
+ui.settings.murderer.killPlayerTimeBonus.title=Kill Player Time Bonus (seconds)
+ui.settings.murderer.killPlayerTimeBonus.description=The time added each time the murderer kills a player.
+ui.settings.murderer.speedPlayerThreshold.title=Players Required for Speed Effect
+ui.settings.murderer.speedPlayerThreshold.description=The number of remaining players required for the Murderer to gain the speed effect.
+ui.settings.murderer.knife=§lKnife
 ui.settings.murderer.knifeCooldown.title=Knife Cooldown (seconds)
 ui.settings.murderer.knifeCooldown.description=How long after the murderer throws a knife before they can recharge another one.
 ui.settings.murderer.knifeCollideArrowDistance.title=Collision Distance Between Knife And Arrow (x0.1 Blocks)
@@ -416,6 +427,16 @@ ui.settings.murderer.knifeSpeed.title=Speed of Thrown Knife
 ui.settings.murderer.knifeSpeed.description=Determine the speed of Murderer's Thrown Knife.
 ui.settings.murderer.knifeThrowTime.title=Draw Time of Thrown Knife (x0.05 seconds)
 ui.settings.murderer.knifeThrowTime.description=How long does it take to throw the Murderer's Thrown Knife in ticks.
+
+### Locator Settings UI
+ui.settings.locator.title=Locator Settings
+ui.settings.locator.description=Controls how the locator works.
+ui.settings.locator.showAllPlayersThreshold.title=Player Count to Show All Players
+ui.settings.locator.showAllPlayersThreshold.description=The number of remaining non-murderers at which all players will be shown on every player's locator bar.
+ui.settings.locator.hideLeftPlayersThreshold.title=Player Count to Hide Remaining Players from Murderer
+ui.settings.locator.hideLeftPlayersThreshold.description=The number of remaining non-murderers at which the murderer's locator bar stops showing all other players.
+ui.settings.locator.showLeftPlayersTime.title=Remaining Time to Show Remaining Players (seconds)
+ui.settings.locator.showLeftPlayersTime.description=When the remaining game time is less than this value, the murderer's locator bar will force-show all other players.
 
 ### Manage Fake Player UI
 ui.settings.fakePlayerManager.title=Manage Fake Player

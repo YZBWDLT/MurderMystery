@@ -273,16 +273,16 @@ chat.aquarium.tank.giftDrinkableSpeedPotion=§c神圣的海洋生物赠予你一
 chat.aquarium.tank.giftBow=§c神圣的海洋生物赠予你一把弓！
 
 ### 阴森庄园的陷阱提示
-textDisplay.spookyMansion.doorTrap.line1=§7按下按钮来
-textDisplay.spookyMansion.doorTrap.line2=§7移除玄关地板
+textDisplay.spookyMansion.doorTrap.line1=§o§7按下按钮来
+textDisplay.spookyMansion.doorTrap.line2=§o§7移除玄关地板
 textDisplay.spookyMansion.doorTrap.line3=§61块金锭
 
-textDisplay.spookyMansion.barrelTrap.line1=§7按下按钮来
-textDisplay.spookyMansion.barrelTrap.line2=§7打开滚筒
+textDisplay.spookyMansion.barrelTrap.line1=§o§7按下按钮来
+textDisplay.spookyMansion.barrelTrap.line2=§o§7打开滚筒
 textDisplay.spookyMansion.barrelTrap.line3=§61块金锭
 
-textDisplay.spookyMansion.crusherTrap.line1=§7按下按钮来
-textDisplay.spookyMansion.crusherTrap.line2=§7启用挤压装置
+textDisplay.spookyMansion.crusherTrap.line1=§o§7按下按钮来
+textDisplay.spookyMansion.crusherTrap.line2=§o§7启用挤压装置
 textDisplay.spookyMansion.crusherTrap.line3=§62块金锭
 
 chat.spookyMansion.elevator.lobby=§7你现在位于§a大厅§7！
@@ -320,6 +320,7 @@ ui.settings.main.gaming=游戏时...
 ui.settings.main.goldSpawn=金锭生成...
 ui.settings.main.detective=侦探...
 ui.settings.main.murderer=杀手...
+ui.settings.main.locator=定位器...
 ui.settings.main.developerSettings=§l开发者设置
 ui.settings.main.fakePlayerManager=管理假玩家...
 ui.settings.main.restoreDefault=恢复默认设置
@@ -382,6 +383,10 @@ ui.settings.gaming.applyNightVision.title=启用夜视效果
 ui.settings.gaming.applyNightVision.description=是否对所有玩家施加夜视状态效果。
 ui.settings.gaming.alwaysShowHero.title=常显示英雄
 ui.settings.gaming.alwaysShowHero.description=无论是谁杀死了杀手都显示英雄，哪怕这个英雄是杀手自己。
+ui.settings.gaming.lastWordAlwaysShow.title=临终遗言始终显示
+ui.settings.gaming.lastWordAlwaysShow.description=临终遗言是否可以穿墙显示。
+ui.settings.gaming.lastWordKeepTime.title=临终遗言维持时间（秒）
+ui.settings.gaming.lastWordKeepTime.description=临终遗言的维持时间，超过该时间后临终遗言会自动消失。
 
 ### 金锭生成设置 UI
 ui.settings.goldSpawn.title=金锭生成设置
@@ -408,6 +413,12 @@ ui.settings.detective.pickupBowMethod.nearby=接近拾取
 ### 杀手设置 UI
 ui.settings.murderer.title=杀手设置
 ui.settings.murderer.description=控制游戏内杀手的表现。
+ui.settings.murderer.general=§l常规
+ui.settings.murderer.killPlayerTimeBonus.title=击杀玩家时间奖励（秒）
+ui.settings.murderer.killPlayerTimeBonus.description=杀手每杀死一名玩家，增加的时间。
+ui.settings.murderer.speedPlayerThreshold.title=速度效果所需玩家数
+ui.settings.murderer.speedPlayerThreshold.description=杀手获得速度效果所需的剩余玩家数。
+ui.settings.murderer.knife=§l飞刀
 ui.settings.murderer.knifeCooldown.title=飞刀冷却（秒）
 ui.settings.murderer.knifeCooldown.description=杀手在飞刀之后，多久后重新装填飞刀。
 ui.settings.murderer.knifeCollideArrowDistance.title=刀箭相碰距离（x0.1格）
@@ -416,6 +427,16 @@ ui.settings.murderer.knifeSpeed.title=飞刀速度
 ui.settings.murderer.knifeSpeed.description=杀手飞刀投掷出去的速度。
 ui.settings.murderer.knifeThrowTime.title=飞刀蓄力时间（x0.05秒）
 ui.settings.murderer.knifeThrowTime.description=杀手飞刀需要蓄力多久才能投掷出去。
+
+### 定位器设置 UI
+ui.settings.locator.title=定位器设置
+ui.settings.locator.description=控制定位器的运作方式。
+ui.settings.locator.showAllPlayersThreshold.title=显示全体玩家的玩家数
+ui.settings.locator.showAllPlayersThreshold.description=当剩余多少名非杀手时，所有玩家的定位栏上会显示其他所有玩家。
+ui.settings.locator.hideLeftPlayersThreshold.title=对杀手隐藏剩余玩家的玩家数
+ui.settings.locator.hideLeftPlayersThreshold.description=当剩余多少名非杀手时，杀手的定位栏上会停止显示其他所有玩家。
+ui.settings.locator.showLeftPlayersTime.title=显示剩余玩家的剩余时长（秒）
+ui.settings.locator.showLeftPlayersTime.description=当游戏剩余时长不足该值时，杀手的定位栏将会强制显示其他所有玩家。
 
 ### 假玩家管理器 UI
 ui.settings.fakePlayerManager.title=假玩家管理器

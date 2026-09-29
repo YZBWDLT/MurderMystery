@@ -967,6 +967,8 @@ class MurderMysterySettings {
         infoboardLastLine: "YZBWDLT",
         applyNightVision: false,
         alwaysShowHero: false,
+        lastWordAlwaysShow: true,
+        lastWordKeepTime: 20,
     };
     /** 金锭生成设置，控制如何生成金锭。 */
     goldSpawn = {
@@ -986,6 +988,14 @@ class MurderMysterySettings {
         knifeCollideArrowDistance: 2.5,
         knifeSpeed: 1.0,
         knifeThrowTime: 10,
+        killPlayerTimeBonus: 0,
+        speedPlayerThreshold: 1,
+    };
+    /** 杀手设置，控制游戏内杀手的表现。 */
+    locator = {
+        showAllPlayersThreshold: 2,
+        hideLeftPlayersThreshold: 1,
+        showLeftPlayersTime: 30,
     };
     /** 地图启用状态，控制系统可以使用哪些地图。 */
     mapEnabled = {};
@@ -1119,6 +1129,11 @@ class MurderMysterySettings {
                 text: { translate: "ui.settings.main.murderer" },
                 icon: "textures/items/iron_sword",
                 onClick: () => this.showMurdererUI(system, player),
+            }, {
+                type: "button",
+                text: { translate: "ui.settings.main.locator" },
+                icon: "textures/items/compass_item",
+                onClick: () => this.showLocatorUI(system, player),
             });
         /** 开发者设置选项。 */
         const developerSettings = [];
@@ -1132,13 +1147,7 @@ class MurderMysterySettings {
                 type: "button",
                 text: { translate: "ui.settings.main.restoreDefault" },
                 onClick: () => {
-                    const defaultSettings = new MurderMysterySettings();
-                    system.settings.gaming = defaultSettings.gaming;
-                    system.settings.goldSpawn = defaultSettings.goldSpawn;
-                    system.settings.mapEnabled = defaultSettings.mapEnabled;
-                    system.settings.waiting = defaultSettings.waiting;
-                    system.settings.murderer = defaultSettings.murderer;
-                    system.settings.detective = defaultSettings.detective;
+                    system.settings = new MurderMysterySettings();
                     this.saveSettings(system);
                     lib.PlayerUtils.notify(player, {
                         message: { translate: "chat.settings.restoreDefault" },
@@ -1503,7 +1512,7 @@ class MurderMysterySettings {
     }
     /** 对玩家显示游戏时 UI。 */
     static showGamingUI(system, player) {
-        const { timePerGame, getSpecialItemDelay, showRoleInSpectatorTeleportUI, infoboardLastLine, getGoldHint, applyNightVision, alwaysShowHero, } = system.settings.gaming;
+        const { timePerGame, getSpecialItemDelay, showRoleInSpectatorTeleportUI, infoboardLastLine, getGoldHint, applyNightVision, alwaysShowHero, lastWordAlwaysShow, lastWordKeepTime, } = system.settings.gaming;
         this.generateSettingsUI(system, player, "gaming", [
             {
                 type: "slider",
@@ -1575,6 +1584,27 @@ class MurderMysterySettings {
                     system.settings.gaming.alwaysShowHero = result;
                 },
             },
+            {
+                type: "toggle",
+                description: { translate: "ui.settings.gaming.lastWordAlwaysShow.title" },
+                tipText: { translate: "ui.settings.gaming.lastWordAlwaysShow.description" },
+                default: lastWordAlwaysShow,
+                onSubmit: result => {
+                    system.settings.gaming.lastWordAlwaysShow = result;
+                },
+            },
+            {
+                type: "slider",
+                description: { translate: "ui.settings.gaming.lastWordKeepTime.title" },
+                tipText: { translate: "ui.settings.gaming.lastWordKeepTime.description" },
+                default: lastWordKeepTime,
+                min: 5,
+                max: 120,
+                step: 5,
+                onSubmit: result => {
+                    system.settings.gaming.lastWordKeepTime = result;
+                },
+            },
         ], () => {
             // 如果要设置的游戏时间小于当前剩余的游戏时间，则直接改为待设置的游戏时间
             if (system.settings.gaming.timePerGame < system.timeLeft)
@@ -1585,44 +1615,6 @@ class MurderMysterySettings {
             else {
                 lib.PlayerUtils.getAll().forEach(player => player.removeEffect("minecraft:night_vision"));
             }
-        });
-    }
-    static showDetectiveUI(system, player) {
-        const { bowCooldown, pickupBowMethod } = system.settings.detective;
-        const pickupBowMethodList = {
-            rightClick: 0,
-            nearby: 1,
-        };
-        const pickupBowMethods = ["rightClick", "nearby"];
-        this.generateSettingsUI(system, player, "detective", [
-            {
-                type: "slider",
-                description: { translate: "ui.settings.detective.bowCooldown.title" },
-                tipText: { translate: "ui.settings.detective.bowCooldown.description" },
-                default: bowCooldown,
-                min: 0,
-                max: 10,
-                step: 1,
-                onSubmit: result => {
-                    system.settings.detective.bowCooldown = result;
-                },
-            },
-            {
-                type: "dropdown",
-                description: { translate: "ui.settings.detective.pickupBowMethod.title" },
-                tipText: { translate: "ui.settings.detective.pickupBowMethod.description" },
-                items: [
-                    { translate: "ui.settings.detective.pickupBowMethod.rightClick" },
-                    { translate: "ui.settings.detective.pickupBowMethod.nearby" },
-                ],
-                default: pickupBowMethodList[pickupBowMethod],
-                onSubmit: result => {
-                    system.settings.detective.pickupBowMethod = pickupBowMethods[result] ?? "nearby";
-                },
-            },
-        ], () => {
-            // 重新注册弓箭检测组件
-            MurderMysteryComponents.playerPickupBowTest(system);
         });
     }
     /** 对玩家显示金锭生成 UI。 */
@@ -1679,10 +1671,37 @@ class MurderMysterySettings {
             },
         ]);
     }
-    /** 对玩家显示杀手刀剑 UI。 */
+    /** 对玩家显示杀手设置 UI。 */
     static showMurdererUI(system, player) {
-        const { knifeCooldown, knifeCollideArrowDistance, knifeSpeed, knifeThrowTime } = system.settings.murderer;
+        const { knifeCooldown, knifeCollideArrowDistance, knifeSpeed, knifeThrowTime, killPlayerTimeBonus, speedPlayerThreshold } = system.settings.murderer;
         this.generateSettingsUI(system, player, "murderer", [
+            { type: "label", text: { translate: "ui.settings.murderer.general" } },
+            {
+                type: "slider",
+                description: { translate: "ui.settings.murderer.killPlayerTimeBonus.title" },
+                tipText: { translate: "ui.settings.murderer.killPlayerTimeBonus.description" },
+                default: killPlayerTimeBonus,
+                min: 0,
+                max: 20,
+                step: 2,
+                onSubmit: result => {
+                    system.settings.murderer.killPlayerTimeBonus = result;
+                },
+            },
+            {
+                type: "slider",
+                description: { translate: "ui.settings.murderer.speedPlayerThreshold.title" },
+                tipText: { translate: "ui.settings.murderer.speedPlayerThreshold.description" },
+                default: speedPlayerThreshold,
+                min: 1,
+                max: 24,
+                step: 1,
+                onSubmit: result => {
+                    system.settings.murderer.speedPlayerThreshold = result;
+                },
+            },
+            { type: "divider" },
+            { type: "label", text: { translate: "ui.settings.murderer.knife" } },
             {
                 type: "slider",
                 description: { translate: "ui.settings.murderer.knifeCooldown.title" },
@@ -1729,6 +1748,87 @@ class MurderMysterySettings {
                 step: 5,
                 onSubmit: result => {
                     system.settings.murderer.knifeThrowTime = result;
+                },
+            },
+        ]);
+    }
+    /** 对玩家显示侦探设置 UI。 */
+    static showDetectiveUI(system, player) {
+        const { bowCooldown, pickupBowMethod } = system.settings.detective;
+        const pickupBowMethodList = {
+            rightClick: 0,
+            nearby: 1,
+        };
+        const pickupBowMethods = ["rightClick", "nearby"];
+        this.generateSettingsUI(system, player, "detective", [
+            {
+                type: "slider",
+                description: { translate: "ui.settings.detective.bowCooldown.title" },
+                tipText: { translate: "ui.settings.detective.bowCooldown.description" },
+                default: bowCooldown,
+                min: 0,
+                max: 10,
+                step: 1,
+                onSubmit: result => {
+                    system.settings.detective.bowCooldown = result;
+                },
+            },
+            {
+                type: "dropdown",
+                description: { translate: "ui.settings.detective.pickupBowMethod.title" },
+                tipText: { translate: "ui.settings.detective.pickupBowMethod.description" },
+                items: [
+                    { translate: "ui.settings.detective.pickupBowMethod.rightClick" },
+                    { translate: "ui.settings.detective.pickupBowMethod.nearby" },
+                ],
+                default: pickupBowMethodList[pickupBowMethod],
+                onSubmit: result => {
+                    system.settings.detective.pickupBowMethod = pickupBowMethods[result] ?? "nearby";
+                },
+            },
+        ], () => {
+            // 重新注册弓箭检测组件
+            MurderMysteryComponents.playerPickupBowTest(system);
+        });
+    }
+    /** 对玩家显示定位器设置 UI。 */
+    static showLocatorUI(system, player) {
+        const { showAllPlayersThreshold, hideLeftPlayersThreshold, showLeftPlayersTime } = system.settings.locator;
+        this.generateSettingsUI(system, player, "locator", [
+            {
+                type: "slider",
+                description: { translate: "ui.settings.locator.showAllPlayersThreshold.title" },
+                tipText: { translate: "ui.settings.locator.showAllPlayersThreshold.description" },
+                default: showAllPlayersThreshold,
+                min: 1,
+                max: 24,
+                step: 1,
+                onSubmit: result => {
+                    system.settings.locator.showAllPlayersThreshold = result;
+                },
+            },
+            {
+                type: "slider",
+                description: { translate: "ui.settings.locator.hideLeftPlayersThreshold.title" },
+                tipText: { translate: "ui.settings.locator.hideLeftPlayersThreshold.description" },
+                default: hideLeftPlayersThreshold,
+                min: 1,
+                max: 24,
+                step: 1,
+                onSubmit: result => {
+                    system.settings.locator.hideLeftPlayersThreshold = result;
+                },
+            },
+            {
+                type: "slider",
+                description: { translate: "ui.settings.locator.showLeftPlayersTime.title" },
+                tipText: { translate: "ui.settings.locator.showLeftPlayersTime.description" },
+                default: showLeftPlayersTime,
+                min: 0,
+                max: 120,
+                step: 5,
+                onSubmit: result => {
+                    system.settings.locator.showLeftPlayersTime = result;
                 },
             },
         ]);
@@ -2653,7 +2753,7 @@ class MurderMysteryComponents {
     }
     /** 杀手速度组件。
      * @description 在单挑模式下不生效。
-     * @description 当最后仅剩 1 人时，为杀手提供速度效果，直到游戏结束。
+     * @description 当最后仅剩 speedPlayerThreshold 人时，为杀手提供速度效果，直到游戏结束。
      */
     static murdererGetSpeed(system) {
         if (system.isSolo)
@@ -2663,9 +2763,9 @@ class MurderMysteryComponents {
             const murdererData = system.livingPlayers.murderer[0];
             if (!murdererData)
                 return;
-            // 如果存活玩家不止 1 人，直接终止
+            // 如果存活玩家不止 speedPlayerThreshold 人，直接终止
             const alivePlayerCount = [...system.livingPlayers.innocent, ...system.livingPlayers.detective].length;
-            if (alivePlayerCount !== 1)
+            if (alivePlayerCount > system.settings.murderer.speedPlayerThreshold)
                 return;
             // 为杀手添加速度效果
             murdererData.player.addEffect("speed", 300, { showParticles: false });
@@ -2919,6 +3019,9 @@ export class MurderMysteryPlayer {
         // 为攻击者添加 1 个击杀数
         if (killer)
             killer.kills++;
+        // 如果攻击者是杀手，则增加游戏时间
+        if (killer?.role === MurderMysteryPlayerRole.Murderer)
+            this.system.timeLeft += this.system.settings.murderer.killPlayerTimeBonus;
         // 判断一次游戏有没有结束
         if (this.role === MurderMysteryPlayerRole.Murderer)
             this.system.gameOverTest(MurderMysteryGameOverReason.MurdererDied, killer);
@@ -2941,14 +3044,17 @@ export class MurderMysteryPlayer {
         const playerLastWordData = gameData.lastWords[playerLastWord];
         if (!playerLastWordData)
             return;
+        const { lastWordAlwaysShow, lastWordKeepTime } = this.system.settings.gaming;
         // 第 1 行：尸体上方 1.3 格（XXX的临终遗言：）
         const line1 = lib.TextDisplayUtils.add({ translate: "lastWords.inGame", with: [this.getName()] }, lib.Vector3Utils.add(player.location, 0, 1.5, 0));
-        line1.timeLeft = 20;
+        line1.timeLeft = lastWordKeepTime;
+        line1.depthTest = !lastWordAlwaysShow;
         // 第 2 行：尸体上方 1.0 格（斜体 "XXX"）
         const phraseIndex = lib.JSUtils.number.randomInt(1, playerLastWordData.count);
         const replace = playerLastWordData.replacer ? playerLastWordData.replacer(this.system, this) : "";
         const line2 = lib.TextDisplayUtils.add({ translate: `lastWords.${playerLastWord}.phrase${phraseIndex}`, with: [replace] }, lib.Vector3Utils.add(player.location, 0, 1, 0));
-        line2.timeLeft = 20;
+        line2.timeLeft = lastWordKeepTime;
+        line2.depthTest = !lastWordAlwaysShow;
     }
     /** 显示信息板。 */
     showInfoboard() {
@@ -3451,14 +3557,15 @@ export class MurderMysteryPlayer {
                 lib.LocatorBarUtils.addDefaultIconEntity(player, playerData.player, 0, 25, 50, 75, entityRules, color);
             });
         };
-        // 剩余 2 名平民/侦探时，对所有玩家添加其他玩家的位置
-        if (nonMurdererCount <= 2 && nonMurdererCount > 1)
+        const { showAllPlayersThreshold, showLeftPlayersTime, hideLeftPlayersThreshold } = this.system.settings.locator;
+        // 剩余 2 名平民/侦探时（默认值），对所有玩家添加其他玩家的位置
+        if (nonMurdererCount <= showAllPlayersThreshold && nonMurdererCount > hideLeftPlayersThreshold)
             addAllPlayers();
-        // 剩余 1 名平民/侦探时，对非杀手添加杀手的位置
-        else if (nonMurdererCount <= 1 && this.role !== MurderMysteryPlayerRole.Murderer)
-            addAllPlayers(true);
-        // 剩余 30 秒时，对杀手添加其他玩家的位置
-        if (this.system.timeLeft <= 30 && this.role === MurderMysteryPlayerRole.Murderer)
+        // 剩余 1 名平民/侦探时（默认值），对非杀手添加杀手的位置
+        else if (nonMurdererCount <= hideLeftPlayersThreshold && this.role !== MurderMysteryPlayerRole.Murderer)
+            addAllPlayers(nonMurdererCount === 1);
+        // 剩余 30 秒时（默认值），对杀手添加其他玩家的位置
+        if (this.system.timeLeft <= showLeftPlayersTime && this.role === MurderMysteryPlayerRole.Murderer)
             addAllPlayers();
         // 对旁观者，添加其他玩家的位置
         if (this.isDead)
