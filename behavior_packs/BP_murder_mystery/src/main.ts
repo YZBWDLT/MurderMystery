@@ -3764,6 +3764,8 @@ export class MurderMysteryPlayer {
             if (shouldSendMessage && isPlayer(murderer)) murderer.sendMessage({ translate: "chat.murdererThrowingKnife.stopped" });
             // 令投掷时间归零
             this.throwingTime = 0;
+            // 取消杀手的缓慢 I 效果
+            murderer.removeEffect("slowness");
         };
 
         // ===== 投刀逻辑 =====
@@ -3783,6 +3785,9 @@ export class MurderMysteryPlayer {
             this.knifeHitTest(this.throwKnife() as minecraft.Entity);
             stopThrowing(false);
         });
+
+        // 杀手投刀施加缓慢 I 效果
+        murderer.addEffect("slowness", 600, { showParticles: false, amplifier: 0 });
 
         // 如果玩家换手，终止投刀
         lib.gameSystem.subscribeEvent(
