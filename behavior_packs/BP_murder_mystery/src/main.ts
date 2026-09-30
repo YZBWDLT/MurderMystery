@@ -347,8 +347,8 @@ export class MurderMysterySystem {
         if (onGameStart) onGameStart.run(this);
 
         // 若该地图没有实现完整功能，提示玩家
-        const hasFullFunction = this.mapData.description.hasFullFunction;
-        if (hasFullFunction === false) lib.PlayerUtils.broadcast({ message: { translate: "chat.hasNoFullFunction" } });
+        if (this.mapData.description.hasFullFunction === false && this.settings.gaming.unfinishedMapHint === "chat")
+            lib.PlayerUtils.broadcast({ message: { translate: "chat.hasNoFullFunction" } });
     }
 
     /** 令游戏进入结束阶段。
@@ -580,7 +580,7 @@ export class MurderMysterySystem {
 
     /** 获取游戏前信息板。 */
     getBeforeGameInfoboard(player: minecraft.Player) {
-        const { id: mapName, mode: mapMode } = this.mapData.description;
+        const { id: mapName, mode: mapMode, hasFullFunction } = this.mapData.description;
         const { startCountdown, currentPlayerCount, maxPlayerCount, playerIsEnough } = this.beforeGameInfo;
         const stateText: minecraft.RawMessage = playerIsEnough
             ? { translate: "infoboard.countdown", with: [`${startCountdown}`] }
@@ -589,12 +589,13 @@ export class MurderMysterySystem {
             MurderMysterySystem.getEntityState(player, "murder_mystery:optOutSpectate", "none") === "none"
                 ? []
                 : [{ text: "" }, { translate: "infoboard.optOutSpectate.enabled" }];
+        const isUnfinished = hasFullFunction === false && this.settings.gaming.unfinishedMapHint === "infoboard";
         const texts: minecraft.RawMessage[] = [
             { translate: "infoboard.title" },
             { text: `§7${lib.JSUtils.timeDisplay.formatDateToYYMMDD()} §8${this.gameId}` },
             { text: `` },
             {
-                translate: "infoboard.mapName",
+                translate: `infoboard.mapName${isUnfinished ? ".unfinished" : ""}`,
                 with: { rawtext: [{ translate: `map.${mapName}` }] },
             },
             {
@@ -1210,6 +1211,13 @@ interface MurderMysteryGameSettings {
 
     /** 临终遗言始终显示，临终遗言是否可以穿墙显示。 */
     lastWordAlwaysShow: boolean;
+
+    /** 未适配地图提醒，若地图未适配，以何种方式提示玩家。
+     * - `chat`：在游戏开始时通过聊天栏提醒玩家。
+     * - `infoboard`：在信息板将地图名变黄以提醒玩家。
+     * - `none`：不提示玩家。
+     */
+    unfinishedMapHint: "chat" | "infoboard" | "none";
 }
 
 interface MurderMysteryGoldSpawnSettings {
@@ -1303,6 +1311,7 @@ class MurderMysterySettings {
         alwaysShowHero: false,
         lastWordAlwaysShow: true,
         lastWordKeepTime: 20,
+        unfinishedMapHint: "chat",
     };
 
     /** 金锭生成设置，控制如何生成金锭。 */
@@ -1919,7 +1928,15 @@ class MurderMysterySettings {
             alwaysShowHero,
             lastWordAlwaysShow,
             lastWordKeepTime,
+            unfinishedMapHint,
         } = system.settings.gaming;
+        const unfinishedMapHintList: Record<"chat" | "infoboard" | "none", number> = {
+            chat: 0,
+            infoboard: 1,
+            none: 2,
+        };
+        const unfinishedMapHints: ["chat", "infoboard", "none"] = ["chat", "infoboard", "none"];
+
         this.generateSettingsUI(
             system,
             player,
@@ -2014,6 +2031,20 @@ class MurderMysterySettings {
                     step: 5,
                     onSubmit: result => {
                         system.settings.gaming.lastWordKeepTime = result;
+                    },
+                },
+                {
+                    type: "dropdown",
+                    description: { translate: "ui.settings.gaming.unfinishedMapHint.title" },
+                    tipText: { translate: "ui.settings.gaming.unfinishedMapHint.description" },
+                    items: [
+                        { translate: "ui.settings.gaming.unfinishedMapHint.chat" },
+                        { translate: "ui.settings.gaming.unfinishedMapHint.infoboard" },
+                        { translate: "ui.settings.gaming.unfinishedMapHint.none" },
+                    ],
+                    default: unfinishedMapHintList[unfinishedMapHint],
+                    onSubmit: result => {
+                        system.settings.gaming.unfinishedMapHint = unfinishedMapHints[result] ?? "chat";
                     },
                 },
             ],
@@ -3558,6 +3589,8 @@ export class MurderMysteryPlayer {
             const throwingTimeSecond = lib.JSUtils.timeDisplay.showSecondsByTick(this.throwingTime);
             return [{ translate: "infoboard.throwing", with: [throwingTimeSecond] }, { text: "" }];
         })();
+        const isUnfinished =
+            this.system.mapData.description.hasFullFunction === false && this.system.settings.gaming.unfinishedMapHint === "infoboard";
         const texts: minecraft.RawMessage[] = [
             { translate: "infoboard.title" },
             { text: `§7${lib.JSUtils.timeDisplay.formatDateToYYMMDD()} §8${this.system.gameId}§r` },
@@ -3582,7 +3615,7 @@ export class MurderMysteryPlayer {
             { text: "" },
             ...killsLine,
             {
-                translate: "infoboard.mapName",
+                translate: `infoboard.mapName${isUnfinished ? ".unfinished" : ""}`,
                 with: { rawtext: [{ translate: `map.${this.system.mapData.description.id}` }] },
             },
             { text: "" },

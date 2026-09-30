@@ -387,6 +387,11 @@ ui.settings.gaming.lastWordAlwaysShow.title=临终遗言始终显示
 ui.settings.gaming.lastWordAlwaysShow.description=临终遗言是否可以穿墙显示。
 ui.settings.gaming.lastWordKeepTime.title=临终遗言维持时间（秒）
 ui.settings.gaming.lastWordKeepTime.description=临终遗言的维持时间，超过该时间后临终遗言会自动消失。
+ui.settings.gaming.unfinishedMapHint.title=未适配地图提醒
+ui.settings.gaming.unfinishedMapHint.description=若地图未适配，以何种方式提示玩家。
+ui.settings.gaming.unfinishedMapHint.chat=在游戏开始时通过聊天栏提醒玩家
+ui.settings.gaming.unfinishedMapHint.infoboard=在信息板将地图名变黄以提醒玩家
+ui.settings.gaming.unfinishedMapHint.none=不提示玩家
 
 ### 金锭生成设置 UI
 ui.settings.goldSpawn.title=金锭生成设置
@@ -463,6 +468,7 @@ chat.youChose=§a你选择了 §6%s
 
 infoboard.title=§l§e    密室杀手    
 infoboard.mapName=地图：§a%s§r
+infoboard.mapName.unfinished=地图：§e%s§r
 infoboard.playerCount=玩家：§a%s/%s
 infoboard.waiting=等待中……
 infoboard.countdown=即将开始：§a%s秒

@@ -387,6 +387,11 @@ ui.settings.gaming.lastWordAlwaysShow.title=Last Words Always Show
 ui.settings.gaming.lastWordAlwaysShow.description=Whether last words can be shown through walls.
 ui.settings.gaming.lastWordKeepTime.title=Last Words Duration (seconds)
 ui.settings.gaming.lastWordKeepTime.description=The duration for which last words are kept. After this time, the last words will automatically disappear.
+ui.settings.gaming.unfinishedMapHint.title=Unadapted Map Hint
+ui.settings.gaming.unfinishedMapHint.description=How to notify players when a map is not adapted.
+ui.settings.gaming.unfinishedMapHint.chat=Notify players via chat at the start of the game
+ui.settings.gaming.unfinishedMapHint.infoboard=Turn the map name yellow on the infoboard to notify players
+ui.settings.gaming.unfinishedMapHint.none=Do not notify players
 
 ### Gold Spawn Settings UI
 ui.settings.goldSpawn.title=Gold Spawn Settings
@@ -463,6 +468,7 @@ chat.youChose=§aYou chose §6%s
 
 infoboard.title=§l§e MURDER MYSTERY 
 infoboard.mapName=Map: §a%s§r
+infoboard.mapName.unfinished=Map: §e%s§r
 infoboard.playerCount=Players: §a%s/%s
 infoboard.waiting=Waiting...
 infoboard.countdown=Starting in: §a%s Seconds

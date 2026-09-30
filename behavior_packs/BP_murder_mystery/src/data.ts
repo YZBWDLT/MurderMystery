@@ -1541,6 +1541,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: 1178.5, y: 96.5, z: 1841.5 },
                 { x: 1171.5, y: 99.5, z: 1857.5 },
             ],
+            hasFullFunction: false,
         },
     },
     // #endregion
@@ -5067,6 +5068,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: -204.5, y: 89.5, z: 3859.5 },
                 { x: -202.5, y: 89.5, z: 3862.5 },
             ],
+            hasFullFunction: false,
         },
     },
     // #endregion
@@ -5893,6 +5895,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: -910.5, y: 28.5, z: 3973.5 },
                 { x: -902.5, y: 28.5, z: 3975.5 },
             ],
+            hasFullFunction: false,
         },
         components: {
             playerInArea: [
@@ -11260,7 +11263,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
             ],
             hasFullFunction: false,
         },
-        components: {},
     },
     // #endregion
 
