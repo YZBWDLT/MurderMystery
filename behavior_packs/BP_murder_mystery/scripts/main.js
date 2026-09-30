@@ -232,18 +232,12 @@ export class MurderMysterySystem {
         MurderMysteryComponents.playerInArea(this);
         // 若地图注册了 onGameStart 组件，则触发其规定的事件
         const onGameStart = this.mapData.components?.onGameStart;
-        if (onGameStart) {
-            const trigger = onGameStart.trigger;
-            if (typeof trigger === "string")
-                this.eventManager.triggerEvent(trigger);
-            else
-                trigger.forEach(t => this.eventManager.triggerEvent(t));
-        }
+        if (onGameStart)
+            onGameStart.run(this);
         // 若该地图没有实现完整功能，提示玩家
         const hasFullFunction = this.mapData.description.hasFullFunction;
-        if (hasFullFunction === false) {
+        if (hasFullFunction === false)
             lib.PlayerUtils.broadcast({ message: { translate: "chat.hasNoFullFunction" } });
-        }
     }
     /** 令游戏进入结束阶段。
      * @description 转换阶段并移除所有正在监听的时间线和事件。
@@ -591,27 +585,9 @@ export class MurderMysterySystem {
 class MurderMysteryEventManager {
     constructor(system) {
         this.system = system;
-        this.events = system.mapData.events ?? {};
     }
     /** 游戏系统。 */
     system;
-    /** 地图使用的事件 */
-    events;
-    // #region - 触发事件
-    /** 触发事件。 */
-    triggerEvent(id, playerData) {
-        // ===== 条件检查 =====
-        // 如果游戏已结束，直接终止
-        if (this.system.gameStage !== GameStage.GamingStage)
-            return false;
-        // 如果不存在对应事件，直接终止
-        const triggedEvent = this.events[id];
-        if (!triggedEvent)
-            return;
-        // ===== 触发事件 =====
-        triggedEvent(this.system, playerData);
-    }
-    // #endregion
     // #region - 系统事件冷却
     /** 事件冷却列表。触发了特定事件后可能会导致特定类型的事件冷却，在冷却期内可指定为无法再次触发事件。冷却单位：秒。 */
     eventCooldown = {};
@@ -1999,10 +1975,10 @@ class MurderMysteryComponents {
             const playerHurtComponent = system.mapData.components?.playerHurt;
             if (!playerHurtComponent)
                 return;
-            playerHurtComponent.forEach(({ cause, trigger }) => {
+            playerHurtComponent.forEach(({ cause, run }) => {
                 if (cause !== thisCause)
                     return;
-                minecraft.system.run(() => eventManager.triggerEvent(trigger, playerData));
+                minecraft.system.run(() => run(system, playerData));
             });
         });
     }
@@ -2041,9 +2017,16 @@ class MurderMysteryComponents {
             ];
             // --- 检查交互黑名单 ---
             // 如果交互黑名单包含指定方块类型，并且玩家不为创造模式，则取消事件
-            const creativePlayer = player.getGameMode() === minecraft.GameMode.Creative;
-            if (banList.includes(block.typeId) && !creativePlayer)
+            if (banList.includes(block.typeId))
                 event.cancel = true;
+            // 如果禁用交互组件中包含指定坐标，则取消事件
+            const disabledLocations = system.mapData.components?.disableInteraction ?? [];
+            if (disabledLocations.some(disabledLocation => lib.Vector3Utils.isEqual(disabledLocation, block.location)))
+                event.cancel = true;
+            // 如果玩家为创造模式，则无条件启用
+            const creativePlayer = player.getGameMode() === minecraft.GameMode.Creative;
+            if (creativePlayer)
+                event.cancel = false;
             // --- 执行指定的事件 ---
             // 如果非游戏阶段，终止运行
             const isGaming = system.gameStage === GameStage.GamingStage;
@@ -2065,11 +2048,7 @@ class MurderMysteryComponents {
             if (!matchedInteraction)
                 return;
             // 运行事件
-            const run = matchedInteraction.run;
-            if (typeof run === "string")
-                minecraft.system.run(() => system.eventManager.triggerEvent(run, playerData));
-            else
-                minecraft.system.run(() => run(system, playerData));
+            minecraft.system.run(() => matchedInteraction.run(system, playerData, matchedInteraction.at));
         });
         // ===== 检查玩家按下按钮 =====
         // 如果没有指定该组件，则不订阅事件
@@ -2090,11 +2069,7 @@ class MurderMysteryComponents {
                 if (!playerData)
                     return;
                 // 运行事件
-                const run = matchedInteraction.run;
-                if (typeof run === "string")
-                    system.eventManager.triggerEvent(run, playerData);
-                else
-                    run(system, playerData);
+                matchedInteraction.run(system, playerData);
             });
         // ===== 检查玩家拉下拉杆 =====
         /** 设置拉杆状态。 */
@@ -2126,13 +2101,7 @@ class MurderMysteryComponents {
                 // --- 运行事件 ---
                 const { run, at } = matchedInteraction;
                 const levers = at.map(location => lib.BlockUtils.get(location));
-                // 若指定为string，则触发对应名称的事件，并且拉杆会自动弹回
-                if (typeof run === "string") {
-                    system.eventManager.triggerEvent(run, playerData);
-                    setLeverState(levers, false);
-                    return;
-                }
-                // 若指定为函数类型，则在这段时间内（返回值，单位：秒）拉杆将不再能被交互，并在该时间过后自动弹回
+                // 在这段时间内（返回值，单位：秒）拉杆将不再能被交互，并在该时间过后自动弹回
                 const reopenDelay = run(system, playerData);
                 if (reopenDelay === 0) {
                     setLeverState(levers, false);
@@ -2824,7 +2793,7 @@ class MurderMysteryComponents {
         // ===== 主程序 =====
         lib.gameSystem.subscribeTimeline("playerInArea", () => {
             component.forEach(areaData => {
-                const { area, trigger } = areaData;
+                const { area, run } = areaData;
                 system.livingPlayers.allPlayers
                     .filter(playerData => {
                     const { x, y, z } = playerData.player.location;
@@ -2846,9 +2815,7 @@ class MurderMysteryComponents {
                     // 否则，实体在该区域内
                     return true;
                 })
-                    .forEach(playerData => {
-                    eventManager.triggerEvent(trigger, playerData);
-                });
+                    .forEach(playerData => run(system, playerData));
             });
         }, 5);
     }
