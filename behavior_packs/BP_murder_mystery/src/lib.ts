@@ -37,7 +37,7 @@ class GameSystem {
     // ===== 时间线管理器 =====
 
     /** 订阅特定 ID 的时间线。
-     * @param callback 接受一个回调函数，参数`time`：该函数执行的次数。若返回`false`则终止时间线的运行，
+     * @param callback 接受一个回调函数，参数`time`：该函数执行的次数，从`1`计起。若返回`false`则终止时间线的运行，
      * @returns 返回是否成功订阅时间线。
      */
     subscribeTimeline(id: string, callback: (time: number) => boolean | void, interval = 1) {
@@ -1213,9 +1213,8 @@ export interface EnchantmentInfo {
     /** 附魔 ID。 */
     readonly id: string;
 
-    /** 附魔等级。
+    /** 附魔等级。 | 默认值：`1`
      * @remarks 允许输入 0，但它什么也不会做
-     * @default 1
      */
     readonly level?: number;
 }

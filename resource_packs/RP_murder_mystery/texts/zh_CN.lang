@@ -28,8 +28,12 @@ item.murder_mystery:mystery_potion_1=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_2=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_3=§a？？？神秘药水？？？
 item.murder_mystery:mystery_potion_4=§a？？？神秘药水？？？
+item.murder_mystery:water_repellent_potion=水肺药水
 item.murder_mystery:locator=定位器
 item.murder_mystery:settings=设置
+
+itemLore.murder_mystery:water_repellent_potion.line1=§r§7喝下药水之后就
+itemLore.murder_mystery:water_repellent_potion.line2=§r§7可以下水了！
 
 ## ===== 命令 =====
 
@@ -262,7 +266,7 @@ monorail.name=单轨列车
 rollerCoaster.name=过山车
 chat.hypixelWorld.rideTwoMinecarts=§c你不能在乘坐矿车时再乘坐另一辆矿车！
 
-### 水族馆的缸
+### 水族馆
 textDisplay.aquarium.pufferfishTank=§6河豚缸
 textDisplay.aquarium.octopusTank=§5章鱼缸
 textDisplay.aquarium.tank.line1=§7§o点击按钮以兑换
@@ -272,7 +276,7 @@ chat.aquarium.tank.giftSplashPotion=§c神圣的海洋生物赠予你一瓶%s！
 chat.aquarium.tank.giftDrinkableSpeedPotion=§c神圣的海洋生物赠予你一瓶可饮用的迅捷药水！
 chat.aquarium.tank.giftBow=§c神圣的海洋生物赠予你一把弓！
 
-### 阴森庄园的陷阱提示
+### 阴森庄园
 textDisplay.spookyMansion.doorTrap.line1=§o§7按下按钮来
 textDisplay.spookyMansion.doorTrap.line2=§o§7移除玄关地板
 textDisplay.spookyMansion.doorTrap.line3=§61块金锭
@@ -297,6 +301,15 @@ textDisplay.spookyMansion.elevator.1stFloor.line2=§62块金锭
 
 textDisplay.spookyMansion.elevator.basement.line1=§7前往：§6地下室
 textDisplay.spookyMansion.elevator.basement.line2=§62块金锭
+
+### 港口小镇
+chat.sanPeratico.drowningWarning=§c§l警告！§r§7你溺水了，请尽快游到安全的地方！
+textDisplay.senPeratico.buyPotion.line1=§b购买：水肺药水
+textDisplay.senPeratico.buyPotion.line2=§63块金锭
+chat.senPeratico.getPotion=§a你获得了§b水肺药水！
+chat.senPeratico.alreadyHavePotion=§c你已经拥有§b水肺药水§c了！
+chat.senPeratico.potionTakeEffect=§a你现在可以在水里§b30秒§a！
+chat.senPeratico.potionOutOfDate=§c你的水肺效果失效了！
 
 ## ===== 设置 UI =====
 

@@ -1,11 +1,12 @@
 {
     "resource_pack_name": "murder_mystery",
     "texture_data": {
-        "mystery_potion_0": { "textures": "textures/items/mystery_potion_0" },
-        "mystery_potion_1": { "textures": "textures/items/mystery_potion_1" },
-        "mystery_potion_2": { "textures": "textures/items/mystery_potion_2" },
-        "mystery_potion_3": { "textures": "textures/items/mystery_potion_3" },
-        "mystery_potion_4": { "textures": "textures/items/mystery_potion_4" },
+        "mystery_potion_0": { "textures": "textures/items/potion_bottle_absorption" },
+        "mystery_potion_1": { "textures": "textures/items/potion_bottle_digSpeed" },
+        "mystery_potion_2": { "textures": "textures/items/potion_bottle_heal" },
+        "mystery_potion_3": { "textures": "textures/items/potion_bottle_moveSpeed" },
+        "mystery_potion_4": { "textures": "textures/items/potion_bottle_turtleMaster" },
+        "water_repellent_potion": { "textures": "textures/items/potion_bottle_waterBreathing" },
         "iron_sword": { "textures": "textures/items/iron_sword" },
         "settings": { "textures": "textures/items/settings" }
     }

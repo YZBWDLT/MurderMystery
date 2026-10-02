@@ -73,8 +73,6 @@ export class MurderMysterySystem {
         this.gameId = lib.JSUtils.number.randomInt(10000, 99999);
         // 对系统数据使用设置
         const { minPlayerCount, maxPlayerCount } = this.settings.waiting;
-        this.beforeGameInfo.minPlayerCount = minPlayerCount;
-        this.beforeGameInfo.maxPlayerCount = maxPlayerCount;
         this.resetStartCountdown();
         const { timePerGame } = this.settings.gaming;
         this.timeLeft = timePerGame;
@@ -88,7 +86,7 @@ export class MurderMysterySystem {
         minecraft.world.gameRules.freezeDamage = true;
         lib.DimensionUtils.getOverworld().runCommand("gamerule playerWaypoints off");
         // 设置为和平模式
-        minecraft.world.setDifficulty(minecraft.Difficulty.Peaceful);
+        minecraft.world.setDifficulty(minecraft.Difficulty.Hard);
         // 设置时间
         minecraft.world.setTimeOfDay(this.mapData.components?.time ?? 6000);
         // 添加事件管理器
@@ -98,7 +96,7 @@ export class MurderMysterySystem {
     }
     // #region - 系统变量
     /** 系统版本。 */
-    version = "1.0 - Pre 2";
+    version = "1.0";
     /** 游戏阶段，不同的游戏阶段会使用不同的功能。 */
     gameStage;
     /** 游戏设置信息，获取管理员等输入的设置信息，并自动应用于设置中。 */
@@ -126,8 +124,6 @@ export class MurderMysterySystem {
      * @description 用于在游戏开始前调用。
      */
     beforeGameInfo = {
-        minPlayerCount: 2,
-        maxPlayerCount: 16,
         currentPlayerCount: 0,
         startCountdown: 60,
         playerIsEnough: false,
@@ -150,6 +146,7 @@ export class MurderMysterySystem {
     /** 通用功能。 */
     general() {
         // 注册通用组件
+        MurderMysteryComponents.keepSaturation();
         MurderMysteryComponents.infoboard(this);
         MurderMysteryComponents.onPlayerHurt(this);
         MurderMysteryComponents.interaction(this);
@@ -158,10 +155,10 @@ export class MurderMysterySystem {
         // 注册可选组件
         MurderMysteryComponents.applyNightVision(this);
     }
-    /** 令游戏进入清除阶段，在清除阶段清空原有的地图。 */
-    enterClearStage() { }
-    /** 令游戏进入加载阶段。 */
-    enterLoadStage() { }
+    // /** 令游戏进入清除阶段，在清除阶段清空原有的地图。 */
+    // enterClearStage() {}
+    // /** 令游戏进入加载阶段。 */
+    // enterLoadStage() {}
     /** 令游戏进入等待阶段。
      * @description 转换阶段并移除所有正在监听的时间线和事件。
      * @description 初始化所有玩家。
@@ -228,7 +225,10 @@ export class MurderMysterySystem {
         MurderMysteryComponents.murdererGetSpeed(this);
         MurderMysteryComponents.locator(this);
         // 注册可选组件
-        MurderMysteryComponents.mysteryPotion(this);
+        MurderMysteryComponents.playerPushLever(this);
+        MurderMysteryComponents.playerPressButton(this);
+        MurderMysteryComponents.playerInteractWithEntity(this);
+        MurderMysteryComponents.playerUsedItem(this);
         MurderMysteryComponents.playerInArea(this);
         // 若地图注册了 onGameStart 组件，则触发其规定的事件
         const onGameStart = this.mapData.components?.onGameStart;
@@ -413,10 +413,12 @@ export class MurderMysterySystem {
      * @description 会恢复玩家的命名牌。
      * @description 会恢复玩家的输入权限。
      * @description 会移除玩家的状态效果。
+     * @description 会将玩家回满血。
      */
     initPlayer(player) {
-        player.getComponent("inventory")?.container.clearAll();
+        player.runCommand("clear @s");
         lib.ItemUtils.inventory.set(player, 6, "murder_mystery:settings", { itemLock: minecraft.ItemLockMode.slot });
+        player.getComponent("health")?.resetToMaxValue();
         const { location, facingLocation } = this.mapData.description.waitHall;
         player.teleport(location, { facingLocation });
         if (isPlayer(player)) {
@@ -436,7 +438,7 @@ export class MurderMysterySystem {
     /** 获取游戏前信息板。 */
     getBeforeGameInfoboard(player) {
         const { id: mapName, mode: mapMode, hasFullFunction } = this.mapData.description;
-        const { startCountdown, currentPlayerCount, maxPlayerCount, playerIsEnough } = this.beforeGameInfo;
+        const { startCountdown, currentPlayerCount, playerIsEnough } = this.beforeGameInfo;
         const stateText = playerIsEnough
             ? { translate: "infoboard.countdown", with: [`${startCountdown}`] }
             : { translate: "infoboard.waiting" };
@@ -455,7 +457,7 @@ export class MurderMysterySystem {
             {
                 translate: "infoboard.playerCount",
                 with: {
-                    rawtext: [{ text: `${currentPlayerCount}` }, { text: `${maxPlayerCount}` }],
+                    rawtext: [{ text: `${currentPlayerCount}` }, { text: `${this.settings.waiting.maxPlayerCount}` }],
                 },
             },
             { text: `` },
@@ -639,8 +641,6 @@ class MurderMysteryEventManager {
     ]);
     /** 默认神秘药水的物品备注。 */
     static mysteryPotionDefaultLore = ["§r§7这是一瓶药水。天知道它会给你什么效果。"];
-    /** 记录玩家当前是否处于神秘药水效果影响下。 */
-    inPotionEffect = {};
     /** 从药水的 ID 获取索引。 */
     static getPotionIndex(potionId) {
         // 匹配完整格式，并捕获数字部分
@@ -713,7 +713,7 @@ class MurderMysteryEventManager {
         if (!isPlayer(player))
             return false;
         // 如果玩家正受神秘药水效果影响，则不给予药效，重新给予药水并提示玩家
-        if (this.inPotionEffect[player.id]) {
+        if (playerData.isInPotionEffect) {
             lib.ItemUtils.equipment.set(player, potionId, minecraft.EquipmentSlot.Mainhand, this.getMysteryPotionData(playerData, potionIndex));
             player.sendMessage({ translate: "chat.mysteryPotion.onlyOneEffect" });
             return false;
@@ -744,8 +744,8 @@ class MurderMysteryEventManager {
             containerSlot.setLore([`§r§7这瓶药水将会使你获得${potionData.name}效果！`]);
         });
         // 记录玩家当前处于神秘药水效果影响下，并在计时结束后移除之
-        this.inPotionEffect[player.id] = playerData;
-        minecraft.system.runTimeout(() => delete this.inPotionEffect[player.id], potionData.duration ?? 200);
+        playerData.isInPotionEffect = true;
+        minecraft.system.runTimeout(() => (playerData.isInPotionEffect = false), potionData.duration ?? 200);
         return true;
     }
     // #endregion
@@ -1483,8 +1483,6 @@ class MurderMysterySettings {
         ], () => {
             // 立刻应用设置
             system.beforeGameInfo.startCountdown = system.settings.waiting.startCountdown;
-            system.beforeGameInfo.minPlayerCount = system.settings.waiting.minPlayerCount;
-            system.beforeGameInfo.maxPlayerCount = system.settings.waiting.maxPlayerCount;
         });
     }
     /** 对玩家显示游戏时 UI。 */
@@ -1941,6 +1939,12 @@ class MurderMysterySettings {
 /** 密室杀手的全部组件，代表一个个的游戏功能。 */
 class MurderMysteryComponents {
     // #region - 通用组件
+    /** 持续给予玩家饱和效果，防止玩家因饥饿而导致无法跑动。 */
+    static keepSaturation() {
+        lib.gameSystem.subscribeTimeline("keepSaturation", () => {
+            lib.PlayerUtils.getAll().forEach(player => player.addEffect("saturation", 1, { amplifier: 10 }));
+        }, 20);
+    }
     /** 显示游戏信息板。
      * @remarks 该组件会自动重注册。
      * @description 为特定玩家输出信息板（实际上是actionbar）。
@@ -1973,7 +1977,11 @@ class MurderMysteryComponents {
             // ===== 变量准备 & 取消游戏引擎事件 =====
             const thisCause = event.damageSource.cause;
             const eventManager = system.eventManager;
-            event.cancel = true;
+            // 不阻碍 none 类型的伤害，系统有时需要对玩家施加伤害
+            // 可通过 MurderMysteryPlayer.dealDamage()方法对玩家施加伤害，并自动判定处死条件
+            // 其他类型的伤害需要阻止
+            if (thisCause !== minecraft.EntityDamageCause.none)
+                event.cancel = true;
             // ===== 条件判断 =====
             // 如果不是玩家和假玩家受伤，则直接终止运行
             const player = event.hurtEntity;
@@ -2007,11 +2015,8 @@ class MurderMysteryComponents {
      * @description 禁止玩家和黑名单内的方块交互。
      * @description 游戏结束后，禁止玩家和方块交互。
      * @description 当玩家和方块交互时，通过`interaction`组件的指定值执行事件。
-     * @description 当玩家和按钮交互时，通过`playerPressButton`组件的指定值执行事件。
-     * @description 当玩家和拉杆交互时，通过`playerPushButton`组件的指定值执行事件。
      */
     static interaction(system) {
-        // ===== 检查玩家交互 =====
         lib.gameSystem.subscribeEvent("interaction", minecraft.world.beforeEvents.playerInteractWithBlock, event => {
             // --- 变量获取 ---
             const { isFirstEvent, block, player } = event;
@@ -2035,6 +2040,7 @@ class MurderMysteryComponents {
                 "minecraft:dropper",
                 "minecraft:frame",
                 "minecraft:bed",
+                "minecraft:beacon",
             ];
             // --- 检查交互黑名单 ---
             // 如果交互黑名单包含指定方块类型，并且玩家不为创造模式，则取消事件
@@ -2071,81 +2077,6 @@ class MurderMysteryComponents {
             // 运行事件
             minecraft.system.run(() => matchedInteraction.run(system, playerData, matchedInteraction.at));
         });
-        // ===== 检查玩家按下按钮 =====
-        // 如果没有指定该组件，则不订阅事件
-        const pressButtonComp = system.mapData.components?.playerPressButton ?? [];
-        if (pressButtonComp.length > 0)
-            lib.gameSystem.subscribeEvent("playerPressButton", minecraft.world.afterEvents.buttonPush, event => {
-                // 如果这次交互不触发任何事件，终止运行
-                const { block: button, source: player } = event;
-                const matchedInteraction = pressButtonComp.find(data => {
-                    if (lib.Vector3Utils.hasPosition(data.at, button.location))
-                        return true;
-                    return false;
-                });
-                if (!matchedInteraction)
-                    return;
-                // 如果不是有效玩家，终止运行
-                const playerData = system.getPlayer(player);
-                if (!playerData)
-                    return;
-                // 运行事件
-                matchedInteraction.run(system, playerData);
-            });
-        // ===== 检查玩家拉下拉杆 =====
-        /** 设置拉杆状态。 */
-        function setLeverState(levers, state) {
-            levers.forEach(lever => {
-                if (!lever)
-                    return;
-                lib.BlockUtils.setState(lever, { open_bit: state });
-                lib.PlayerUtils.broadcast({ sound: "random.lever_click", location: lever.location });
-            });
-        }
-        // 如果没有指定该组件，则不订阅事件
-        const pushLeverComp = system.mapData.components?.playerPushLever ?? [];
-        if (pushLeverComp.length > 0)
-            lib.gameSystem.subscribeEvent("playerPushLever", minecraft.world.afterEvents.leverAction, event => {
-                // 如果这次交互不触发任何事件，终止运行
-                const { block: lever, player } = event;
-                const matchedInteraction = pushLeverComp.find(data => {
-                    if (lib.Vector3Utils.hasPosition(data.at, lever.location))
-                        return true;
-                    return false;
-                });
-                if (!matchedInteraction)
-                    return;
-                // 如果不是有效玩家，终止运行
-                const playerData = system.getPlayer(player);
-                if (!playerData)
-                    return;
-                // --- 运行事件 ---
-                const { run, at } = matchedInteraction;
-                const levers = at.map(location => lib.BlockUtils.get(location));
-                // 在这段时间内（返回值，单位：秒）拉杆将不再能被交互，并在该时间过后自动弹回
-                const reopenDelay = run(system, playerData);
-                if (reopenDelay === 0) {
-                    setLeverState(levers, false);
-                    return;
-                }
-                const eventId = lib.JSUtils.number.randomInt(100000000, 999999999);
-                setLeverState(levers, true);
-                // 禁止交互
-                lib.gameSystem.subscribeEvent(`banLever${eventId}`, minecraft.world.beforeEvents.playerInteractWithBlock, event => {
-                    const hasLeverMatched = levers.some(lever => {
-                        if (!lever)
-                            return false;
-                        return lib.Vector3Utils.isEqual(lever.location, event.block.location);
-                    });
-                    if (hasLeverMatched)
-                        event.cancel = true;
-                });
-                // 在延迟结束之后，重新允许交互
-                lib.gameSystem.subscribeDelay(`recoverLever${eventId}`, () => {
-                    setLeverState(levers, false);
-                    lib.gameSystem.unsubscribeEvent(`banLever${eventId}`);
-                }, 20 * reopenDelay);
-            });
     }
     /** 玩家使用设置。
      * @description 为使用玩家开启一个设置界面。
@@ -2178,7 +2109,7 @@ class MurderMysteryComponents {
             const players = system.getPlayersBeforeGame();
             const beforeGameInfo = system.beforeGameInfo;
             beforeGameInfo.currentPlayerCount = players.length;
-            beforeGameInfo.playerIsEnough = beforeGameInfo.currentPlayerCount >= beforeGameInfo.minPlayerCount;
+            beforeGameInfo.playerIsEnough = beforeGameInfo.currentPlayerCount >= system.settings.waiting.minPlayerCount;
             // 如果玩家人数足够且倒计时还未开始，则开始倒计时
             const { playerIsEnough, countdownStarted } = beforeGameInfo;
             if (playerIsEnough && !countdownStarted) {
@@ -2781,24 +2712,157 @@ class MurderMysteryComponents {
     }
     // #endregion
     // #region - 开始后可选
-    /** 神秘药水组件。
-     * @description 会自动判断系统的地图数据是否含有`enableMysteryPotion`组件，若不含该组件则不会注册该组件。
-     * @description 会在游戏开始时尝试在规定的位置生成展示文本。
-     * @description 当玩家喝下神秘药水时，会导致玩家拥有不同的药效。
+    /** 玩家按下按钮组件。
+     * @description 会自动判断系统的地图数据是否含有`playerPressButton`组件，若不含该组件则不会注册该组件。
+     * @description 当玩家和按钮交互时，通过`playerPressButton`组件的指定值执行事件。
      */
-    static mysteryPotion(system) {
-        // 检查是否有神秘药水组件
-        const mysteryPotionComponent = system.mapData.components?.enableMysteryPotion;
-        if (!mysteryPotionComponent)
+    static playerPressButton(system) {
+        // 如果没有指定该组件，则不订阅事件
+        const pressButtonComp = system.mapData.components?.playerPressButton ?? [];
+        if (pressButtonComp.length <= 0)
             return;
-        // 变量准备
-        const eventManager = system.eventManager;
-        // 喝下神秘药水
-        lib.gameSystem.subscribeEvent("playerUseMysteryPotionTest", minecraft.world.afterEvents.itemCompleteUse, event => {
-            const playerData = system.getPlayer(event.source);
+        lib.gameSystem.subscribeEvent("playerPressButton", minecraft.world.afterEvents.buttonPush, event => {
+            // 如果这次交互不触发任何事件，终止运行
+            const { block: button, source: player } = event;
+            const matchedInteraction = pressButtonComp.find(data => {
+                if (lib.Vector3Utils.hasPosition(data.at, button.location))
+                    return true;
+                return false;
+            });
+            if (!matchedInteraction)
+                return;
+            // 如果不是有效玩家，终止运行
+            const playerData = system.getPlayer(player);
             if (!playerData)
                 return;
-            eventManager.drinkMysteryPotion(playerData, event.itemStack.typeId);
+            // 运行事件
+            matchedInteraction.run(system, playerData);
+        });
+    }
+    /** 玩家拉下拉杆组件。
+     * @description 会自动判断系统的地图数据是否含有`playerPushLever`组件，若不含该组件则不会注册该组件。
+     * @description 当玩家和拉杆交互时，通过`playerPushLever`组件的指定值执行事件。
+     */
+    static playerPushLever(system) {
+        // 如果没有指定该组件，则不订阅事件
+        const pushLeverComp = system.mapData.components?.playerPushLever ?? [];
+        if (pushLeverComp.length <= 0)
+            return;
+        /** 设置拉杆状态。 */
+        function setLeverState(levers, state) {
+            levers.forEach(lever => {
+                if (!lever)
+                    return;
+                lib.BlockUtils.setState(lever, { open_bit: state });
+                lib.PlayerUtils.broadcast({ sound: "random.lever_click", location: lever.location });
+            });
+        }
+        lib.gameSystem.subscribeEvent("playerPushLever", minecraft.world.afterEvents.leverAction, event => {
+            // 如果这次交互不触发任何事件，终止运行
+            const { block: lever, player } = event;
+            const matchedInteraction = pushLeverComp.find(data => {
+                if (lib.Vector3Utils.hasPosition(data.at, lever.location))
+                    return true;
+                return false;
+            });
+            if (!matchedInteraction)
+                return;
+            // 如果不是有效玩家，终止运行
+            const playerData = system.getPlayer(player);
+            if (!playerData)
+                return;
+            // --- 运行事件 ---
+            const { run, at } = matchedInteraction;
+            const levers = at.map(location => lib.BlockUtils.get(location));
+            // 在这段时间内（返回值，单位：秒）拉杆将不再能被交互，并在该时间过后自动弹回
+            const reopenDelay = run(system, playerData);
+            if (reopenDelay === 0) {
+                setLeverState(levers, false);
+                return;
+            }
+            const eventId = lib.JSUtils.number.randomInt(100000000, 999999999);
+            setLeverState(levers, true);
+            // 禁止交互
+            lib.gameSystem.subscribeEvent(`banLever${eventId}`, minecraft.world.beforeEvents.playerInteractWithBlock, event => {
+                const hasLeverMatched = levers.some(lever => {
+                    if (!lever)
+                        return false;
+                    return lib.Vector3Utils.isEqual(lever.location, event.block.location);
+                });
+                if (hasLeverMatched)
+                    event.cancel = true;
+            });
+            // 在延迟结束之后，重新允许交互
+            lib.gameSystem.subscribeDelay(`recoverLever${eventId}`, () => {
+                setLeverState(levers, false);
+                lib.gameSystem.unsubscribeEvent(`banLever${eventId}`);
+            }, 20 * reopenDelay);
+        });
+    }
+    /** 玩家与实体交互组件。
+     * @description 会自动判断系统的地图数据是否含有`playerInteractWithEntity`组件，若不含该组件则不会注册该组件。
+     * @description 当玩家和实体交互时，通过`playerInteractWithEntity`组件的指定值执行事件。
+     */
+    static playerInteractWithEntity(system) {
+        // 如果没有指定该组件，则不订阅事件
+        const comps = system.mapData.components?.playerInteractWithEntity ?? [];
+        if (comps.length <= 0)
+            return;
+        // ===== 玩家与实体交互 =====
+        lib.gameSystem.subscribeEvent("playerInteractWithEntity", minecraft.world.afterEvents.playerInteractWithEntity, event => {
+            const { player, target } = event;
+            // 如果玩家没有玩家信息，终止运行
+            const playerData = system.getPlayer(player);
+            if (!playerData)
+                return;
+            // 对所有组件进行遍历，执行符合条件的
+            comps
+                .filter(comp => {
+                if (comp.type === "hit")
+                    return false;
+                if (!target.hasTag(comp.hasTag))
+                    return false;
+                return true;
+            })
+                .forEach(comp => comp.run(system, playerData, target));
+        });
+        // ===== 玩家击打实体 =====
+        lib.gameSystem.subscribeEvent("playerHitEntity", minecraft.world.afterEvents.entityHitEntity, event => {
+            const { hitEntity: target, damagingEntity: player } = event;
+            // 如果玩家没有玩家信息，终止运行
+            const playerData = system.getPlayer(player);
+            if (!playerData)
+                return;
+            // 对所有组件进行遍历，执行符合条件的
+            comps
+                .filter(comp => {
+                if (comp.type === "interaction")
+                    return false;
+                if (!target.hasTag(comp.hasTag))
+                    return false;
+                return true;
+            })
+                .forEach(comp => comp.run(system, playerData, target));
+        });
+    }
+    /** 玩家使用物品组件。
+     * @description 会自动判断系统的地图数据是否含有`playerUsedItem`组件，若不含该组件则不会注册该组件。
+     * @description 当玩家使用物品后，通过`playerUsedItem`组件的指定值执行事件。
+     */
+    static playerUsedItem(system) {
+        // 如果没有指定该组件，则不订阅事件
+        const comps = system.mapData.components?.playerUsedItem ?? [];
+        if (comps.length <= 0)
+            return;
+        // ===== 玩家使用物品 =====
+        lib.gameSystem.subscribeEvent("playerUsedItem", minecraft.world.afterEvents.itemCompleteUse, event => {
+            const { source: player, itemStack } = event;
+            // 如果玩家没有玩家信息，终止运行
+            const playerData = system.getPlayer(player);
+            if (!playerData)
+                return;
+            // 对所有组件进行遍历，执行符合条件的
+            comps.filter(comp => comp.itemId.includes(itemStack.typeId)).forEach(comp => comp.run(system, playerData, itemStack));
         });
     }
     /** 玩家进入特定区域组件。
@@ -2922,6 +2986,21 @@ export class MurderMysteryPlayer {
             case MurderMysteryPlayerRole.Spectator:
                 break;
         }
+    }
+    /** 对玩家施加伤害。
+     * @param deathType 若下一次的伤害会导致玩家死亡，以何种方式将玩家处死。
+     */
+    dealDamage(amount, deathType) {
+        // 检查玩家当前血量是否能够继续扣下去，如果不能则直接处死，并恢复全部血量
+        const playerHealthComp = this.player.getComponent("health");
+        const currentHealth = playerHealthComp?.currentValue ?? 20;
+        if (currentHealth <= amount) {
+            this.setDead(deathType);
+            playerHealthComp?.resetToMaxValue();
+            return;
+        }
+        // 否则，施加伤害
+        this.player.applyDamage(amount, { cause: minecraft.EntityDamageCause.none });
     }
     /** 设置玩家为已死亡，并对玩家播放死因。如果是侦探死亡，则全体公告。如果触发特定条件，会导致游戏结束。
      * @returns 返回是否成功将该玩家设定为死亡。
@@ -3607,7 +3686,7 @@ export class MurderMysteryPlayer {
         }
         return isEnough;
     }
-    /** 消耗玩家的金锭。
+    /** 消耗玩家的金锭。当金锭不充足时会提醒玩家。
      * @returns 返回是否成功消耗金锭。若玩家金锭不足，则返回`false`。
      */
     consumeGold(count) {
@@ -3619,8 +3698,8 @@ export class MurderMysteryPlayer {
     }
     // #endregion
     // #region - 设置物品
-    /** 检查是否能给予玩家物品。 */
-    canGiveItem(maxItemCount = 3) {
+    /** 检查是否能给予玩家物品。当玩家背包已满无法给予时，会对玩家发送消息。 */
+    canGiveItem(maxItemCount = 3, customMessage = { translate: "chat.inventoryFull" }) {
         // ===== 变量准备 =====
         const player = this.player;
         const playerContainer = player.getComponent("inventory")?.container;
@@ -3638,7 +3717,7 @@ export class MurderMysteryPlayer {
         // ===== 检查玩家的背包是否已满 =====
         if (currentItemCount >= maxItemCount) {
             if (isPlayer(player))
-                lib.PlayerUtils.notify(player, { message: { translate: "chat.inventoryFull" }, sound: "random.anvil_land" });
+                lib.PlayerUtils.notify(player, { message: customMessage, sound: "random.anvil_land" });
             return false;
         }
         return true;
@@ -3672,6 +3751,8 @@ export class MurderMysteryPlayer {
     isInHauntedHouseDoor = false;
     /** 是否正在乘坐矿车。 */
     isRidingMinecart = false;
+    /** 是否受到药水效果影响。 */
+    isInPotionEffect = false;
 }
 // #endregion
 // #region 创建系统实例

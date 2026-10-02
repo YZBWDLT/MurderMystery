@@ -28,8 +28,12 @@ item.murder_mystery:mystery_potion_1=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_2=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_3=§a??? Mystery Potion ???
 item.murder_mystery:mystery_potion_4=§a??? Mystery Potion ???
+item.murder_mystery:water_repellent_potion=Water Repellent
 item.murder_mystery:locator=Locator
 item.murder_mystery:settings=Settings
+
+itemLore.murder_mystery:water_repellent_potion.line1=§7Drink this potion to be able to go in
+itemLore.murder_mystery:water_repellent_potion.line2=§7the water!
 
 ## ===== Command =====
 
@@ -262,7 +266,7 @@ monorail.name=Monorail
 rollerCoaster.name=Roller Coaster
 chat.hypixelWorld.rideTwoMinecarts=§cYou cannot ride another minecart while already riding one!
 
-### Tanks in Aquarium
+### Aquarium
 textDisplay.aquarium.pufferfishTank=§6Pufferfish Tank
 textDisplay.aquarium.octopusTank=§5Octopus Tank
 textDisplay.aquarium.tank.line1=§7§oPress Button to exchange
@@ -272,7 +276,7 @@ chat.aquarium.tank.giftSplashPotion=§cThe mighty sea creature has gifted you a 
 chat.aquarium.tank.giftDrinkableSpeedPotion=§cThe mighty sea creature has gifted you a Drinkable Speed Potion!
 chat.aquarium.tank.giftBow=§cThe mighty sea creature has gifted you a bow!
 
-### Traps in Spooky Mansion
+### Spooky Mansion
 textDisplay.spookyMansion.doorTrap.line1=§7Press buttons to
 textDisplay.spookyMansion.doorTrap.line2=§7remove porch floor
 textDisplay.spookyMansion.doorTrap.line3=§61 Gold
@@ -297,6 +301,15 @@ textDisplay.spookyMansion.elevator.1stFloor.line2=§62 Golds
 
 textDisplay.spookyMansion.elevator.basement.line1=§7To: §6Basement
 textDisplay.spookyMansion.elevator.basement.line2=§62 Golds
+
+### San Peratico
+chat.sanPeratico.drowningWarning=§c§lWARNING! §r§7You are drowning, swim to safety!
+textDisplay.senPeratico.buyPotion.line1=§bBuy: Water Repellent
+textDisplay.senPeratico.buyPotion.line2=§63 Golds
+chat.senPeratico.getPotion=§aYou received your §bWater Repellent!
+chat.senPeratico.alreadyHavePotion=§cYou already have a §bWater Repellent§c!
+chat.senPeratico.potionTakeEffect=§aYou can now go in the water for §b30 seconds§a!
+chat.senPeratico.potionOutOfDate=§cYour water repellent wore off!
 
 ## ===== Settings UI =====
 

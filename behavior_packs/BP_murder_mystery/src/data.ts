@@ -112,7 +112,48 @@ export const about = {
     customHeadAdaption: ["南瓜汁 (PumpkinJui)", "o绿叶o (GreeLeaf)", "KrisChamber文雨 (KrisWenYu)", "狂野巴豆 (Andy7343)"],
 
     /** 测试员。 */
-    tester: ["1.0 正式版更新后同步……"],
+    tester: [
+        "狂野巴豆 (Andy7343)",
+        "KrisChambers文雨 (KrisWenYu)",
+        "南瓜汁 (PumpkinJui)",
+        "鸽子 (PigeonKI)",
+        "橘子 (freeorange114)",
+        "o绿叶o (GreeLeaf)",
+        "比翼鸟 (KianaKaslana947)",
+        "小飞侠 (tck1122)",
+        "抖抖抖 (SpyingLace85493)",
+        "海王星 (Neptune exe1591)",
+        "鱼周 (UnhandyShark856)",
+        "xsg (xsg868758)",
+        "星辰 (xc13599305)",
+        "里昂 (zhao run zhe520)",
+        "龙龙 (longlongxiaotao)",
+        "硫化银 (yiyishi54188)",
+        "珂朵莉 (Tetrisoo)",
+        "火卫三 (IBukreev)",
+        "lanos (lanos212)",
+        "塞拉 (Traptrix SL)",
+        "墨澜 (modiya2333)",
+        "蒙德人 (Tuffy2020China)",
+        "命令块 (CommandBlock603)",
+        "很合理 (ZheBuHeLiaa)",
+        "小鼠 (xiaoshu512)",
+        "橘子冰 (Orangeice114514)",
+        "十三酱 (Rss and L53)",
+        "小面包 (LittleBread2026)",
+        "烟雨 (RustyAbyss29193)",
+        "永恒 (JHY2189)",
+        "创哲宇 (Chuangzheyu2048)",
+        "欧拉 (EurluoL)",
+        "风暴 (FoxLanMo)",
+        "Panda (CutePandaBL)",
+        "吊桥 (diaoqiaoyl)",
+        "Tiger (TigerishSnow86)",
+        "小意 (Xiaoyia666)",
+        "马可 (MAXOUYT8117)",
+        "阿辰 (ACH1en3153)",
+        "条形马 (QRnobelly)",
+    ],
 
     /** 特别感谢。 */
     specialThanks: ["珂朵莉 (Tetrisoo)", "欧拉 (EurluoL)"],
@@ -121,36 +162,14 @@ export const about = {
 
 /** 更新日志原文（Markdown 格式）。 */
 const updateLogRaw: string[] = [
-    "提前预祝大家国庆节快乐！我们计划在 10 月 3 日发布最终的 RC 版本，因此这个版本将会是最后一个预览版本了。我们将会在 10 月 1 日发布最终的 RC 版本，欢迎大家积极参与测试！",
-    "我们在这次的更新中添加了众多设置，并且改进了定位器的运作方式。虽然我们仍然没能修复定位器的退出重进失效问题……（我们真的尽力了！这真的是在给原版擦屁股，真的很累……）",
-    "一起来看看本周的更新吧，祝你躲过杀手的追击！",
-    "### 地图",
-    "- 现在地图雪景球不再会掉进轨道里",
-    "- 现在地图雪中平安夜 V1 不再能够出图了",
-    "- 现在地图阴森庄园和阴森庄园 V1 不再能通过弓箭压住木按钮，导致按下按钮的事件无法触发",
-    "- 现在地图游轮不再默认带有假人",
-    "- 现在地图好莱坞的管道可以用于传送了",
-    "- 现在地图好莱坞、水族馆、山脉、雪中平安夜都能够在开始游戏前进入主场地了",
-    "### 交互机制",
-    "- 现在床不再能交互了",
-    "- 现在地图 Hypixel 游乐园和复活节游乐园不再能与门交互",
-    "### 定位器",
-    "- 现在定位器物品的外观改为了指南针",
-    "- 现在定位器物品是始终给予的，而不再是在特定时段给予定位器",
-    "- 定位器在平民（侦探）玩家小于等于 2 人时，会对所有玩家显示其他玩家的位置",
-    "- 定位器在平民（侦探）玩家小于等于 1 人时，会对杀手隐藏最后一名玩家的位置",
-    "- 定位器在游戏剩余 30 秒时，会重新对杀手显示最后一名玩家的位置",
-    "- 定位器会对旁观者或死去的玩家显示所有玩家的位置",
-    "### 设置",
-    "- 修复等待设置的游戏倒计时时长无法和默认值对齐的问题（只能调整为 5 的倍数，但实际上是 16 秒）",
-    "- 单独开启了一个侦探设置，并将侦探弓冷却时间和弓拾取形式移动到了侦探设置中",
-    "- 移除了杂项设置，并将其中的所有设置项全部移动到了游戏设置中",
-    "- 将杀手刀剑设置更名为杀手设置",
-    "- 为杀手设置新增了速度效果所需玩家数设置和击杀玩家时间奖励设置",
-    "- 添加了 3 个定位器设置，可以调整上文的 3 个定位器参数",
-    "- 为游戏设置新增了地图未适配提醒设置",
-    "### 杀手飞刀",
-    "- 现在杀手在飞刀蓄力时会减速（获得缓慢 I 效果）",
+    "这是我们发布的第一个版本，因此没有更新日志！",
+    "然而，你可以在我们的群文档了解更多：",
+    "§amm.nekoawa.com",
+    "也欢迎在我的以下平台留言：",
+    "- QQ 群：§a673941729（我在 QQ 群最活跃！）；",
+    "- B 站：§a@一只卑微的量筒；",
+    "- GitHub：§aYZBWDLT/MurderMystery",
+    "最后感谢你的游玩！欢迎关注我，在以上几个平台了解本地图的最新更新动态！",
 ];
 
 /**
@@ -238,11 +257,6 @@ export interface MurderMysteryMapDataComponent {
     /** 时间组件，设定该地图使用的游戏内时间。 | 默认值：`6000` */
     readonly time?: number;
 
-    /** 是否启用神秘药水。使用该组件决定喝下神秘药水后会使用神秘药水的随机药效，以及神秘药水的文本位置。
-     * - 通常和`interaction`组件联合使用，并且需要使用带有`getMysteryPotion`的事件以使玩家能够获得神秘药水。
-     */
-    readonly enableMysteryPotion?: MurderMysteryEnableMysteryPotionComponent;
-
     /** 交互组件。当玩家与特定位置的方块交互后可触发事件。 */
     readonly interaction?: MurderMysteryInteractionComponent[];
 
@@ -257,6 +271,12 @@ export interface MurderMysteryMapDataComponent {
 
     /** 检查玩家进入特定区域组件。当玩家进入特定区域的时候，触发特定事件。 */
     readonly playerInArea?: MurderMysteryPlayerInAreaComponent[];
+
+    /** 玩家与 NPC 交互组件。当玩家与 NPC 交互、或击打 NPC 的时候，触发特定事件。 */
+    readonly playerInteractWithEntity?: MurderMysteryPlayerInteractWithEntityComponent[];
+
+    /** 玩家使用物品组件。当玩家使用完毕一个物品的时候，触发特定事件。 */
+    readonly playerUsedItem?: MurderMysteryPlayerUsedItemComponent[];
 
     /** 检查玩家受伤组件。当玩家受伤的时候，触发特定事件。 */
     readonly playerHurt?: MurderMysteryPlayerHurtComponent[];
@@ -296,7 +316,28 @@ export interface MurderMysteryPlayerPushLeverComponent {
     run: (system: MurderMysterySystem, playerData: MurderMysteryPlayer) => number;
 }
 
-export interface MurderMysteryEnableMysteryPotionComponent {}
+export interface MurderMysteryPlayerInteractWithEntityComponent {
+    /** NPC 必须拥有的标签。 */
+    hasTag: string;
+
+    /** 交互类型。
+     * - `all`：（默认值）通过击打或交互均可触发事件。
+     * - `interaction`：仅右键交互可触发事件。
+     * - `hit`：仅左键击打可触发事件。
+     */
+    type?: "interaction" | "hit" | "all";
+
+    /** 玩家交互后执行的函数。 */
+    run: (system: MurderMysterySystem, playerData: MurderMysteryPlayer, interactedEntity: minecraft.Entity) => void;
+}
+
+export interface MurderMysteryPlayerUsedItemComponent {
+    /** 玩家使用物品的 ID。 */
+    itemId: string[];
+
+    /** 玩家使用物品后执行的函数。 */
+    run: (system: MurderMysterySystem, playerData: MurderMysteryPlayer, usedItem: minecraft.ItemStack) => void;
+}
 
 export interface MurderMysteryPlayerInAreaComponent {
     /** 待检测的区域的条件。仅当所有条件都完全符合时才会触发事件。
@@ -429,6 +470,44 @@ function spookyMansionCrusher(
     lib.BlockUtils.fill({ id: operation === "on" ? "minecraft:polished_andesite" : "minecraft:air", from, to });
     lib.PlayerUtils.broadcast({ location: soundLocation, sound: "note.hat", soundOptions: { pitch: 2 } });
 }
+// #endregion
+
+// #region - 港口小镇方法
+
+/** 播放港口小镇的桥的动画。 */
+function sanPeraticoBridgeTrap(
+    system: MurderMysterySystem,
+    playerData: MurderMysteryPlayer,
+    id: 1 | 2 | 3,
+    structureLocation: minecraft.Vector3,
+    shouldMirror = false,
+) {
+    // --- 条件检查 ---
+    // 如果当前陷阱处于冷却，终止运行
+    if (system.eventManager.getEventCooldownCountdown(`sanPeratico:bridge${id}Cooldown`, "general", playerData.player) > 0) return;
+    // 如果玩家金锭不足，终止运行
+    if (!playerData.consumeGold(2)) return;
+
+    // --- 开启陷阱 ---
+    system.eventManager.setEventCooldown(`sanPeratico:bridge${id}Cooldown`, 15);
+    const setTrap = (stage: number) => {
+        lib.StructureUtils.placeAsync(`murder_mystery:sanPeratico/bridge_stage${stage}`, structureLocation, {
+            mirror: shouldMirror ? minecraft.StructureMirrorAxis.X : minecraft.StructureMirrorAxis.None,
+        });
+        lib.PlayerUtils.broadcast({ location: structureLocation, sound: "mob.irongolem.hit" });
+    };
+    lib.gameSystem.subscribeTimeline(`bridge${id}Animation`, time => {
+        const timelines: Record<number, () => void> = {
+            1: () => setTrap(2),
+            24: () => setTrap(3),
+            200: () => setTrap(2),
+            224: () => setTrap(1),
+        };
+        timelines[time]?.();
+        if (time === 225) return false;
+    });
+}
+
 // #endregion
 
 // #endregion
@@ -957,7 +1036,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     run: (system, playerData) => {
                         // --- 条件检查 ---
                         // 如果仍处于冷却，终止运行
-                        if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap", "general", playerData?.player) > 0)
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:piranhaTrap", "general", playerData.player) > 0)
                             return 0;
                         // 如果玩家金锭不足，终止运行
                         if (!playerData.consumeGold(1)) return 0;
@@ -999,7 +1078,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     run: (system, playerData) => {
                         // --- 条件检查 ---
                         // 如果当前陷阱处于冷却，终止运行
-                        if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap", "general", playerData?.player) > 0)
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:bridgeTrap", "general", playerData.player) > 0)
                             return 0;
                         // 如果玩家金锭不足，终止运行
                         if (!playerData.consumeGold(1)) return 0;
@@ -1040,7 +1119,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     run: (system, playerData) => {
                         // --- 条件检查 ---
                         // 如果当前陷阱处于冷却，终止运行
-                        if (system.eventManager.getEventCooldownCountdown("aquarium:sharkTrap", "general", playerData?.player) > 0)
+                        if (system.eventManager.getEventCooldownCountdown("aquarium:sharkTrap", "general", playerData.player) > 0)
                             return;
                         // 如果玩家金锭不足，终止运行
                         if (!playerData.consumeGold(2)) return;
@@ -3924,8 +4003,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     run: (system, playerData) => {
                         // ===== 条件检查 =====
                         // 如果当前陷阱处于冷却，终止运行
-                        if (system.eventManager.getEventCooldownCountdown("darkfall:trap", "general", playerData?.player) > 0)
-                            return 0;
+                        if (system.eventManager.getEventCooldownCountdown("darkfall:trap", "general", playerData.player) > 0) return 0;
                         // 如果玩家金锭不足，终止运行
                         if (!playerData.consumeGold(2)) return 0;
 
@@ -3970,7 +4048,6 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     run: (system, playerData) => tryGetMysteryPotion(system, { x: 121, y: 38, z: 1892 }, playerData),
                 },
             ],
-            enableMysteryPotion: {},
             playerInArea: [
                 {
                     area: { xMin: 107, yMin: 35, zMin: 1879, xMax: 113, yMax: 36, zMax: 1885 },
@@ -3989,6 +4066,18 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         playerData.player.teleport({ x: 154, y: 37.1, z: 1915 }, { facingLocation: { x: 140, y: 37, z: 1915 } });
                         notify(playerData.player, { sound: "portal.travel", soundDelay: 3 });
                     },
+                },
+            ],
+            playerUsedItem: [
+                {
+                    itemId: [
+                        "murder_mystery:mystery_potion_0",
+                        "murder_mystery:mystery_potion_1",
+                        "murder_mystery:mystery_potion_2",
+                        "murder_mystery:mystery_potion_3",
+                        "murder_mystery:mystery_potion_4",
+                    ],
+                    run: (system, playerData, potion) => system.eventManager.drinkMysteryPotion(playerData, potion.typeId),
                 },
             ],
             onGameStart: {
@@ -6744,16 +6833,18 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     run: (system, playerData) => tryGetMysteryPotion(system, { x: -884, y: 111, z: 1966 }, playerData),
                 },
             ],
-            enableMysteryPotion: {
-                locations: [
-                    { x: -884, y: 102, z: 1923 },
-                    { x: -907, y: 102, z: 1909 },
-                    { x: -927, y: 102, z: 1935 },
-                    { x: -853, y: 102, z: 1953 },
-                    { x: -884, y: 111, z: 1966 },
-                ],
-                consume: 1,
-            },
+            playerUsedItem: [
+                {
+                    itemId: [
+                        "murder_mystery:mystery_potion_0",
+                        "murder_mystery:mystery_potion_1",
+                        "murder_mystery:mystery_potion_2",
+                        "murder_mystery:mystery_potion_3",
+                        "murder_mystery:mystery_potion_4",
+                    ],
+                    run: (system, playerData, potion) => system.eventManager.drinkMysteryPotion(playerData, potion.typeId),
+                },
+            ],
             playerInArea: [
                 {
                     area: { yMax: 40 },
@@ -7894,6 +7985,139 @@ export const maps: Record<string, MurderMysteryMapData> = {
             hasFullFunction: false,
             enabledByDefault: false,
         },
+        components: {
+            onGameStart: {
+                run: () => {
+                    lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -947, y: 15, z: -56 });
+                    lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -967, y: 15, z: -56 });
+                    lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -985, y: 15, z: -56 });
+
+                    lib.EntityUtils.add("murder_mystery:npc", { x: -976.5, y: 16, z: -69.5 }, "overworld", {
+                        initialRotation: 0,
+                    }).addTag("sanPeratico:waterRepellentPotionSeller");
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -977, y: 18.6, z: -70 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -977, y: 18.2, z: -70 });
+                    lib.EntityUtils.add("murder_mystery:npc", { x: -917.5, y: 16, z: -20.5 }, "overworld", {
+                        initialRotation: 180,
+                    }).addTag("sanPeratico:waterRepellentPotionSeller");
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -918, y: 18.6, z: -21 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -918, y: 18.2, z: -21 });
+                },
+            },
+            playerPressButton: [
+                {
+                    at: [{ x: -947, y: 17, z: -48 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 1, { x: -947, y: 15, z: -55 }),
+                },
+                {
+                    at: [{ x: -943, y: 17, z: -58 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 1, { x: -947, y: 15, z: -56 }, true),
+                },
+                {
+                    at: [{ x: -967, y: 17, z: -48 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 2, { x: -967, y: 15, z: -55 }),
+                },
+                {
+                    at: [{ x: -963, y: 17, z: -58 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 2, { x: -967, y: 15, z: -56 }, true),
+                },
+                {
+                    at: [{ x: -981, y: 17, z: -47 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 3, { x: -985, y: 15, z: -55 }),
+                },
+                {
+                    at: [{ x: -985, y: 17, z: -58 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 3, { x: -985, y: 15, z: -56 }, true),
+                },
+            ],
+            playerInArea: [
+                // ===== 玩家溺水 =====
+                {
+                    area: { yMax: 11.49 },
+                    run: (system, playerData) => {
+                        if (playerData.isInPotionEffect) return;
+                        const playerName = playerData.getName();
+                        const player = playerData.player;
+                        // 对玩家注册一个时间线，若玩家在 11.49 格或更高并且玩家离水则终止运行
+                        lib.gameSystem.subscribeTimeline(
+                            `${playerName}Drowning`,
+                            time => {
+                                if (time === 1)
+                                    notify(playerData.player, { message: { translate: "chat.sanPeratico.drowningWarning" } });
+                                // 如果玩家在水中喝下药水，则立刻终止运行
+                                if (playerData.isInPotionEffect) return false;
+                                // 如果玩家上岸，则终止运行
+                                if (player.location.y > 11.49 && !player.isInWater) return false;
+                                playerData.dealDamage(2, MurderMysteryDeathType.Drowned);
+                            },
+                            30,
+                        );
+                    },
+                },
+            ],
+            playerInteractWithEntity: [
+                {
+                    hasTag: "sanPeratico:waterRepellentPotionSeller",
+                    run: (system, playerData, trader) => {
+                        // --- 条件检查 ---
+                        const player = playerData.player;
+                        if (!playerData.canGiveItem(1, { translate: "chat.senPeratico.alreadyHavePotion" })) return;
+                        if (!playerData.consumeGold(3)) return;
+
+                        // --- 给予玩家药水 ---
+                        playerData.giveItem("murder_mystery:water_repellent_potion", {
+                            itemLock: minecraft.ItemLockMode.slot,
+                            lore: [
+                                { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
+                                { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
+                            ],
+                        });
+                        notify(player, {
+                            sound: "random.pop",
+                            message: { translate: "chat.senPeratico.getPotion" },
+                        });
+                    },
+                },
+            ],
+            playerUsedItem: [
+                {
+                    itemId: ["murder_mystery:water_repellent_potion"],
+                    run: (system, playerData) => {
+                        const player = playerData.player;
+                        // 如果玩家当前仍然在水肺状态效果下，阻止之
+                        if (playerData.isInPotionEffect) {
+                            playerData.giveItem("murder_mystery:water_repellent_potion", {
+                                itemLock: minecraft.ItemLockMode.slot,
+                                lore: [
+                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
+                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
+                                ],
+                            });
+                            notify(player, { message: { translate: "chat.mysteryPotion.onlyOneEffect" } });
+                            return;
+                        }
+                        // 执行水肺效果
+                        player.addEffect("water_breathing", 600, { amplifier: 0, showParticles: false });
+                        playerData.isInPotionEffect = true;
+                        notify(player, { message: { translate: "chat.senPeratico.potionTakeEffect" } });
+                        lib.ItemUtils.equipment.set(player, "minecraft:golden_boots", minecraft.EquipmentSlot.Feet, {
+                            itemLock: minecraft.ItemLockMode.slot,
+                            unbreakable: true,
+                            enchantments: [{ id: "depth_strider", level: 2 }],
+                        });
+                        lib.gameSystem.subscribeDelay(
+                            `${player}InPotionEffect`,
+                            () => {
+                                playerData.isInPotionEffect = false;
+                                notify(player, { message: { translate: "chat.senPeratico.potionOutOfDate" } });
+                                lib.ItemUtils.equipment.set(player, "minecraft:air", minecraft.EquipmentSlot.Feet);
+                            },
+                            600,
+                        );
+                    },
+                },
+            ],
+        },
     },
     // #endregion
 
@@ -8239,6 +8463,139 @@ export const maps: Record<string, MurderMysteryMapData> = {
                 { x: -1054.5, y: 51.5, z: -930.5 },
             ],
             hasFullFunction: false,
+        },
+        components: {
+            onGameStart: {
+                run: () => {
+                    lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -1091, y: 50, z: -909 });
+                    lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -1111, y: 50, z: -909 });
+                    lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -1129, y: 50, z: -909 });
+
+                    lib.EntityUtils.add("murder_mystery:npc", { x: -1061.5, y: 51, z: -873.5 }, "overworld", {
+                        initialRotation: 180,
+                    }).addTag("sanPeratico:waterRepellentPotionSeller");
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -1062, y: 53.6, z: -874 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -1062, y: 53.2, z: -874 });
+                    lib.EntityUtils.add("murder_mystery:npc", { x: -1120.5, y: 51, z: -922.5 }, "overworld", {
+                        initialRotation: 0,
+                    }).addTag("sanPeratico:waterRepellentPotionSeller");
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -1121, y: 53.6, z: -923 });
+                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -1121, y: 53.2, z: -923 });
+                },
+            },
+            playerPressButton: [
+                {
+                    at: [{ x: -1091, y: 52, z: -901 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 1, { x: -1091, y: 50, z: -908 }),
+                },
+                {
+                    at: [{ x: -1087, y: 52, z: -911 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 1, { x: -1091, y: 50, z: -909 }, true),
+                },
+                {
+                    at: [{ x: -1111, y: 52, z: -901 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 2, { x: -1111, y: 50, z: -908 }),
+                },
+                {
+                    at: [{ x: -1107, y: 52, z: -911 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 2, { x: -1111, y: 50, z: -909 }, true),
+                },
+                {
+                    at: [{ x: -1125, y: 52, z: -900 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 3, { x: -1129, y: 50, z: -908 }),
+                },
+                {
+                    at: [{ x: -1129, y: 52, z: -911 }],
+                    run: (system, playerData) => sanPeraticoBridgeTrap(system, playerData, 3, { x: -1129, y: 50, z: -909 }, true),
+                },
+            ],
+            playerInArea: [
+                // ===== 玩家溺水 =====
+                {
+                    area: { yMax: 46.49 },
+                    run: (system, playerData) => {
+                        if (playerData.isInPotionEffect) return;
+                        const playerName = playerData.getName();
+                        const player = playerData.player;
+                        // 对玩家注册一个时间线，若玩家在 46.49 格或更高并且玩家离水则终止运行
+                        lib.gameSystem.subscribeTimeline(
+                            `${playerName}Drowning`,
+                            time => {
+                                if (time === 1)
+                                    notify(playerData.player, { message: { translate: "chat.sanPeratico.drowningWarning" } });
+                                // 如果玩家在水中喝下药水，则立刻终止运行
+                                if (playerData.isInPotionEffect) return false;
+                                // 如果玩家上岸，则终止运行
+                                if (player.location.y > 46.49 && !player.isInWater) return false;
+                                playerData.dealDamage(2, MurderMysteryDeathType.Drowned);
+                            },
+                            30,
+                        );
+                    },
+                },
+            ],
+            playerInteractWithEntity: [
+                {
+                    hasTag: "sanPeratico:waterRepellentPotionSeller",
+                    run: (system, playerData, trader) => {
+                        // --- 条件检查 ---
+                        const player = playerData.player;
+                        if (!playerData.canGiveItem(1, { translate: "chat.senPeratico.alreadyHavePotion" })) return;
+                        if (!playerData.consumeGold(3)) return;
+
+                        // --- 给予玩家药水 ---
+                        playerData.giveItem("murder_mystery:water_repellent_potion", {
+                            itemLock: minecraft.ItemLockMode.slot,
+                            lore: [
+                                { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
+                                { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
+                            ],
+                        });
+                        notify(player, {
+                            sound: "random.pop",
+                            message: { translate: "chat.senPeratico.getPotion" },
+                        });
+                    },
+                },
+            ],
+            playerUsedItem: [
+                {
+                    itemId: ["murder_mystery:water_repellent_potion"],
+                    run: (system, playerData) => {
+                        const player = playerData.player;
+                        // 如果玩家当前仍然在水肺状态效果下，阻止之
+                        if (playerData.isInPotionEffect) {
+                            playerData.giveItem("murder_mystery:water_repellent_potion", {
+                                itemLock: minecraft.ItemLockMode.slot,
+                                lore: [
+                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
+                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
+                                ],
+                            });
+                            notify(player, { message: { translate: "chat.mysteryPotion.onlyOneEffect" } });
+                            return;
+                        }
+                        // 执行水肺效果
+                        player.addEffect("water_breathing", 600, { amplifier: 0, showParticles: false });
+                        playerData.isInPotionEffect = true;
+                        notify(player, { message: { translate: "chat.senPeratico.potionTakeEffect" } });
+                        lib.ItemUtils.equipment.set(player, "minecraft:golden_boots", minecraft.EquipmentSlot.Feet, {
+                            itemLock: minecraft.ItemLockMode.slot,
+                            unbreakable: true,
+                            enchantments: [{ id: "depth_strider", level: 2 }],
+                        });
+                        lib.gameSystem.subscribeDelay(
+                            `${player}InPotionEffect`,
+                            () => {
+                                playerData.isInPotionEffect = false;
+                                notify(player, { message: { translate: "chat.senPeratico.potionOutOfDate" } });
+                                lib.ItemUtils.equipment.set(player, "minecraft:air", minecraft.EquipmentSlot.Feet);
+                            },
+                            600,
+                        );
+                    },
+                },
+            ],
         },
     },
     // #endregion
@@ -10504,8 +10861,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                         // ===== 条件检查 =====
                         // 如果仍处于冷却，终止运行
                         if (
-                            system.eventManager.getEventCooldownCountdown("spookyMansion:barrelTrap", "general", playerData?.player) >
-                            0
+                            system.eventManager.getEventCooldownCountdown("spookyMansion:barrelTrap", "general", playerData.player) > 0
                         )
                             return;
                         // 如果玩家金锭不足，终止运行
@@ -10539,7 +10895,7 @@ export const maps: Record<string, MurderMysteryMapData> = {
                     run: (system, playerData) => {
                         // ===== 条件检查 =====
                         // 如果仍处于冷却，终止运行
-                        if (system.eventManager.getEventCooldownCountdown("spookyMansion:doorTrap", "general", playerData?.player) > 0)
+                        if (system.eventManager.getEventCooldownCountdown("spookyMansion:doorTrap", "general", playerData.player) > 0)
                             return;
                         // 如果玩家金锭不足，终止运行
                         if (!playerData.consumeGold(1)) return;
@@ -10591,14 +10947,14 @@ export const maps: Record<string, MurderMysteryMapData> = {
                             });
 
                             // 开陷阱
-                            if (time === 16)
+                            if (time === 6)
                                 spookyMansionCrusher(
                                     "on",
                                     { x: -64, y: 76, z: -2886 },
                                     { x: -64, y: 78, z: -2884 },
                                     { x: -65, y: 77, z: -2885 },
                                 );
-                            if (time === 18) {
+                            if (time === 8) {
                                 spookyMansionCrusher(
                                     "on",
                                     { x: -65, y: 76, z: -2886 },
@@ -10613,21 +10969,21 @@ export const maps: Record<string, MurderMysteryMapData> = {
                             }
 
                             // 关陷阱
-                            if (time === 28)
+                            if (time === 18)
                                 spookyMansionCrusher(
                                     "off",
                                     { x: -66, y: 76, z: -2886 },
                                     { x: -66, y: 78, z: -2884 },
                                     { x: -65, y: 77, z: -2885 },
                                 );
-                            if (time === 34)
+                            if (time === 24)
                                 spookyMansionCrusher(
                                     "off",
                                     { x: -65, y: 76, z: -2886 },
                                     { x: -65, y: 78, z: -2884 },
                                     { x: -65, y: 77, z: -2885 },
                                 );
-                            if (time === 40) {
+                            if (time === 30) {
                                 spookyMansionCrusher(
                                     "off",
                                     { x: -64, y: 76, z: -2886 },
@@ -10666,28 +11022,28 @@ export const maps: Record<string, MurderMysteryMapData> = {
                             });
 
                             // 开陷阱
-                            if (time === 12)
+                            if (time === 2)
                                 spookyMansionCrusher(
                                     "on",
                                     { x: -57, y: 89, z: -2895 },
                                     { x: -59, y: 89, z: -2893 },
                                     { x: -58, y: 87, z: -2894 },
                                 );
-                            if (time === 14)
+                            if (time === 4)
                                 spookyMansionCrusher(
                                     "on",
                                     { x: -57, y: 88, z: -2895 },
                                     { x: -59, y: 88, z: -2893 },
                                     { x: -58, y: 87, z: -2894 },
                                 );
-                            if (time === 16)
+                            if (time === 6)
                                 spookyMansionCrusher(
                                     "on",
                                     { x: -57, y: 87, z: -2895 },
                                     { x: -59, y: 87, z: -2893 },
                                     { x: -58, y: 87, z: -2894 },
                                 );
-                            if (time === 18) {
+                            if (time === 8) {
                                 spookyMansionCrusher(
                                     "on",
                                     { x: -57, y: 86, z: -2895 },
@@ -10702,28 +11058,28 @@ export const maps: Record<string, MurderMysteryMapData> = {
                             }
 
                             // 关陷阱
-                            if (time === 28)
+                            if (time === 18)
                                 spookyMansionCrusher(
                                     "off",
                                     { x: -57, y: 86, z: -2895 },
                                     { x: -59, y: 86, z: -2893 },
                                     { x: -58, y: 87, z: -2894 },
                                 );
-                            if (time === 32)
+                            if (time === 22)
                                 spookyMansionCrusher(
                                     "off",
                                     { x: -57, y: 87, z: -2895 },
                                     { x: -59, y: 87, z: -2893 },
                                     { x: -58, y: 87, z: -2894 },
                                 );
-                            if (time === 36)
+                            if (time === 26)
                                 spookyMansionCrusher(
                                     "off",
                                     { x: -57, y: 88, z: -2895 },
                                     { x: -59, y: 88, z: -2893 },
                                     { x: -58, y: 87, z: -2894 },
                                 );
-                            if (time === 40) {
+                            if (time === 30) {
                                 spookyMansionCrusher(
                                     "off",
                                     { x: -57, y: 89, z: -2895 },

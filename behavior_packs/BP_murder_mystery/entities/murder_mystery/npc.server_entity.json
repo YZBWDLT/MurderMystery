@@ -3,7 +3,6 @@
     "minecraft:entity": {
         "description": {
             "identifier": "murder_mystery:npc",
-            "is_experimental": false,
             "is_spawnable": true,
             "is_summonable": true,
             "properties": {
@@ -25,7 +24,8 @@
             "minecraft:health": { "value": 20, "max": 20 },
             "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
             "minecraft:damage_sensor": { "triggers": [{ "cause": "all", "deals_damage": "no" }] },
-            "minecraft:equipment": { "slot_drop_chance": [{ "slot": "slot.weapon.mainhand", "drop_chance": 0 }] }
+            "minecraft:equipment": { "slot_drop_chance": [{ "slot": "slot.weapon.mainhand", "drop_chance": 0 }] },
+            "minecraft:interact": { "interactions": [{}] }
         },
         "events": {
             "murder_mystery:npc_steve": {

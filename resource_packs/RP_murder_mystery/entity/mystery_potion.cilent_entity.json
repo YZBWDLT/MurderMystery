@@ -5,11 +5,11 @@
             "identifier": "murder_mystery:mystery_potion",
             "materials": { "default": "entity_alphatest" },
             "textures": {
-                "type_0": "textures/items/mystery_potion_0",
-                "type_1": "textures/items/mystery_potion_1",
-                "type_2": "textures/items/mystery_potion_2",
-                "type_3": "textures/items/mystery_potion_3",
-                "type_4": "textures/items/mystery_potion_4"
+                "type_0": "textures/items/potion_bottle_absorption",
+                "type_1": "textures/items/potion_bottle_digSpeed",
+                "type_2": "textures/items/potion_bottle_heal",
+                "type_3": "textures/items/potion_bottle_moveSpeed",
+                "type_4": "textures/items/potion_bottle_turtleMaster"
             },
             "geometry": { "default": "geometry.mystery_potion" },
             "render_controllers": ["controller.render.mystery_potion"],
