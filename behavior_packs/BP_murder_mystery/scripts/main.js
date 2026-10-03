@@ -72,7 +72,6 @@ export class MurderMysterySystem {
         this.gameStage = GameStage.WaitingStage;
         this.gameId = lib.JSUtils.number.randomInt(10000, 99999);
         // 对系统数据使用设置
-        const { minPlayerCount, maxPlayerCount } = this.settings.waiting;
         this.resetStartCountdown();
         const { timePerGame } = this.settings.gaming;
         this.timeLeft = timePerGame;
@@ -559,6 +558,10 @@ export class MurderMysterySystem {
     /** 获取游戏已开始的时长。单位：秒。 */
     getGameStartedTime() {
         return this.settings.gaming.timePerGame - this.timeLeft;
+    }
+    /** 对所有玩家更新定位栏。 */
+    updateLocatorBar() {
+        this.players.allPlayers.forEach(playerData => playerData.updateLocatorBar());
     }
     /** 获取实体的状态。状态列表可在 {@link EntityDynamicProperties} 检查或注册。 */
     static getEntityState(entity, state, defaultValue) {
@@ -1060,12 +1063,6 @@ class MurderMysterySettings {
                 icon: "textures/items/spyglass",
                 onClick: () => this.showAboutUI(system, player),
             },
-            {
-                type: "button",
-                text: { translate: "ui.settings.main.updateLog" },
-                icon: "textures/items/book_writable",
-                onClick: () => this.showUpdateLogUI(system, player),
-            },
         ];
         /** 管理员设置选项。 */
         const operatorSettings = [];
@@ -1241,9 +1238,7 @@ class MurderMysterySettings {
         }
         lib.UIUtils.createAction(player, {
             type: "action",
-            onCancel: () => {
-                this.showLastWordsUI(system, player);
-            },
+            onCancel: () => this.showLastWordsUI(system, player),
             components: [
                 {
                     type: "header",
@@ -1253,9 +1248,6 @@ class MurderMysterySettings {
                     },
                 },
                 { type: "label", text: { translate: `lastWords.${lastWord}.description` } },
-                { type: "divider" },
-                ...lastWords,
-                { type: "divider" },
                 {
                     type: "button",
                     text: { translate: "ui.settings.confirm" },
@@ -1268,19 +1260,38 @@ class MurderMysterySettings {
                         });
                     },
                 },
+                { type: "divider" },
+                ...lastWords,
+            ],
+        });
+    }
+    /** 对玩家显示关于 UI。 */
+    static showAboutUI(system, player) {
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showMainSettingsUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.settings.about.title" } },
                 {
                     type: "button",
-                    text: { translate: "ui.settings.cancel" },
-                    icon: "textures/ui/cancel",
-                    onClick: () => {
-                        this.showLastWordsUI(system, player);
-                    },
+                    text: { translate: "ui.settings.about.author" },
+                    onClick: () => this.showAuthorUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.about.updateLog" },
+                    onClick: () => this.showUpdateLogUI(system, player),
+                },
+                {
+                    type: "button",
+                    text: { translate: "ui.settings.about.qa" },
+                    onClick: () => this.showQAUI(system, player),
                 },
             ],
         });
     }
-    /** 对玩家显示关于我们 UI。 */
-    static showAboutUI(system, player) {
+    /** 对玩家显示作者 UI。 */
+    static showAuthorUI(system, player) {
         const author = gameData.about.author.map(text => ({ type: "label", text: `§a${text}` }));
         const map = gameData.about.map.map(text => ({ type: "label", text: `§a${text}` }));
         const customHeadAdaption = gameData.about.customHeadAdaption.map(text => ({
@@ -1294,26 +1305,26 @@ class MurderMysterySettings {
         }));
         lib.UIUtils.createAction(player, {
             type: "action",
-            onCancel: () => this.showMainSettingsUI(system, player),
+            onCancel: () => this.showAboutUI(system, player),
             components: [
-                { type: "header", text: { translate: "ui.settings.about.title" } },
+                { type: "header", text: { translate: "ui.settings.about.author" } },
                 { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.about.author" } },
+                { type: "label", text: { translate: "ui.settings.about.author.author" } },
                 ...author,
                 { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.about.version" } },
+                { type: "label", text: { translate: "ui.settings.about.author.version" } },
                 { type: "label", text: `§a${system.version}` },
                 { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.about.map" } },
+                { type: "label", text: { translate: "ui.settings.about.author.map" } },
                 ...map,
                 { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.about.customHeadAdaption" } },
+                { type: "label", text: { translate: "ui.settings.about.author.customHeadAdaption" } },
                 ...customHeadAdaption,
                 { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.about.tester" } },
+                { type: "label", text: { translate: "ui.settings.about.author.tester" } },
                 ...tester,
                 { type: "divider" },
-                { type: "label", text: { translate: "ui.settings.about.specialThanks" } },
+                { type: "label", text: { translate: "ui.settings.about.author.specialThanks" } },
                 ...specialThanks,
             ],
         });
@@ -1323,13 +1334,31 @@ class MurderMysterySettings {
         const textComponent = gameData.updateLog.map(text => ({ type: "label", text: text }));
         lib.UIUtils.createAction(player, {
             type: "action",
-            onCancel: () => this.showMainSettingsUI(system, player),
+            onCancel: () => this.showAboutUI(system, player),
             components: [
-                { type: "header", text: { translate: "ui.settings.updateLog.title" } },
-                { type: "label", text: { translate: "ui.settings.updateLog.line1" } },
+                { type: "header", text: { translate: "ui.settings.about.updateLog" } },
+                { type: "label", text: { translate: "ui.settings.about.updateLog.description" } },
                 { type: "divider" },
                 { type: "label", text: `§a§l${system.version}` },
                 ...textComponent,
+            ],
+        });
+    }
+    /** 对玩家常见问题 UI。 */
+    static showQAUI(system, player) {
+        const texts = [];
+        const QACount = 5;
+        for (let i = 1; i <= QACount; i++) {
+            texts.push({ type: "label", text: { translate: `ui.settings.about.qa.question${i}` } }, { type: "label", text: { translate: `ui.settings.about.qa.answer${i}` } });
+        }
+        lib.UIUtils.createAction(player, {
+            type: "action",
+            onCancel: () => this.showAboutUI(system, player),
+            components: [
+                { type: "header", text: { translate: "ui.settings.about.qa" } },
+                { type: "label", text: { translate: "ui.settings.about.qa.description" } },
+                { type: "divider" },
+                ...texts,
             ],
         });
     }
@@ -1942,7 +1971,7 @@ class MurderMysteryComponents {
     /** 持续给予玩家饱和效果，防止玩家因饥饿而导致无法跑动。 */
     static keepSaturation() {
         lib.gameSystem.subscribeTimeline("keepSaturation", () => {
-            lib.PlayerUtils.getAll().forEach(player => player.addEffect("saturation", 1, { amplifier: 10 }));
+            lib.PlayerUtils.getAll().forEach(player => player.addEffect("saturation", 1, { amplifier: 10, showParticles: false }));
         }, 20);
     }
     /** 显示游戏信息板。
@@ -2209,7 +2238,7 @@ class MurderMysteryComponents {
                     message: { translate: "chat.gameWillOver" },
                     sound: "note.hat",
                 });
-            if (system.timeLeft === 30) {
+            if (system.timeLeft === system.settings.locator.showLeftPlayersTime) {
                 system.livingPlayers.allPlayers.forEach(playerData => {
                     if (isPlayer(playerData.player))
                         lib.PlayerUtils.notify(playerData.player, {
@@ -2217,6 +2246,7 @@ class MurderMysteryComponents {
                             sound: "note.hat",
                         });
                 });
+                system.updateLocatorBar();
             }
             if (system.timeLeft <= 0)
                 system.enterGameOverStage(MurderMysteryGameOverReason.TimeOut);
@@ -2929,6 +2959,10 @@ export class MurderMysteryPlayer {
             this.isDead = true;
             if (isPlayer(this.player))
                 this.player.setGameMode(minecraft.GameMode.Spectator);
+            minecraft.system.runTimeout(() => {
+                this.showLocatorBar();
+                this.updateLocatorBar();
+            }, 5);
         }
         // 如果是侦探，标记为首位侦探
         if (this.role === MurderMysteryPlayerRole.Detective)
@@ -3026,7 +3060,7 @@ export class MurderMysteryPlayer {
         this.system.removeLivingPlayer(this);
         // 更新所有玩家的定位栏，并且为该玩家显示定位栏
         this.showLocatorBar();
-        this.system.players.allPlayers.forEach(playerData => playerData.updateLocatorBar());
+        this.system.updateLocatorBar();
         // 添加死亡次数
         const currentDeathCount = MurderMysterySystem.getEntityState(player, "murder_mystery:deathCount.total", 0);
         MurderMysterySystem.setEntityState(player, "murder_mystery:deathCount.total", currentDeathCount + 1);
@@ -3238,8 +3272,8 @@ export class MurderMysteryPlayer {
                 return;
             if (isPlayer(player))
                 player.sendMessage({ translate: "chat.bowPicked" });
-            playerData.updateLocatorBar();
         });
+        this.system.updateLocatorBar();
     }
     // #endregion
     // #region - 侦探
@@ -3278,8 +3312,8 @@ export class MurderMysteryPlayer {
         // 生成弓
         const bowLocation = forceLocation ?? this.player.location;
         lib.EntityUtils.add(bowEntityId, bowLocation);
-        // 对平民启用定位栏
-        this.system.livingPlayers.innocent.forEach(innocent => innocent.updateLocatorBar());
+        // 更新定位栏
+        this.system.updateLocatorBar();
     }
     // #endregion
     // #region - 杀手 & 杀手飞刀
@@ -3601,10 +3635,12 @@ export class MurderMysteryPlayer {
             return;
         // 移除所有玩家原有的定位栏
         lib.LocatorBarUtils.removeAll(player);
-        // 对平民添加弓的位置
-        const bowLocation = lib.EntityUtils.getType("murder_mystery:item_bow")[0]?.location;
-        const bowIconPath = "textures/locator_bar/bow";
-        if (bowLocation && this.role === MurderMysteryPlayerRole.Innocent)
+        /** 在定位栏上添加弓的位置。 */
+        const addBow = () => {
+            const bowLocation = lib.EntityUtils.getType("murder_mystery:item_bow")[0]?.location;
+            if (!bowLocation)
+                return;
+            const bowIconPath = "textures/locator_bar/bow";
             lib.LocatorBarUtils.addLocation(player, bowLocation, {
                 textureBoundsList: [
                     { texture: { path: bowIconPath, iconHeight: 1, iconWidth: 1 }, lowerBound: 0, upperBound: 25 },
@@ -3613,7 +3649,8 @@ export class MurderMysteryPlayer {
                     { texture: { path: bowIconPath, iconHeight: 0.25, iconWidth: 0.25 }, lowerBound: 75 },
                 ],
             }, { red: 0.333, green: 1, blue: 1 });
-        const nonMurdererCount = this.system.livingPlayers.detective.length + this.system.livingPlayers.innocent.length;
+        };
+        /** 在定位栏上添加所有存活玩家（除自己外）的位置。 */
         const addAllPlayers = (markSpecialRole = false) => {
             this.system.livingPlayers.allPlayers.forEach(playerData => {
                 // 不注册自己的定位栏
@@ -3629,19 +3666,26 @@ export class MurderMysteryPlayer {
                 lib.LocatorBarUtils.addDefaultIconEntity(player, playerData.player, 0, 25, 50, 75, entityRules, color);
             });
         };
-        const { showAllPlayersThreshold, showLeftPlayersTime, hideLeftPlayersThreshold } = this.system.settings.locator;
+        // 对旁观者和死亡玩家，添加其他玩家的位置和弓的位置，然后终止运行
+        if (this.isDead) {
+            addAllPlayers(this.system.settings.gaming.showRoleInSpectatorTeleportUI);
+            addBow();
+            return;
+        }
+        // 对平民，添加弓的位置
+        if (this.role === MurderMysteryPlayerRole.Innocent)
+            addBow();
         // 剩余 2 名平民/侦探时（默认值），对所有玩家添加其他玩家的位置
+        // 剩余 1 名平民/侦探时（默认值），对非杀手添加杀手的位置
+        // 剩余 30 秒时（默认值），对杀手添加其他玩家的位置
+        const nonMurdererCount = this.system.livingPlayers.detective.length + this.system.livingPlayers.innocent.length;
+        const { showAllPlayersThreshold, showLeftPlayersTime, hideLeftPlayersThreshold } = this.system.settings.locator;
         if (nonMurdererCount <= showAllPlayersThreshold && nonMurdererCount > hideLeftPlayersThreshold)
             addAllPlayers();
-        // 剩余 1 名平民/侦探时（默认值），对非杀手添加杀手的位置
         else if (nonMurdererCount <= hideLeftPlayersThreshold && this.role !== MurderMysteryPlayerRole.Murderer)
             addAllPlayers(nonMurdererCount === 1);
-        // 剩余 30 秒时（默认值），对杀手添加其他玩家的位置
         if (this.system.timeLeft <= showLeftPlayersTime && this.role === MurderMysteryPlayerRole.Murderer)
             addAllPlayers();
-        // 对旁观者，添加其他玩家的位置
-        if (this.isDead)
-            addAllPlayers(this.system.settings.gaming.showRoleInSpectatorTeleportUI);
     }
     // #endregion
     // #region - 事件冷却

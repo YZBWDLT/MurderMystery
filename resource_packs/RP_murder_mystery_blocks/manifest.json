@@ -4,7 +4,7 @@
         "name": "量筒的密室杀手：方块包",
         "description": "包含地图内各种各样的方块。",
         "uuid": "250ba4e1-3b9c-4d08-9bd1-f659b94cc208",
-        "version": [1, 0, 21],
+        "version": [1, 0, 22],
         "min_engine_version": [1, 26, 40]
     },
     "modules": [
@@ -17,7 +17,7 @@
     "dependencies": [
         {
             "uuid": "21ce8949-fc13-47fb-aa6d-ab863f833b51",
-            "version": [1, 0, 21]
+            "version": [1, 0, 22]
         }
     ],
     "metadata": { "authors": ["YZBWDLT"] },

@@ -320,7 +320,7 @@ interact.settings=地图设置...
 ui.settings.main.title=设置
 ui.settings.main.playerSettings=§l玩家设置
 ui.settings.main.optOutSpectate=主动旁观设置...
-ui.settings.main.about=关于我们
+ui.settings.main.about=关于
 ui.settings.main.updateLog=更新日志
 ui.settings.main.spectatorSettings=§l旁观者设置
 ui.settings.main.teleportTo=传送到...
@@ -340,18 +340,29 @@ ui.settings.main.restoreDefault=恢复默认设置
 
 chat.settings.restoreDefault=§e已将所有设置调整为默认值，部分设置需要重置系统以生效
 
-### 关于我们 UI
-ui.settings.about.title=关于我们
-ui.settings.about.author=§l作者
-ui.settings.about.version=§l版本
-ui.settings.about.map=§l地图适配
-ui.settings.about.customHeadAdaption=§l地图内自定义头颅适配
-ui.settings.about.tester=§l测试员
-ui.settings.about.specialThanks=§l特别感谢
-
-### 更新日志 UI
-ui.settings.updateLog.title=更新日志
-ui.settings.updateLog.line1=本段使用中文编写，若您需要请使用翻译软件进行翻译。
+### 关于 UI
+ui.settings.about.title=关于
+ui.settings.about.author=作者
+ui.settings.about.author.author=§l作者
+ui.settings.about.author.version=§l版本
+ui.settings.about.author.map=§l地图适配
+ui.settings.about.author.customHeadAdaption=§l地图内自定义头颅适配
+ui.settings.about.author.tester=§l测试员
+ui.settings.about.author.specialThanks=§l特别感谢
+ui.settings.about.updateLog=更新日志
+ui.settings.about.updateLog.description=本段使用中文编写，若您需要请使用翻译软件进行翻译。
+ui.settings.about.qa=常见问题
+ui.settings.about.qa.description=这里汇总了一些你可能会遇到的问题，希望对你有用！
+ui.settings.about.qa.question1=§c§lQ1 §r§7在退出重进后，为什么我的定位器会失效？
+ui.settings.about.qa.answer1=§a§lA1 §r§7这是基岩版引擎的一个漏洞导致的，Mojang 已于 26.60 修复此漏洞。如果你不幸遇到了此问题，请联系服主/房主使用 /reload 命令。
+ui.settings.about.qa.question2=§c§lQ2 §r§7目前地图适配情况如何？
+ui.settings.about.qa.answer2=§a§lA2 §r§7目前我们已适配了 10 张地图：总部、图书馆、水族馆、档案馆、阴森庄园（包括 V1）、港口小镇（包括 V1）、暗景秋色、Hypixel 游乐园、复活节游乐园、高坠塔。在后续版本还会对更多地图进行适配！
+ui.settings.about.qa.question3=§c§lQ3 §r§7未来会发布到网易吗？
+ui.settings.about.qa.answer3=§a§lA3 §r§7会！但是目前来说，出于一些比较重要的需求，我们必须将我们的最低要求版本设置到 26.40。在网易更新到此版本后，我们会尽快着手发布此地图！
+ui.settings.about.qa.question4=§c§lQ4 §r§7未来的更新计划包括哪些内容？
+ui.settings.about.qa.answer4=§a§lA4 §r§7未来我们会继续更新剩余的地图、以及更新 Hypixel 现有的双倍、刺客、感染等模式。也包括飞刀皮肤、投掷物特效等，敬请期待！
+ui.settings.about.qa.question5=§c§lQ5 §r§7在哪里可以联系作者，反馈地图问题？
+ui.settings.about.qa.answer5=§a§lA5 §r§71. 欢迎在我们的 QQ 群：673941729 反馈问题！2. 你也可以直接在 GitHub 的本仓库（YZBWDLT/MurderMystery）上提交 issues，可以的话请留一个 Star 哦/w\。3. 也可以在 B 站对应的宣传片下留言，欢迎关注我的 B 站账号 @一只卑微的量筒 哦awa
 
 ### 主动旁观 UI
 ui.settings.optoutspectate.title=主动旁观设置

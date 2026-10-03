@@ -240,6 +240,46 @@ function spookyMansionCrusher(operation, from, to, soundLocation) {
 }
 // #endregion
 // #region - 港口小镇方法
+/** 港口小镇，安置 NPC。
+ * @param location 指定为方块位置（整数位置）。
+ * @param rotation 实体生成时的初始位置。
+ */
+function sanPeraticoSetNPC(location, rotation) {
+    lib.EntityUtils.add("murder_mystery:npc", { ...location, x: location.x + 0.5, z: location.z + 0.5 }, "overworld", {
+        initialRotation: rotation,
+    }).addTag("sanPeratico:waterRepellentPotionSeller");
+    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { ...location, y: location.y + 2.6 });
+    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { ...location, y: location.y + 2.2 });
+}
+/** 玩家溺水判定。
+ * @param waterY 水所处于的层数。
+ */
+function playerIntoWater(playerData, waterY) {
+    // 如果玩家正处于水肺状态效果下，终止运行
+    if (playerData.isInPotionEffect)
+        return;
+    const player = playerData.player;
+    // 对玩家注册一个时间线，若玩家在 waterY + 1 格或更高并且玩家离水则终止运行
+    lib.gameSystem.subscribeTimeline(`${playerData.getName()}Drowning`, time => {
+        // 首次溺水提示玩家
+        if (time === 1)
+            notify(playerData.player, { message: { translate: "chat.sanPeratico.drowningWarning" } });
+        // 如果玩家在水中喝下药水，则立刻终止运行
+        if (playerData.isInPotionEffect)
+            return false;
+        // 如果玩家上岸 1 格且未跳跃，则终止运行
+        if (player.location.y >= waterY + 1 && !player.isInWater) {
+            if (!isPlayer(player))
+                return false;
+            else if (!player.isJumping)
+                return false;
+        }
+        // 如果玩家上岸 2 格，则终止运行
+        if (player.location.y >= waterY + 2)
+            return false;
+        playerData.dealDamage(2, MurderMysteryDeathType.Drowned);
+    }, 30);
+}
 /** 播放港口小镇的桥的动画。 */
 function sanPeraticoBridgeTrap(system, playerData, id, structureLocation, shouldMirror = false) {
     // --- 条件检查 ---
@@ -268,6 +308,52 @@ function sanPeraticoBridgeTrap(system, playerData, id, structureLocation, should
         if (time === 225)
             return false;
     });
+}
+/** 给予玩家水肺药水。 */
+function giveRepellentPotion(playerData) {
+    playerData.giveItem("murder_mystery:water_repellent_potion", {
+        itemLock: minecraft.ItemLockMode.slot,
+        lore: [
+            { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
+            { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
+        ],
+    });
+}
+/** 玩家购买水肺药水。如果不能成功购买则通知玩家。 */
+function buyWaterRepellentPotion(playerData) {
+    // --- 条件检查 ---
+    const player = playerData.player;
+    if (!playerData.canGiveItem(1, { translate: "chat.senPeratico.alreadyHavePotion" }))
+        return;
+    if (!playerData.consumeGold(3))
+        return;
+    // --- 给予玩家药水 ---
+    giveRepellentPotion(playerData);
+    notify(player, { sound: "random.pop", message: { translate: "chat.senPeratico.getPotion" } });
+}
+/** 玩家喝下水肺药水。 */
+function drinkWaterRepellentPotion(playerData) {
+    const player = playerData.player;
+    // 如果玩家当前仍然在水肺状态效果下，阻止之
+    if (playerData.isInPotionEffect) {
+        giveRepellentPotion(playerData);
+        notify(player, { message: { translate: "chat.mysteryPotion.onlyOneEffect" } });
+        return;
+    }
+    // 执行水肺效果
+    player.addEffect("water_breathing", 600, { amplifier: 0, showParticles: false });
+    playerData.isInPotionEffect = true;
+    notify(player, { message: { translate: "chat.senPeratico.potionTakeEffect" } });
+    lib.ItemUtils.equipment.set(player, "minecraft:golden_boots", minecraft.EquipmentSlot.Feet, {
+        itemLock: minecraft.ItemLockMode.slot,
+        unbreakable: true,
+        enchantments: [{ id: "depth_strider", level: 2 }],
+    });
+    lib.gameSystem.subscribeDelay(`${playerData.getName()}InPotionEffect`, () => {
+        playerData.isInPotionEffect = false;
+        notify(player, { message: { translate: "chat.senPeratico.potionOutOfDate" } });
+        lib.ItemUtils.equipment.set(player, "minecraft:air", minecraft.EquipmentSlot.Feet);
+    }, 600);
 }
 /** 全部的临终遗言。遗言需要在语言文件中声明，包括：
  * - `lastWords.(ID).title`：临终遗言的标题。
@@ -1728,7 +1814,7 @@ export const maps = {
         components: {
             playerInArea: [
                 {
-                    area: { xMin: 1052, yMin: 124, zMin: -219, xMax: 1054, yMax: 126, zMax: -217 },
+                    area: { xMin: 1052, yMin: 124, zMin: -219, xMax: 1055, yMax: 127, zMax: -216 },
                     run: (system, playerData) => playerData.setDead(MurderMysteryDeathType.EndPortal),
                 },
             ],
@@ -4158,12 +4244,20 @@ export const maps = {
         },
         components: {
             disableInteraction: [
+                // 鬼屋门的门
                 { x: -165, y: 21, z: 3104 },
                 { x: -165, y: 22, z: 3104 },
                 { x: -165, y: 21, z: 3101 },
                 { x: -165, y: 22, z: 3101 },
                 { x: -165, y: 21, z: 3098 },
                 { x: -165, y: 22, z: 3098 },
+                // 单轨列车拉杆
+                { x: -107, y: 24, z: 3058 },
+                { x: -139, y: 24, z: 3092 },
+                { x: -139, y: 24, z: 3108 },
+                { x: -153, y: 24, z: 3130 },
+                { x: -108, y: 24, z: 3141 },
+                { x: -84, y: 24, z: 3141 },
             ],
             playerInArea: [
                 {
@@ -6031,12 +6125,20 @@ export const maps = {
         components: {
             time: 18000,
             disableInteraction: [
+                // 鬼屋门的门
                 { x: -959, y: 46, z: 2883 },
                 { x: -959, y: 47, z: 2883 },
                 { x: -959, y: 46, z: 2880 },
                 { x: -959, y: 47, z: 2880 },
                 { x: -959, y: 46, z: 2877 },
                 { x: -959, y: 47, z: 2877 },
+                // 单轨列车拉杆
+                { x: -901, y: 49, z: 2837 },
+                { x: -933, y: 49, z: 2871 },
+                { x: -933, y: 49, z: 2887 },
+                { x: -947, y: 49, z: 2909 },
+                { x: -902, y: 49, z: 2920 },
+                { x: -878, y: 49, z: 2920 },
             ],
             playerInArea: [
                 {
@@ -7628,7 +7730,6 @@ export const maps = {
                 { x: -927.5, y: 16.5, z: -15.5 },
                 { x: -911.5, y: 16.5, z: -80.5 },
             ],
-            hasFullFunction: false,
             enabledByDefault: false,
         },
         components: {
@@ -7637,16 +7738,9 @@ export const maps = {
                     lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -947, y: 15, z: -56 });
                     lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -967, y: 15, z: -56 });
                     lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -985, y: 15, z: -56 });
-                    lib.EntityUtils.add("murder_mystery:npc", { x: -976.5, y: 16, z: -69.5 }, "overworld", {
-                        initialRotation: 0,
-                    }).addTag("sanPeratico:waterRepellentPotionSeller");
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -977, y: 18.6, z: -70 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -977, y: 18.2, z: -70 });
-                    lib.EntityUtils.add("murder_mystery:npc", { x: -917.5, y: 16, z: -20.5 }, "overworld", {
-                        initialRotation: 180,
-                    }).addTag("sanPeratico:waterRepellentPotionSeller");
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -918, y: 18.6, z: -21 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -918, y: 18.2, z: -21 });
+                    sanPeraticoSetNPC({ x: -918, y: 16, z: -21 }, 180);
+                    sanPeraticoSetNPC({ x: -977, y: 16, z: -70 }, 0);
+                    sanPeraticoSetNPC({ x: -946, y: 29, z: -18 }, 270);
                 },
             },
             playerPressButton: [
@@ -7678,84 +7772,20 @@ export const maps = {
             playerInArea: [
                 // ===== 玩家溺水 =====
                 {
-                    area: { yMax: 11.49 },
-                    run: (system, playerData) => {
-                        if (playerData.isInPotionEffect)
-                            return;
-                        const playerName = playerData.getName();
-                        const player = playerData.player;
-                        // 对玩家注册一个时间线，若玩家在 11.49 格或更高并且玩家离水则终止运行
-                        lib.gameSystem.subscribeTimeline(`${playerName}Drowning`, time => {
-                            if (time === 1)
-                                notify(playerData.player, { message: { translate: "chat.sanPeratico.drowningWarning" } });
-                            // 如果玩家在水中喝下药水，则立刻终止运行
-                            if (playerData.isInPotionEffect)
-                                return false;
-                            // 如果玩家上岸，则终止运行
-                            if (player.location.y > 11.49 && !player.isInWater)
-                                return false;
-                            playerData.dealDamage(2, MurderMysteryDeathType.Drowned);
-                        }, 30);
-                    },
+                    area: { yMax: 10.9 },
+                    run: (system, playerData) => playerIntoWater(playerData, 10),
                 },
             ],
             playerInteractWithEntity: [
                 {
                     hasTag: "sanPeratico:waterRepellentPotionSeller",
-                    run: (system, playerData, trader) => {
-                        // --- 条件检查 ---
-                        const player = playerData.player;
-                        if (!playerData.canGiveItem(1, { translate: "chat.senPeratico.alreadyHavePotion" }))
-                            return;
-                        if (!playerData.consumeGold(3))
-                            return;
-                        // --- 给予玩家药水 ---
-                        playerData.giveItem("murder_mystery:water_repellent_potion", {
-                            itemLock: minecraft.ItemLockMode.slot,
-                            lore: [
-                                { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
-                                { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
-                            ],
-                        });
-                        notify(player, {
-                            sound: "random.pop",
-                            message: { translate: "chat.senPeratico.getPotion" },
-                        });
-                    },
+                    run: (system, playerData, trader) => buyWaterRepellentPotion(playerData),
                 },
             ],
             playerUsedItem: [
                 {
                     itemId: ["murder_mystery:water_repellent_potion"],
-                    run: (system, playerData) => {
-                        const player = playerData.player;
-                        // 如果玩家当前仍然在水肺状态效果下，阻止之
-                        if (playerData.isInPotionEffect) {
-                            playerData.giveItem("murder_mystery:water_repellent_potion", {
-                                itemLock: minecraft.ItemLockMode.slot,
-                                lore: [
-                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
-                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
-                                ],
-                            });
-                            notify(player, { message: { translate: "chat.mysteryPotion.onlyOneEffect" } });
-                            return;
-                        }
-                        // 执行水肺效果
-                        player.addEffect("water_breathing", 600, { amplifier: 0, showParticles: false });
-                        playerData.isInPotionEffect = true;
-                        notify(player, { message: { translate: "chat.senPeratico.potionTakeEffect" } });
-                        lib.ItemUtils.equipment.set(player, "minecraft:golden_boots", minecraft.EquipmentSlot.Feet, {
-                            itemLock: minecraft.ItemLockMode.slot,
-                            unbreakable: true,
-                            enchantments: [{ id: "depth_strider", level: 2 }],
-                        });
-                        lib.gameSystem.subscribeDelay(`${player}InPotionEffect`, () => {
-                            playerData.isInPotionEffect = false;
-                            notify(player, { message: { translate: "chat.senPeratico.potionOutOfDate" } });
-                            lib.ItemUtils.equipment.set(player, "minecraft:air", minecraft.EquipmentSlot.Feet);
-                        }, 600);
-                    },
+                    run: (system, playerData) => drinkWaterRepellentPotion(playerData),
                 },
             ],
         },
@@ -8102,7 +8132,6 @@ export const maps = {
                 { x: -1055.5, y: 51.5, z: -937.5 },
                 { x: -1054.5, y: 51.5, z: -930.5 },
             ],
-            hasFullFunction: false,
         },
         components: {
             onGameStart: {
@@ -8110,16 +8139,8 @@ export const maps = {
                     lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -1091, y: 50, z: -909 });
                     lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -1111, y: 50, z: -909 });
                     lib.StructureUtils.placeAsync("murder_mystery:sanPeratico/bridge_full", { x: -1129, y: 50, z: -909 });
-                    lib.EntityUtils.add("murder_mystery:npc", { x: -1061.5, y: 51, z: -873.5 }, "overworld", {
-                        initialRotation: 180,
-                    }).addTag("sanPeratico:waterRepellentPotionSeller");
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -1062, y: 53.6, z: -874 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -1062, y: 53.2, z: -874 });
-                    lib.EntityUtils.add("murder_mystery:npc", { x: -1120.5, y: 51, z: -922.5 }, "overworld", {
-                        initialRotation: 0,
-                    }).addTag("sanPeratico:waterRepellentPotionSeller");
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line1" }, { x: -1121, y: 53.6, z: -923 });
-                    lib.TextDisplayUtils.add({ translate: "textDisplay.senPeratico.buyPotion.line2" }, { x: -1121, y: 53.2, z: -923 });
+                    sanPeraticoSetNPC({ x: -1062, y: 51, z: -874 }, 180);
+                    sanPeraticoSetNPC({ x: -1121, y: 51, z: -923 }, 0);
                 },
             },
             playerPressButton: [
@@ -8151,84 +8172,20 @@ export const maps = {
             playerInArea: [
                 // ===== 玩家溺水 =====
                 {
-                    area: { yMax: 46.49 },
-                    run: (system, playerData) => {
-                        if (playerData.isInPotionEffect)
-                            return;
-                        const playerName = playerData.getName();
-                        const player = playerData.player;
-                        // 对玩家注册一个时间线，若玩家在 46.49 格或更高并且玩家离水则终止运行
-                        lib.gameSystem.subscribeTimeline(`${playerName}Drowning`, time => {
-                            if (time === 1)
-                                notify(playerData.player, { message: { translate: "chat.sanPeratico.drowningWarning" } });
-                            // 如果玩家在水中喝下药水，则立刻终止运行
-                            if (playerData.isInPotionEffect)
-                                return false;
-                            // 如果玩家上岸，则终止运行
-                            if (player.location.y > 46.49 && !player.isInWater)
-                                return false;
-                            playerData.dealDamage(2, MurderMysteryDeathType.Drowned);
-                        }, 30);
-                    },
+                    area: { yMax: 45.9 },
+                    run: (system, playerData) => playerIntoWater(playerData, 45),
                 },
             ],
             playerInteractWithEntity: [
                 {
                     hasTag: "sanPeratico:waterRepellentPotionSeller",
-                    run: (system, playerData, trader) => {
-                        // --- 条件检查 ---
-                        const player = playerData.player;
-                        if (!playerData.canGiveItem(1, { translate: "chat.senPeratico.alreadyHavePotion" }))
-                            return;
-                        if (!playerData.consumeGold(3))
-                            return;
-                        // --- 给予玩家药水 ---
-                        playerData.giveItem("murder_mystery:water_repellent_potion", {
-                            itemLock: minecraft.ItemLockMode.slot,
-                            lore: [
-                                { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
-                                { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
-                            ],
-                        });
-                        notify(player, {
-                            sound: "random.pop",
-                            message: { translate: "chat.senPeratico.getPotion" },
-                        });
-                    },
+                    run: (system, playerData, trader) => buyWaterRepellentPotion(playerData),
                 },
             ],
             playerUsedItem: [
                 {
                     itemId: ["murder_mystery:water_repellent_potion"],
-                    run: (system, playerData) => {
-                        const player = playerData.player;
-                        // 如果玩家当前仍然在水肺状态效果下，阻止之
-                        if (playerData.isInPotionEffect) {
-                            playerData.giveItem("murder_mystery:water_repellent_potion", {
-                                itemLock: minecraft.ItemLockMode.slot,
-                                lore: [
-                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line1" },
-                                    { translate: "itemLore.murder_mystery:water_repellent_potion.line2" },
-                                ],
-                            });
-                            notify(player, { message: { translate: "chat.mysteryPotion.onlyOneEffect" } });
-                            return;
-                        }
-                        // 执行水肺效果
-                        player.addEffect("water_breathing", 600, { amplifier: 0, showParticles: false });
-                        playerData.isInPotionEffect = true;
-                        notify(player, { message: { translate: "chat.senPeratico.potionTakeEffect" } });
-                        lib.ItemUtils.equipment.set(player, "minecraft:golden_boots", minecraft.EquipmentSlot.Feet, {
-                            itemLock: minecraft.ItemLockMode.slot,
-                            unbreakable: true,
-                            enchantments: [{ id: "depth_strider", level: 2 }],
-                        });
-                        lib.gameSystem.subscribeDelay(`${player}InPotionEffect`, () => {
-                            playerData.isInPotionEffect = false;
-                            notify(player, { message: { translate: "chat.senPeratico.potionOutOfDate" } });
-                            lib.ItemUtils.equipment.set(player, "minecraft:air", minecraft.EquipmentSlot.Feet);
-                        }, 600);
-                    },
+                    run: (system, playerData) => drinkWaterRepellentPotion(playerData),
                 },
             ],
         },

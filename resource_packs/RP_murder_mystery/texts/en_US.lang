@@ -320,7 +320,7 @@ interact.settings=Map Settings...
 ui.settings.main.title=Settings
 ui.settings.main.playerSettings=§lPlayer Settings
 ui.settings.main.optOutSpectate=Opt-Out Spectate Settings...
-ui.settings.main.about=About Us
+ui.settings.main.about=About
 ui.settings.main.updateLog=Update Log
 ui.settings.main.spectatorSettings=§lSpectator Settings
 ui.settings.main.teleportTo=Teleport To...
@@ -340,18 +340,29 @@ ui.settings.main.restoreDefault=Restore Default Settings
 
 chat.settings.restoreDefault=§eAll settings have been restored to default values. Some settings may require a system restart to take effect.
 
-### About Us UI
-ui.settings.about.title=About Us
-ui.settings.about.author=§lAuthor
-ui.settings.about.version=§lVersion
-ui.settings.about.map=§lMap Adaptation
-ui.settings.about.customHeadAdaption=§lIn-Map Custom Head Adaptation
-ui.settings.about.tester=§lTesters
-ui.settings.about.specialThanks=§lSpecial Thanks
-
-### Update Log UI
-ui.settings.updateLog.title=Update Log
-ui.settings.updateLog.line1=This paragraph is written in Chinese. Please use translation software if in need.
+### About UI
+ui.settings.about.title=About
+ui.settings.about.author=Author
+ui.settings.about.author.author=§lAuthor
+ui.settings.about.author.version=§lVersion
+ui.settings.about.author.map=§lMap Adaptation
+ui.settings.about.author.customHeadAdaption=§lIn-Map Custom Head Adaptation
+ui.settings.about.author.tester=§lTesters
+ui.settings.about.author.specialThanks=§lSpecial Thanks
+ui.settings.about.updateLog=Update Log
+ui.settings.about.updateLog.description=This paragraph is written in Chinese. Please use translation software if in need.
+ui.settings.about.qa=Q&A
+ui.settings.about.qa.description=Here we've gathered some questions you might encounter. We hope they're helpful!
+ui.settings.about.qa.question1=§c§lQ1 §r§7Why does my locator stop working after I leave and rejoin?
+ui.settings.about.qa.answer1=§a§lA1 §r§7This is caused by a bug in the Bedrock Edition engine. Mojang has fixed this bug in 26.60. If you happen to encounter this issue, please contact the server owner/host to use the /reload command.
+ui.settings.about.qa.question2=§c§lQ2 §r§7What is the current map adaptation status?
+ui.settings.about.qa.answer2=§a§lA2 §r§7We have currently adapted 10 maps: Headquarters, Library, Aquarium, Archives, Spooky Mansion (including V1), San Peratico (including V1), Darkfall, Hypixel World, Easter World, and Towerfall. More maps will be adapted in future versions!
+ui.settings.about.qa.question3=§c§lQ3 §r§7Will it be released on China Version in the future?
+ui.settings.about.qa.answer3=§a§lA3 §r§7Yes! However, for now, due to some important requirements, we must set our minimum required version to 26.40. Once NetEase updates to this version, we will start working on releasing this map as soon as possible!
+ui.settings.about.qa.question4=§c§lQ4 §r§7What does the future update plan include?
+ui.settings.about.qa.answer4=§a§lA4 §r§7In the future, we will continue to update the remaining maps, as well as update Hypixel's existing modes such as Double Up, Assassins, Infection, etc. This also includes knife skins, projectile effects, and more. Stay tuned!
+ui.settings.about.qa.question5=§c§lQ5 §r§7Where can I contact the author to report map issues?
+ui.settings.about.qa.answer5=§a§lA5 §r§71. Feel free to report issues in our QQ group: 673941729! 2. You can also directly submit issues on this repository on GitHub (YZBWDLT/MurderMystery). If possible, please leave a Star /w\. 3. You can also leave a comment under the corresponding promotional video on Bilibili. Feel free to follow my Bilibili account @一只卑微的量筒 awa
 
 ### Opt-Out Spectate UI
 ui.settings.optoutspectate.title=Opt-Out Spectate Settings
