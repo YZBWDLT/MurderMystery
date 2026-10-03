@@ -2070,6 +2070,7 @@ class MurderMysteryComponents {
                 "minecraft:frame",
                 "minecraft:bed",
                 "minecraft:beacon",
+                "minecraft:enchanting_table",
             ];
             // --- 检查交互黑名单 ---
             // 如果交互黑名单包含指定方块类型，并且玩家不为创造模式，则取消事件

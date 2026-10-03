@@ -2534,6 +2534,7 @@ class MurderMysteryComponents {
                 "minecraft:frame",
                 "minecraft:bed",
                 "minecraft:beacon",
+                "minecraft:enchanting_table",
             ];
 
             // --- 检查交互黑名单 ---
